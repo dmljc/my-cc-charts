@@ -1,0 +1,87 @@
+{
+  "name": "cc-charts",
+  "version": "0.1.0",
+  "description": "cc-charts",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "exports": {
+    "./*": "./*",
+    ".": {
+      "import": "./es/index.js",
+      "require": "./lib/index.js"
+    }
+  },
+  "typings": "types/index.d.ts",
+  "files": [
+    "build/",
+    "dist/",
+    "lib/",
+    "es/",
+    "types/",
+    "lowcode/",
+    "lowcode_lib/",
+    "lowcode_es/"
+  ],
+  "scripts": {
+    "start": "npm run dumi",
+    "build": "build-scripts build",
+    "dev": "build-scripts start --config ./build.lowcode.js",
+    "lowcode:build": "build-scripts build --config ./build.lowcode.js",
+    "dumi": "cross-env APP_ROOT=docs dumi dev",
+    "dumi:build": "cross-env APP_ROOT=docs dumi build",
+    "prepublishOnly": "npm run build && npm run lowcode:build && npm run dumi:build"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [
+    "Fusion"
+  ],
+  "author": "fusion-team",
+  "license": "MIT",
+  "husky": {
+    "hooks": {
+    }
+  },
+  "lint-staged": {
+  },
+  "peerDependencies": {
+    "moment": "latest",
+    "react": "^16.x",
+    "react-dom": "^16.x"
+  },
+  "devDependencies": {
+    "@alib/build-scripts": "^0.1.3",
+    "@alifd/theme-2": "^0.1.0",
+    "cc-plugin-lowcode": "^0.1.0",
+    "@types/react": "^16.14.24",
+    "@types/react-dom": "^16.9.4",
+    "@umijs/plugin-sass": "^1.1.1",
+    "build-plugin-component": "^1.12.1",
+    "build-plugin-fusion": "^0.1.0",
+    "cross-env": "^7.0.3",
+    "dumi": "^1.1.49",
+    "dumi-theme-default": "^1.1.24"
+  },
+  "dependencies": {
+    "@alifd/next": "^1.25.27",
+    "axios": "^1.10.0",
+    "bizcharts": "^4.1.23",
+    "moment": "latest",
+    "prop-types": "^15.5.8",
+    "react": "^16.x",
+    "react-dom": "^16.x"
+  },
+  "acceptDependencies": {
+    "webpack": "^4.46.x"
+  },
+  "resolutions": {
+    "webpack": "^4.46.x"
+  },
+  "componentConfig": {
+    "isComponentLibrary": true
+  },
+  "lcMeta": {
+    "type": "component"
+  }
+}
