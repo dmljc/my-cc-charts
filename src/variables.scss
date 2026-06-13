@@ -1,3 +1,30 @@
 @import '~@alifd/next/variables.scss';
 
 $biz-css-prefix: '.bizpack';
+$bizpack-scroll-edge-gap: 12px;
+
+@mixin bizpack-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(96, 118, 138, 0.72) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(96, 118, 138, 0.72);
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@mixin bizpack-scroll-area {
+  @include bizpack-scrollbar;
+  box-sizing: border-box;
+  min-height: 0;
+  padding-right: 0;
+  margin-right: 0;
+}

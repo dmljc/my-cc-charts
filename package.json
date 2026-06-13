@@ -9,6 +9,14 @@
     ".": {
       "import": "./es/index.js",
       "require": "./lib/index.js"
+    },
+    "./prototype": {
+      "require": "./lowcode_lib/meta.js",
+      "import": "./lowcode_es/meta.js"
+    },
+    "./prototypeView": {
+      "require": "./lowcode_lib/view.js",
+      "import": "./lowcode_es/view.js"
     }
   },
   "typings": "types/index.d.ts",
@@ -40,11 +48,9 @@
   "author": "fusion-team",
   "license": "MIT",
   "husky": {
-    "hooks": {
-    }
+    "hooks": {}
   },
-  "lint-staged": {
-  },
+  "lint-staged": {},
   "peerDependencies": {
     "moment": "latest",
     "react": "^16.x",
@@ -61,7 +67,8 @@
     "build-plugin-fusion": "^0.1.0",
     "cross-env": "^7.0.3",
     "dumi": "^1.1.49",
-    "dumi-theme-default": "^1.1.24"
+    "dumi-theme-default": "^1.1.24",
+    "typescript": "~4.9.5"
   },
   "dependencies": {
     "@alifd/next": "^1.25.27",
@@ -70,7 +77,8 @@
     "moment": "latest",
     "prop-types": "^15.5.8",
     "react": "^16.x",
-    "react-dom": "^16.x"
+    "react-dom": "^16.x",
+    "@babel/runtime": "^7.0.0"
   },
   "acceptDependencies": {
     "webpack": "^4.46.x"
@@ -79,7 +87,8 @@
     "webpack": "^4.46.x"
   },
   "componentConfig": {
-    "isComponentLibrary": true
+    "isComponentLibrary": true,
+    "materialSchema": "https://unpkg.com/cc-charts@0.1.0/build/lowcode/assets-prod.json"
   },
   "lcMeta": {
     "type": "component"

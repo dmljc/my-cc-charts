@@ -1,0 +1,103 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-today-task {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 18px $bizpack-scroll-edge-gap 0;
+  overflow: hidden;
+  color: #eaf7ff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+  background: linear-gradient(
+      120deg,
+      rgba(21, 48, 86, 0.96) 0%,
+      rgba(38, 70, 103, 0.88) 54%,
+      rgba(91, 104, 105, 0.74) 100%
+    ),
+    rgba(10, 26, 45, 0.96);
+  border-top: 1px dashed rgba(38, 154, 255, 0.62);
+  border-bottom: 1px dashed rgba(30, 150, 255, 0.94);
+
+  &-list {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    @include bizpack-scroll-area;
+  }
+
+  &-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: none;
+    box-sizing: border-box;
+    height: 32px;
+    padding: 0;
+    color: #ffffff;
+    text-align: left;
+    cursor: pointer;
+    background: linear-gradient(90deg, #559ee6 0%, rgba(13, 129, 247, 0) 100%);
+    border: 0;
+    border-radius: 5px;
+    outline: none;
+  }
+
+  &-icon-wrap {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 32px;
+  }
+
+  &-icon {
+    display: block;
+    width: 32px;
+    height: 32px;
+    background-image: url('./icon_@2x.webp');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 32px 32px;
+    border-radius: 4px;
+  }
+
+  &-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 400;
+    color: #ffffff;
+    letter-spacing: 1px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &-level {
+    flex: none;
+    width: 30px;
+    margin-left: auto;
+    margin-right: 12px;
+    font-weight: 400;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  &-row-urgent &-level {
+    color: #ff2f2f;
+  }
+
+  &-row-normal &-level {
+    color: #ffbe2f;
+  }
+
+  &-row-regular &-level {
+    color: #3399ff;
+  }
+}
