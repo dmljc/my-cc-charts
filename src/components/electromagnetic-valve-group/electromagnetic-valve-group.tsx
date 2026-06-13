@@ -1,4 +1,5 @@
 import * as React from 'react';
+import '../jsx-shim';
 // createElement is required by tsconfig jsxFactory
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useMemo, useState } from 'react';
