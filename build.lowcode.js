@@ -9,7 +9,16 @@ module.exports = {
       'cc-plugin-lowcode',
       {
         library,
-        engineScope: "@alilc"
+        engineScope: '@alilc',
+      },
+    ],
+    [
+      '@alilc/build-plugin-alt',
+      {
+        type: 'component',
+        inject: true,
+        library,
+        openUrl: 'http://localhost:5556?debug',
       },
     ],
   ],
