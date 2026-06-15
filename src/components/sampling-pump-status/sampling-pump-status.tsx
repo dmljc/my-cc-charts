@@ -121,10 +121,11 @@ const SamplingPumpStatus: React.FC<SamplingPumpStatusProps> = function SamplingP
   }, []);
 
   const handleToggle = (item: SamplingPumpStatusItem, index: number) => {
+    console.log('---取样泵组件开关切换--item-index', item, index);
     const nextRunning = !item.running;
-    const nextItems = items.map((current, currentIndex) => (
-      currentIndex === index ? { ...current, running: nextRunning } : current
-    ));
+    const nextItems = items.map((current, currentIndex) =>
+      currentIndex === index ? { ...current, running: nextRunning } : current,
+    );
 
     setItems(nextItems);
     if (onToggle) {

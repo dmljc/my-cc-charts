@@ -1,6 +1,8 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
+const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
+
 const defaultData = [
   { id: 1, name: '取样泵1', running: false, selected: true, status: 'normal' },
   { id: 2, name: '取样泵1', running: true, status: 'normal' },
@@ -68,7 +70,18 @@ const SamplingPumpStatusMeta: ComponentMetadata = {
           label: '数据',
         },
         items: [
-          ...ChartMetaIot,
+          ...dataSourceMeta,
+          {
+            name: 'data',
+            title: {
+              label: '取样泵数据',
+              tip: '每一项包含 id、name、running、selected、status 字段',
+            },
+            setter: 'JsonSetter',
+            condition: (target: any) => {
+              return target.getProps().getPropValue('dataType') === 'data';
+            },
+          },
         ],
       },
       {
@@ -88,6 +101,45 @@ const SamplingPumpStatusMeta: ComponentMetadata = {
             name: 'height',
             title: '高度',
             setter: 'NumberSetter',
+          },
+          {
+            name: 'className',
+            title: '自定义类名',
+            setter: 'StringSetter',
+          },
+        ],
+      },
+      {
+        name: '',
+        type: 'group',
+        display: 'accordion',
+        title: {
+          label: '交互事件',
+        },
+        items: [
+          {
+            name: 'onSelect',
+            title: {
+              label: '选择取样泵',
+              tip: '(item, index) => void',
+            },
+            setter: 'FunctionSetter',
+          },
+          {
+            name: 'onToggle',
+            title: {
+              label: '切换启停',
+              tip: '(item, nextRunning, index) => void',
+            },
+            setter: 'FunctionSetter',
+          },
+          {
+            name: 'onLocate',
+            title: {
+              label: '点击定位',
+              tip: '(item, index) => void',
+            },
+            setter: 'FunctionSetter',
           },
         ],
       },
