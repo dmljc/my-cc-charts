@@ -7,6 +7,9 @@ export { default as FilletColumnChart } from './components/fillet-column-chart'
 export type { SamplingPumpStatusProps } from './components/sampling-pump-status';
 export { default as SamplingPumpStatus } from './components/sampling-pump-status';
 
+export type { VacuumPumpStatusProps } from './components/vacuum-pump-status';
+export { default as VacuumPumpStatus } from './components/vacuum-pump-status';
+
 export type { FlowRateMetricsProps } from './components/flow-rate-metrics';
 export { default as FlowRateMetrics } from './components/flow-rate-metrics';
 
