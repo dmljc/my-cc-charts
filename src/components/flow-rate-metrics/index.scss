@@ -1,0 +1,58 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-flow-rate-metrics {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 52px;
+  overflow: hidden;
+  color: #eaf7ff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+
+  &-item {
+    min-width: 87px;
+    text-align: center;
+  }
+
+  &-visual {
+    position: relative;
+    width: 87px;
+    height: 87px;
+    margin: 0 auto;
+  }
+
+  &-value {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    box-sizing: border-box;
+    height: 100%;
+    font-size: 28px;
+    font-weight: 700;
+    font-family: DIN Alternate, Arial, sans-serif;
+    line-height: 36px;
+    color: #ffffff;
+  }
+
+  &-label {
+    margin-top: -23px;
+    font-weight: 400;
+    font-size: 16px;
+    color: #dbdbdb;
+  }
+
+  &-orbit {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 87px;
+    height: 87px;
+    margin: 0 auto;
+    pointer-events: none;
+    background: url('./base_@2x.webp') center calc(100% + 6px) / 87px 87px no-repeat;
+  }
+}

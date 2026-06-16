@@ -1,0 +1,103 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-flow-rate-pump {
+  position: relative;
+  box-sizing: border-box;
+  padding: 20px 18px;
+  overflow: hidden;
+  color: #eaf7ff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+//   border-bottom: 1px dashed rgba(30, 150, 255, 0.94);
+
+  &-content {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  &-list {
+    box-sizing: border-box;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-around;
+    min-width: 0;
+    height: 100%;
+  }
+
+  &-item {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    text-align: center;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    outline: none;
+  }
+
+  &-value {
+    display: block;
+    margin-bottom: 0;
+    font-size: 24px;
+    font-weight: 700;
+    font-family: DIN Alternate, Arial, sans-serif;
+    line-height: 26px;
+    color: #ffffff;
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.72), 0 0 8px rgba(255, 255, 255, 0.36);
+  }
+
+  &-name {
+    display: block;
+    max-width: 88px;
+    height: 20px;
+    font-family: SourceHanSansCN, SourceHanSansCN;
+    font-weight: 400;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.74);
+    line-height: 20px;
+    letter-spacing: 1px;
+    text-align: center;
+    font-style: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &-page {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 22px;
+    height: 34px;
+    padding: 0;
+    cursor: pointer;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    border: 0;
+    outline: none;
+    transform: translateY(-50%);
+  }
+
+  &-page-prev {
+    left: 22px;
+    background-image: url('./left_@2x.webp');
+  }
+
+  &-page-next {
+    right: 22px;
+    background-image: url('./right_@2x.webp');
+  }
+
+  &-page-disabled {
+    cursor: not-allowed;
+    opacity: 0.72;
+  }
+}

@@ -12,11 +12,9 @@ export interface FlowRatePumpItem {
   value: number | string;
 }
 
-export interface FlowRateProps {
+export interface FlowRatePumpProps {
   title?: string;
   data?: FlowRatePumpItem[];
-  averageSpeed?: number | string;
-  maxSpeed?: number | string;
   pageSize?: number;
   width?: number | string;
   height?: number | string;
@@ -38,6 +36,9 @@ const defaultData: FlowRatePumpItem[] = [
   { id: 1, name: '取样泵1', value: 192.1 },
   { id: 2, name: '取样泵2', value: 0.0 },
   { id: 3, name: '取样泵3', value: 0.0 },
+  { id: 4, name: '取样泵4', value: 156.8 },
+  { id: 5, name: '取样泵5', value: 88.2 },
+  { id: 6, name: '取样泵6', value: 0.0 },
 ];
 
 const formatValue = (value: number | string) => {
@@ -68,14 +69,12 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
   return domProps;
 };
 
-const FlowRate: React.FC<FlowRateProps> = function FlowRate(props) {
+const FlowRatePump: React.FC<FlowRatePumpProps> = function FlowRatePump(props) {
   const {
     data = defaultData,
-    averageSpeed = 187.3,
-    maxSpeed = 321.5,
     pageSize = 3,
     width = 400,
-    height = 204,
+    height = 92,
     style = {},
     className = '',
     onPrev,
@@ -129,36 +128,15 @@ const FlowRate: React.FC<FlowRateProps> = function FlowRate(props) {
 
   return (
     <div
-      className={`bizpack-flow-rate ${className}`}
+      className={`bizpack-flow-rate-pump ${className}`}
       style={{ width, height, ...style }}
       {...rootDomProps}
     >
-      <div className="bizpack-flow-rate-content">
-        <div className="bizpack-flow-rate-metrics">
-          <div className="bizpack-flow-rate-metric">
-            <div className="bizpack-flow-rate-metric-visual">
-              <div className="bizpack-flow-rate-orbit" />
-              <div className="bizpack-flow-rate-metric-value">
-                {formatValue(averageSpeed)}
-              </div>
-            </div>
-            <div className="bizpack-flow-rate-metric-label">平均流速</div>
-          </div>
-          <div className="bizpack-flow-rate-metric">
-            <div className="bizpack-flow-rate-metric-visual">
-              <div className="bizpack-flow-rate-orbit" />
-              <div className="bizpack-flow-rate-metric-value">
-                {formatValue(maxSpeed)}
-              </div>
-            </div>
-            <div className="bizpack-flow-rate-metric-label">最大流速</div>
-          </div>
-        </div>
-
+      <div className="bizpack-flow-rate-pump-content">
         <button
           type="button"
-          className={`bizpack-flow-rate-page bizpack-flow-rate-page-prev ${
-            canGoPrev ? '' : 'bizpack-flow-rate-page-disabled'
+          className={`bizpack-flow-rate-pump-page bizpack-flow-rate-pump-page-prev ${
+            canGoPrev ? '' : 'bizpack-flow-rate-pump-page-disabled'
           }`}
           disabled={!canGoPrev}
           onClick={() => {
@@ -174,8 +152,8 @@ const FlowRate: React.FC<FlowRateProps> = function FlowRate(props) {
         />
         <button
           type="button"
-          className={`bizpack-flow-rate-page bizpack-flow-rate-page-next ${
-            canGoNext ? '' : 'bizpack-flow-rate-page-disabled'
+          className={`bizpack-flow-rate-pump-page bizpack-flow-rate-pump-page-next ${
+            canGoNext ? '' : 'bizpack-flow-rate-pump-page-disabled'
           }`}
           disabled={!canGoNext}
           onClick={() => {
@@ -190,7 +168,7 @@ const FlowRate: React.FC<FlowRateProps> = function FlowRate(props) {
           }}
         />
 
-        <div className="bizpack-flow-rate-pumps">
+        <div className="bizpack-flow-rate-pump-list">
           {visibleItems.map((item, index) => {
             const absoluteIndex = currentPageIndex * safePageSize + index;
 
@@ -198,7 +176,7 @@ const FlowRate: React.FC<FlowRateProps> = function FlowRate(props) {
               <button
                 key={item.id || absoluteIndex}
                 type="button"
-                className="bizpack-flow-rate-pump"
+                className="bizpack-flow-rate-pump-item"
                 onClick={() => {
                   if (onPumpClick) {
                     onPumpClick(item, absoluteIndex);
@@ -218,5 +196,5 @@ const FlowRate: React.FC<FlowRateProps> = function FlowRate(props) {
   );
 };
 
-FlowRate.displayName = 'FlowRate';
-export default FlowRate;
+FlowRatePump.displayName = 'FlowRatePump';
+export default FlowRatePump;

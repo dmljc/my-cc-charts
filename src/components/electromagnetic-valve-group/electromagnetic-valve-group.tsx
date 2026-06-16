@@ -124,6 +124,7 @@ const ElectromagneticValveGroup: React.FC<ElectromagneticValveGroupProps> = func
   const closeCount = items.length - openCount;
 
   const handleToggle = (item: ElectromagneticValveItem, index: number) => {
+    console.log('电池阀组-开关切换--item-index', item, index);
     const nextOpen = !isValveOpen(item);
     const nextItems = items.map((current, currentIndex) => (
       currentIndex === index

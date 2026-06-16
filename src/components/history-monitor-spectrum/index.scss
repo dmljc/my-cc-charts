@@ -3,17 +3,9 @@
 #{$biz-css-prefix}-history-monitor-spectrum {
   position: relative;
   box-sizing: border-box;
-  padding: 0 12px;
   overflow: hidden;
   color: #eaf7ff;
   font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
-  background: linear-gradient(
-      120deg,
-      rgba(21, 48, 86, 0.96) 0%,
-      rgba(38, 70, 103, 0.88) 54%,
-      rgba(91, 104, 105, 0.74) 100%
-    ),
-    rgba(10, 26, 45, 0.96);
 
   &-list {
     display: flex;

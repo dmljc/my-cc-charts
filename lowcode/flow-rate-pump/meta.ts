@@ -10,9 +10,9 @@ const defaultData = [
   { id: 6, name: '取样泵6', value: 0.0 },
 ];
 
-const FlowRateMeta: ComponentMetadata = {
-  componentName: 'FlowRate',
-  title: '流速',
+const FlowRatePumpMeta: ComponentMetadata = {
+  componentName: 'FlowRatePump',
+  title: '取样泵流速',
   category: '状态组件',
   group: '图表库',
   docUrl: '',
@@ -21,7 +21,7 @@ const FlowRateMeta: ComponentMetadata = {
   npm: {
     package: 'cc-charts',
     version: '0.1.0',
-    exportName: 'FlowRate',
+    exportName: 'FlowRatePump',
     main: 'src/index.tsx',
     destructuring: true,
     subName: '',
@@ -83,16 +83,6 @@ const FlowRateMeta: ComponentMetadata = {
         },
         items: [
           {
-            name: 'averageSpeed',
-            title: '平均流速',
-            setter: 'NumberSetter',
-          },
-          {
-            name: 'maxSpeed',
-            title: '最大流速',
-            setter: 'NumberSetter',
-          },
-          {
             name: 'pageSize',
             title: '每页取样泵数',
             setter: 'NumberSetter',
@@ -109,27 +99,61 @@ const FlowRateMeta: ComponentMetadata = {
           },
         ],
       },
+      {
+        name: '',
+        type: 'group',
+        display: 'accordion',
+        title: {
+          label: '交互事件',
+        },
+        items: [
+          {
+            name: 'onPrev',
+            title: {
+              label: '上一页',
+              tip: '(pageIndex: number) => void',
+            },
+            setter: 'FunctionSetter',
+          },
+          {
+            name: 'onNext',
+            title: {
+              label: '下一页',
+              tip: '(pageIndex: number) => void',
+            },
+            setter: 'FunctionSetter',
+          },
+          {
+            name: 'onPumpClick',
+            title: {
+              label: '点击取样泵',
+              tip: '(item: FlowRatePumpItem, index: number) => void',
+            },
+            setter: 'FunctionSetter',
+          },
+        ],
+      },
     ],
   },
 };
 
 const snippets: Snippet[] = [
   {
-    title: '流速',
+    title: '取样泵流速',
     screenshot: '',
     schema: {
-      componentName: 'FlowRate',
+      componentName: 'FlowRatePump',
       props: {
         ...ChartSnippet,
         data: defaultData,
         width: 400,
-        height: 204,
+        height: 92,
       },
     },
   },
 ];
 
 export default {
-  ...FlowRateMeta,
+  ...FlowRatePumpMeta,
   snippets,
 };

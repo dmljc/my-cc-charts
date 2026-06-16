@@ -7,8 +7,11 @@ export { default as FilletColumnChart } from './components/fillet-column-chart'
 export type { SamplingPumpStatusProps } from './components/sampling-pump-status';
 export { default as SamplingPumpStatus } from './components/sampling-pump-status';
 
-export type { FlowRateProps } from './components/flow-rate';
-export { default as FlowRate } from './components/flow-rate';
+export type { FlowRateMetricsProps } from './components/flow-rate-metrics';
+export { default as FlowRateMetrics } from './components/flow-rate-metrics';
+
+export type { FlowRatePumpProps, FlowRatePumpItem } from './components/flow-rate-pump';
+export { default as FlowRatePump } from './components/flow-rate-pump';
 
 export type { ElectromagneticValveGroupProps } from './components/electromagnetic-valve-group';
 export { default as ElectromagneticValveGroup } from './components/electromagnetic-valve-group';
