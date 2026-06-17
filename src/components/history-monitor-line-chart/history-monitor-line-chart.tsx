@@ -29,6 +29,20 @@ export interface HistoryMonitorLineChartProps {
   style?: React.CSSProperties;
   className?: string;
   maxValue?: number;
+  /** x 轴映射的数据字段名，默认 'label' */
+  xField?: string;
+  /** 泵启停次数对应的数据字段名，默认 'pumpCount' */
+  pumpField?: string;
+  /** 告警总次数对应的数据字段名，默认 'alarmCount' */
+  alarmField?: string;
+  /** 泵启停线的颜色，默认 '#3d9bff' */
+  pumpColor?: string;
+  /** 告警线的颜色，默认 '#f2a93c' */
+  alarmColor?: string;
+  /** 泵启停面积填充色，默认蓝色渐变 */
+  pumpAreaColor?: string;
+  /** 告警面积填充色，默认橙色渐变 */
+  alarmAreaColor?: string;
   onPointClick?: (item: HistoryMonitorLinePoint, index: number) => void;
   [key: string]: unknown;
 }
@@ -49,14 +63,15 @@ const defaultData: HistoryMonitorLinePoint[] = [
   { label: '周日', pumpCount: 25, alarmCount: 33 },
 ];
 
-const seriesNames = {
+const DEFAULT_SERIES_NAMES = {
   pumpCount: '泵启停次数',
   alarmCount: '告警总次数',
 };
 
-const seriesColors = ['#3d9bff', '#f2a93c'];
-const blueAreaColor = 'l(90) 0:rgba(26,90,170,1) 1:rgba(45,140,245,1)';
-const orangeAreaColor = 'l(90) 0:rgba(120,92,52,1) 1:rgba(166,124,66,1)';
+const DEFAULT_PUMP_COLOR = '#3d9bff';
+const DEFAULT_ALARM_COLOR = '#f2a93c';
+const DEFAULT_PUMP_AREA_COLOR = 'l(90) 0:rgba(26,90,170,1) 1:rgba(45,140,245,1)';
+const DEFAULT_ALARM_AREA_COLOR = 'l(90) 0:rgba(120,92,52,1) 1:rgba(166,124,66,1)';
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
@@ -84,9 +99,22 @@ const HistoryMonitorLineChart: React.FC<HistoryMonitorLineChartProps> = function
     maxValue = 50,
     style = {},
     className = '',
+    xField = 'label',
+    pumpField = 'pumpCount',
+    alarmField = 'alarmCount',
+    pumpColor = DEFAULT_PUMP_COLOR,
+    alarmColor = DEFAULT_ALARM_COLOR,
+    pumpAreaColor = DEFAULT_PUMP_AREA_COLOR,
+    alarmAreaColor = DEFAULT_ALARM_AREA_COLOR,
     onPointClick,
     ...otherProps
   } = props;
+
+  const seriesNames = {
+    [pumpField]: DEFAULT_SERIES_NAMES.pumpCount,
+    [alarmField]: DEFAULT_SERIES_NAMES.alarmCount,
+  };
+  const seriesColors = [pumpColor, alarmColor];
   const [items, setItems] = useState<HistoryMonitorLinePoint[]>(data);
   const rootDomProps = pickRootDomProps(otherProps);
   const bizRef = React.useRef<BizRef | null>(null);
@@ -101,22 +129,22 @@ const HistoryMonitorLineChart: React.FC<HistoryMonitorLineChartProps> = function
     }>>((result, item) => ([
       ...result,
       {
-        label: item.label,
-        type: seriesNames.pumpCount,
-        value: item.pumpCount,
+        label: (item as any)[xField],
+        type: seriesNames[pumpField],
+        value: (item as any)[pumpField],
         source: item,
       },
       {
-        label: item.label,
-        type: seriesNames.alarmCount,
-        value: item.alarmCount,
+        label: (item as any)[xField],
+        type: seriesNames[alarmField],
+        value: (item as any)[alarmField],
         source: item,
       },
     ]), [])
-  ), [items]);
+  ), [items, xField, pumpField, alarmField, seriesNames]);
 
   const scale = useMemo(() => ({
-    label: {
+    [xField]: {
       range: [0, 1],
     },
     value: {
@@ -125,7 +153,7 @@ const HistoryMonitorLineChart: React.FC<HistoryMonitorLineChartProps> = function
       tickInterval: 10,
       nice: false,
     },
-  }), [maxValue]);
+  }), [maxValue, xField]);
 
   useEffect(() => {
     setItems(data);
@@ -175,7 +203,7 @@ const HistoryMonitorLineChart: React.FC<HistoryMonitorLineChartProps> = function
           if (chart && chart.on) {
             chart.on('point:click', (event: any) => {
               const source = event && event.data && event.data.data && event.data.data.source;
-              const index = items.findIndex((item) => item.label === source.label);
+              const index = items.findIndex((item) => (item as any)[xField] === (source as any)?.[xField]);
 
               if (source && onPointClick) {
                 onPointClick(source, index);
@@ -185,18 +213,18 @@ const HistoryMonitorLineChart: React.FC<HistoryMonitorLineChartProps> = function
         }}
       >
         <Area
-          position="label*value"
+          position={`${xField}*value`}
           color={['type', (type: string) => (
-            type === seriesNames.pumpCount ? blueAreaColor : orangeAreaColor
+            type === seriesNames[pumpField] ? pumpAreaColor : alarmAreaColor
           )]}
         />
         <Line
-          position="label*value"
+          position={`${xField}*value`}
           color={['type', seriesColors]}
           size={2.5}
         />
         <Point
-          position="label*value"
+          position={`${xField}*value`}
           color={['type', seriesColors]}
           shape="circle"
           size={4.5}
@@ -226,7 +254,7 @@ const HistoryMonitorLineChart: React.FC<HistoryMonitorLineChartProps> = function
           }}
         />
         <Axis
-          name="label"
+          name={xField}
           tickLine={false}
           line={{
             style: {
