@@ -130,7 +130,7 @@ const PairedVacuumPumpStatusMeta: ComponentMetadata = {
             name: 'onSelect',
             title: {
               label: '选择真空泵',
-              tip: '(item, index) => void',
+              tip: '(item, index, groupIndex?: number) => void',
             },
             setter: 'FunctionSetter',
           },
@@ -138,7 +138,7 @@ const PairedVacuumPumpStatusMeta: ComponentMetadata = {
             name: 'onLocate',
             title: {
               label: '点击定位',
-              tip: '(item, index) => void',
+              tip: '(item, index, groupIndex?: number) => void',
             },
             setter: 'FunctionSetter',
           },

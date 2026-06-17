@@ -142,6 +142,20 @@ const HistoryMonitorLineChartMeta: ComponentMetadata = {
               componentName: 'ColorSetter',
             },
           },
+          {
+            name: 'pumpAreaColor',
+            title: '泵启停面积色',
+            setter: {
+              componentName: 'ColorSetter',
+            },
+          },
+          {
+            name: 'alarmAreaColor',
+            title: '告警面积色',
+            setter: {
+              componentName: 'ColorSetter',
+            },
+          },
         ],
       },
       // 交互事件

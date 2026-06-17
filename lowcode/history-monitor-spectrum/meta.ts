@@ -88,6 +88,30 @@ const HistoryMonitorSpectrumMeta: ComponentMetadata = {
             title: '高度',
             setter: 'NumberSetter',
           },
+          {
+            name: 'className',
+            title: '自定义类名',
+            setter: 'StringSetter',
+          },
+        ],
+      },
+      // 交互事件
+      {
+        name: '',
+        type: 'group',
+        display: 'accordion',
+        title: {
+          label: '交互事件',
+        },
+        items: [
+          {
+            name: 'onItemClick',
+            title: {
+              label: '点击列表项',
+              tip: '(item: HistoryMonitorSpectrumItem, index: number) => void',
+            },
+            setter: 'FunctionSetter',
+          },
         ],
       },
     ],

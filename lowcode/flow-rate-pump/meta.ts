@@ -97,6 +97,11 @@ const FlowRatePumpMeta: ComponentMetadata = {
             title: '高度',
             setter: 'NumberSetter',
           },
+          {
+            name: 'className',
+            title: '自定义类名',
+            setter: 'StringSetter',
+          },
         ],
       },
       {

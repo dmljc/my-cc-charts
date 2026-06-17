@@ -69,6 +69,22 @@ const TodayTaskMeta: ComponentMetadata = {
         },
         items: [
           ...ChartMetaIot,
+          {
+            name: 'defaultTaskDetailVisible',
+            title: {
+              label: '默认打开任务详情',
+              tip: '组件加载时是否自动显示任务详情弹窗',
+            },
+            setter: 'BoolSetter',
+          },
+          {
+            name: 'taskDetail',
+            title: {
+              label: '初始任务详情',
+              tip: '包含 taskName、taskArea、inspectionDevice、taskTime 字段的任务详情数据',
+            },
+            setter: 'JsonSetter',
+          },
         ],
       },
       {
@@ -88,6 +104,11 @@ const TodayTaskMeta: ComponentMetadata = {
             name: 'height',
             title: '高度',
             setter: 'NumberSetter',
+          },
+          {
+            name: 'className',
+            title: '自定义类名',
+            setter: 'StringSetter',
           },
         ],
       },
