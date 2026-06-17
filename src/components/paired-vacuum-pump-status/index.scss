@@ -37,12 +37,35 @@
     text-shadow: 0 0 8px rgba(42, 232, 243, 0.55);
   }
 
+  &-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    @include bizpack-scroll-area;
+  }
+
+  &-group {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  &-group-header {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 1;
+  }
+
   &-cards {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
-    flex: 1;
-    min-height: 0;
   }
 
   &-card {

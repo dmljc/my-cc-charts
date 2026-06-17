@@ -2,6 +2,7 @@
 import PairedVacuumPumpStatus from './paired-vacuum-pump-status';
 
 export type {
+  PairedVacuumPumpGroup,
   PairedVacuumPumpMode,
   PairedVacuumPumpStatusData,
   PairedVacuumPumpStatusItem,

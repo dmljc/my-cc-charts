@@ -4,13 +4,17 @@ import { ChartSnippet, ChartMetaIot } from '../common/iot';
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
 const defaultData = {
-  switchMode: 'auto',
-  switchModeText: '自动',
-  abSwitchTime: 'auto',
-  abSwitchTimeText: '自动',
-  pumps: [
-    { id: 'A', name: '真空泵A', mode: 'auto', modeText: '自动', runningHours: 12, selected: true },
-    { id: 'B', name: '真空泵B', mode: 'auto', modeText: '自动', runningHours: 12 },
+  groups: [
+    {
+      switchMode: 'auto',
+      switchModeText: '自动',
+      abSwitchTime: 300,
+      abSwitchTimeText: '300ms',
+      pumps: [
+        { id: 'A', name: '真空泵A', mode: 'auto', modeText: '自动', runningHours: 12, selected: true },
+        { id: 'B', name: '真空泵B', mode: 'auto', modeText: '自动', runningHours: 12 },
+      ],
+    },
   ],
 };
 
@@ -80,7 +84,7 @@ const PairedVacuumPumpStatusMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '成对真空泵数据',
-              tip: '包含 switchMode、abSwitchTime、pumps 等字段；pumps 中 runningHours 为运行小时数，mode 支持 auto/manual',
+              tip: 'groups 数组，每项是一条完整数据：switchMode（切换模式，auto/manual）、abSwitchTime（切换时间，如 300→"300ms"）、pumps（成对的两个泵）',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
