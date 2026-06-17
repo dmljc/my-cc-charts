@@ -205,7 +205,10 @@ const TodayTask: React.FC<TodayTaskProps> = function TodayTask(props) {
               <span className="bizpack-today-task-name" title={item.name}>
                 {item.name}
               </span>
-              <span className="bizpack-today-task-level">{levelText}</span>
+              <span className="bizpack-today-task-right">
+                <span className="bizpack-today-task-level">{levelText}</span>
+                <span className="bizpack-today-task-row-arrow" aria-hidden="true" />
+              </span>
             </button>
           );
         })}

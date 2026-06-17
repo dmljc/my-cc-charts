@@ -71,14 +71,33 @@
     white-space: nowrap;
   }
 
-  &-level {
+  &-right {
+    display: flex;
     flex: none;
-    width: 30px;
+    align-items: center;
+    gap: 8px;
     margin-left: auto;
     margin-right: 12px;
+  }
+
+  &-level {
+    flex: none;
     font-weight: 400;
     font-size: 14px;
+    line-height: 1;
     text-align: center;
+    white-space: nowrap;
+  }
+
+  &-row-arrow {
+    flex: none;
+    display: block;
+    width: 7px;
+    height: 7px;
+    box-sizing: border-box;
+    border-top: 1.5px solid rgba(255, 255, 255, 0.92);
+    border-right: 1.5px solid rgba(255, 255, 255, 0.92);
+    transform: rotate(45deg);
   }
 
   &-row-urgent &-level {
