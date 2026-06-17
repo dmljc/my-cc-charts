@@ -1,3 +1,4 @@
+// 圆角进度柱状图
 import React, { useEffect, createElement } from "react";
 import {
   Chart,
