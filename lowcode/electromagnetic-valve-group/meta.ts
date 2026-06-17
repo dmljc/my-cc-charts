@@ -96,6 +96,24 @@ const ElectromagneticValveGroupMeta: ComponentMetadata = {
           },
         ],
       },
+      {
+        name: '',
+        type: 'group',
+        display: 'accordion',
+        title: {
+          label: '交互事件',
+        },
+        items: [
+          {
+            name: 'onToggle',
+            title: {
+              label: '切换开关',
+              tip: '(item, nextOpen, index) => void',
+            },
+            setter: 'FunctionSetter',
+          },
+        ],
+      },
     ],
   },
 };

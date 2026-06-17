@@ -91,6 +91,32 @@ const TodayTaskMeta: ComponentMetadata = {
           },
         ],
       },
+      {
+        name: '',
+        type: 'group',
+        display: 'accordion',
+        title: {
+          label: '交互事件',
+        },
+        items: [
+          {
+            name: 'onItemClick',
+            title: {
+              label: '点击任务',
+              tip: '(item, index) => void',
+            },
+            setter: 'FunctionSetter',
+          },
+          {
+            name: 'onTaskDetailClose',
+            title: {
+              label: '关闭详情',
+              tip: '() => void',
+            },
+            setter: 'FunctionSetter',
+          },
+        ],
+      },
     ],
   },
 };

@@ -91,6 +91,24 @@ const OperationAlarmMeta: ComponentMetadata = {
           },
         ],
       },
+      {
+        name: '',
+        type: 'group',
+        display: 'accordion',
+        title: {
+          label: '交互事件',
+        },
+        items: [
+          {
+            name: 'onItemClick',
+            title: {
+              label: '点击警报',
+              tip: '(item, index) => void',
+            },
+            setter: 'FunctionSetter',
+          },
+        ],
+      },
     ],
   },
 };
