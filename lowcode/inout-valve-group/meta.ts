@@ -20,7 +20,7 @@ const InoutValveGroupMeta: ComponentMetadata = {
   screenshot: '',
   devMode: 'proCode',
   npm: {
-    package: 'cc-charts',
+    package: 'my-cc-charts',
     version: '0.1.0',
     exportName: 'InoutValveGroup',
     main: 'src/index.tsx',

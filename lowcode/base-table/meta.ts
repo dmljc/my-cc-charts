@@ -25,7 +25,7 @@ const BaseTableMeta: ComponentMetadata = {
   screenshot: '',
   devMode: 'proCode',
   npm: {
-    package: 'cc-charts',
+    package: 'my-cc-charts',
     version: '0.1.0',
     exportName: 'BaseTable',
     main: 'src/index.tsx',

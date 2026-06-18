@@ -6,7 +6,7 @@
 
 ```tsx
 import React from 'react';
-import { ColorfulInput } from 'cc-charts';
+import { ColorfulInput } from 'my-cc-charts';
 
 
 export default () => {

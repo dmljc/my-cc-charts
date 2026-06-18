@@ -27,7 +27,7 @@ const PairedVacuumPumpStatusMeta: ComponentMetadata = {
   screenshot: '',
   devMode: 'proCode',
   npm: {
-    package: 'cc-charts',
+    package: 'my-cc-charts',
     version: '0.1.0',
     exportName: 'PairedVacuumPumpStatus',
     main: 'src/index.tsx',

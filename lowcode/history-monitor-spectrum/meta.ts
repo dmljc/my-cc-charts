@@ -15,7 +15,7 @@ const HistoryMonitorSpectrumMeta: ComponentMetadata = {
   screenshot: '',
   devMode: 'proCode',
   npm: {
-    package: 'cc-charts',
+    package: 'my-cc-charts',
     version: '0.1.0',
     exportName: 'HistoryMonitorSpectrum',
     main: 'src/index.tsx',

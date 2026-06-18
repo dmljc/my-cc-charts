@@ -1,7 +1,7 @@
 {
-  "name": "cc-charts",
+  "name": "my-cc-charts",
   "version": "0.1.0",
-  "description": "cc-charts",
+  "description": "my-cc-charts",
   "main": "lib/index.js",
   "module": "es/index.js",
   "exports": {
@@ -88,7 +88,7 @@
   },
   "componentConfig": {
     "isComponentLibrary": true,
-    "materialSchema": "https://unpkg.com/cc-charts@0.1.0/build/lowcode/assets-prod.json"
+    "materialSchema": "https://unpkg.com/my-cc-charts@0.1.0/build/lowcode/assets-prod.json"
   },
   "lcMeta": {
     "type": "component"
