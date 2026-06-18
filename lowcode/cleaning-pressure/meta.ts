@@ -1,6 +1,8 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
+const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
+
 const defaultRow = {
   id: 1,
   name: '清洗阀T1',
@@ -81,7 +83,50 @@ const CleaningPressureMeta: ComponentMetadata = {
           label: '数据',
         },
         items: [
-          ...ChartMetaIot,
+          ...dataSourceMeta,
+          {
+            name: 'data',
+            title: {
+              label: '压力数据',
+              tip: '{ front, rear } 各包含 { id, name, status, pressure, duration }[]',
+            },
+            setter: 'JsonSetter',
+            condition: (target: any) => {
+              return target.getProps().getPropValue('dataType') === 'data';
+            },
+          },
+          {
+            name: 'nameField',
+            title: {
+              label: '名称字段名',
+              tip: '数据中名称对应的字段名，默认为 name',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'statusField',
+            title: {
+              label: '状态字段名',
+              tip: '数据中状态对应的字段名，默认为 status',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'pressureField',
+            title: {
+              label: '压力字段名',
+              tip: '数据中压力对应的字段名，默认为 pressure',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'durationField',
+            title: {
+              label: '时长字段名',
+              tip: '数据中时长对应的字段名，默认为 duration',
+            },
+            setter: 'StringSetter',
+          },
         ],
       },
       {
@@ -162,6 +207,10 @@ const snippets: Snippet[] = [
         ...ChartSnippet,
         activeTab: 'front',
         data: defaultData,
+        nameField: 'name',
+        statusField: 'status',
+        pressureField: 'pressure',
+        durationField: 'duration',
         width: 400,
         height: 108,
       },

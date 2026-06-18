@@ -82,6 +82,38 @@ const VacuumPumpStatusMeta: ComponentMetadata = {
               return target.getProps().getPropValue('dataType') === 'data';
             },
           },
+          {
+            name: 'nameField',
+            title: {
+              label: '名称字段名',
+              tip: '数据中名称对应的字段名，默认为 name',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'runningField',
+            title: {
+              label: '运行状态字段名',
+              tip: '数据中运行状态对应的字段名，默认为 running',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'selectedField',
+            title: {
+              label: '选中状态字段名',
+              tip: '数据中选中状态对应的字段名，默认为 selected',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'statusField',
+            title: {
+              label: '状态字段名',
+              tip: '数据中状态对应的字段名，默认为 status',
+            },
+            setter: 'StringSetter',
+          },
         ],
       },
       {
@@ -148,6 +180,10 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
+        nameField: 'name',
+        runningField: 'running',
+        selectedField: 'selected',
+        statusField: 'status',
         width: 400,
         height: 200,
       },

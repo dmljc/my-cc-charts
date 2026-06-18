@@ -15,6 +15,10 @@ export interface OperationAlarmItem {
 export interface OperationAlarmProps {
   title?: string;
   data?: OperationAlarmItem[];
+  /** 名称对应的数据字段名，默认 'name' */
+  nameField?: string;
+  /** 状态对应的数据字段名，默认 'status' */
+  statusField?: string;
   width?: number | string;
   height?: number | string;
   style?: React.CSSProperties;
@@ -56,6 +60,8 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
 const OperationAlarm: React.FC<OperationAlarmProps> = function OperationAlarm(props) {
   const {
     data = defaultData,
+    nameField = 'name',
+    statusField = 'status',
     width = 400,
     height = 171,
     style = {},
@@ -109,8 +115,14 @@ const OperationAlarm: React.FC<OperationAlarmProps> = function OperationAlarm(pr
                 }
               }}
             >
-              <span className="bizpack-operation-alarm-dot" />
-              <span className="bizpack-operation-alarm-name" title={item.name}>{item.name}</span>
+              <span
+                className={`bizpack-operation-alarm-dot ${
+                  (item as any)[statusField] === 'alarm'
+                    ? 'bizpack-operation-alarm-dot-alarm'
+                    : 'bizpack-operation-alarm-dot-normal'
+                }`}
+              />
+              <span className="bizpack-operation-alarm-name" title={(item as any)[nameField]}>{(item as any)[nameField]}</span>
             </button>
           ))}
         </div>

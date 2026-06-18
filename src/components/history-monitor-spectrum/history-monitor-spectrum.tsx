@@ -15,6 +15,10 @@ export interface HistoryMonitorSpectrumItem {
 export interface HistoryMonitorSpectrumProps {
   title?: string;
   data?: HistoryMonitorSpectrumItem[];
+  /** 标签对应的数据字段名，默认 'name' */
+  labelField?: string;
+  /** 数值对应的数据字段名，默认 'value' */
+  valueField?: string;
   width?: number | string;
   height?: number | string;
   style?: React.CSSProperties;
@@ -65,6 +69,8 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
 const HistoryMonitorSpectrum: React.FC<HistoryMonitorSpectrumProps> = function HistoryMonitorSpectrum(props) {
   const {
     data = defaultData,
+    labelField = 'name',
+    valueField = 'value',
     width = 400,
     height = 170,
     style = {},
@@ -120,10 +126,10 @@ const HistoryMonitorSpectrum: React.FC<HistoryMonitorSpectrumProps> = function H
             <span className="bizpack-history-monitor-spectrum-visual">
               <span className="bizpack-history-monitor-spectrum-light" />
               <span className="bizpack-history-monitor-spectrum-value">
-                {formatValue(item.value)}
+                {formatValue((item as any)[valueField])}
               </span>
             </span>
-            <span className="bizpack-history-monitor-spectrum-label">{item.name}</span>
+            <span className="bizpack-history-monitor-spectrum-label">{(item as any)[labelField]}</span>
           </button>
         ))}
       </div>

@@ -1,6 +1,8 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
+const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
+
 const defaultData = [
   { id: 1, name: '取样泵1', value: 192.1 },
   { id: 2, name: '取样泵2', value: 0.0 },
@@ -71,7 +73,34 @@ const FlowRatePumpMeta: ComponentMetadata = {
           label: '数据',
         },
         items: [
-          ...ChartMetaIot,
+          ...dataSourceMeta,
+          {
+            name: 'data',
+            title: {
+              label: '取样泵数据',
+              tip: '{ id, name, value }[]',
+            },
+            setter: 'JsonSetter',
+            condition: (target: any) => {
+              return target.getProps().getPropValue('dataType') === 'data';
+            },
+          },
+          {
+            name: 'labelField',
+            title: {
+              label: '标签字段名',
+              tip: '数据中标签对应的字段名，默认为 name',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'valueField',
+            title: {
+              label: '值字段名',
+              tip: '数据中数值对应的字段名，默认为 value',
+            },
+            setter: 'StringSetter',
+          },
         ],
       },
       {
@@ -85,6 +114,7 @@ const FlowRatePumpMeta: ComponentMetadata = {
           {
             name: 'pageSize',
             title: '每页取样泵数',
+            defaultValue: 3,
             setter: 'NumberSetter',
           },
           {
@@ -113,6 +143,14 @@ const FlowRatePumpMeta: ComponentMetadata = {
         },
         items: [
           {
+            name: 'onPumpClick',
+            title: {
+              label: '点击取样泵',
+              tip: '(item: FlowRatePumpItem, index: number) => void',
+            },
+            setter: 'FunctionSetter',
+          },
+          {
             name: 'onPrev',
             title: {
               label: '上一页',
@@ -125,14 +163,6 @@ const FlowRatePumpMeta: ComponentMetadata = {
             title: {
               label: '下一页',
               tip: '(pageIndex: number) => void',
-            },
-            setter: 'FunctionSetter',
-          },
-          {
-            name: 'onPumpClick',
-            title: {
-              label: '点击取样泵',
-              tip: '(item: FlowRatePumpItem, index: number) => void',
             },
             setter: 'FunctionSetter',
           },
@@ -151,6 +181,8 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
+        labelField: 'name',
+        valueField: 'value',
         width: 400,
         height: 92,
       },

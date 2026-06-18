@@ -1,6 +1,8 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
+const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
+
 const defaultInletData = [
   { id: 'D01', name: 'D01', open: true },
   { id: 'D02', name: 'D02', open: false },
@@ -72,7 +74,18 @@ const InoutValveGroupMeta: ComponentMetadata = {
           label: '数据',
         },
         items: [
-          ...ChartMetaIot,
+          ...dataSourceMeta,
+          {
+            name: 'data',
+            title: {
+              label: '阀组数据',
+              tip: '{ inletData, outletData } 各包含 { id, name, label, open, status, statusText }[]',
+            },
+            setter: 'JsonSetter',
+            condition: (target: any) => {
+              return target.getProps().getPropValue('dataType') === 'data';
+            },
+          },
           {
             name: 'inletData',
             title: '入口阀数据',
@@ -82,6 +95,46 @@ const InoutValveGroupMeta: ComponentMetadata = {
             name: 'outletData',
             title: '出口阀数据',
             setter: 'JsonSetter',
+          },
+          {
+            name: 'nameField',
+            title: {
+              label: '名称字段名',
+              tip: '数据中名称对应的字段名，默认为 name',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'labelField',
+            title: {
+              label: '标签字段名',
+              tip: '数据中标签对应的字段名，默认为 label',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'openField',
+            title: {
+              label: '开关字段名',
+              tip: '数据中开关状态对应的字段名，默认为 open',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'statusField',
+            title: {
+              label: '状态字段名',
+              tip: '数据中状态对应的字段名，默认为 status',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'statusTextField',
+            title: {
+              label: '状态文本字段名',
+              tip: '数据中状态文本对应的字段名，默认为 statusText',
+            },
+            setter: 'StringSetter',
           },
         ],
       },
@@ -102,6 +155,16 @@ const InoutValveGroupMeta: ComponentMetadata = {
             name: 'height',
             title: '高度',
             setter: 'NumberSetter',
+          },
+          {
+            name: 'inletTitle',
+            title: '入口阀标题',
+            setter: 'StringSetter',
+          },
+          {
+            name: 'outletTitle',
+            title: '出口阀标题',
+            setter: 'StringSetter',
           },
           {
             name: 'className',
@@ -142,6 +205,13 @@ const snippets: Snippet[] = [
         ...ChartSnippet,
         inletData: defaultInletData,
         outletData: defaultOutletData,
+        nameField: 'name',
+        labelField: 'label',
+        openField: 'open',
+        statusField: 'status',
+        statusTextField: 'statusText',
+        inletTitle: '入口阀',
+        outletTitle: '出口阀',
         width: 400,
         height: 90,
       },

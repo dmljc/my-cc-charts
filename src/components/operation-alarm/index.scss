@@ -54,9 +54,16 @@
     width: 9px;
     height: 9px;
     margin-right: 22px;
-    background: #ff5757;
     border: 1px solid #ffffff;
     border-radius: 50%;
+  }
+
+  &-dot-alarm {
+    background: #ff5757;
+  }
+
+  &-dot-normal {
+    background: #45e76b;
   }
 
   &-name {

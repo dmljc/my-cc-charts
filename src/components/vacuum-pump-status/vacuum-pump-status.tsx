@@ -17,6 +17,14 @@ export interface VacuumPumpStatusItem {
 export interface VacuumPumpStatusProps {
   title?: string;
   data?: VacuumPumpStatusItem[];
+  /** 名称对应的数据字段名，默认 'name' */
+  nameField?: string;
+  /** 运行状态对应的数据字段名，默认 'running' */
+  runningField?: string;
+  /** 选中状态对应的数据字段名，默认 'selected' */
+  selectedField?: string;
+  /** 状态对应的数据字段名，默认 'status' */
+  statusField?: string;
   width?: number | string;
   height?: number | string;
   style?: React.CSSProperties;
@@ -59,6 +67,10 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
 const VacuumPumpStatus: React.FC<VacuumPumpStatusProps> = function VacuumPumpStatus(props) {
   const {
     data = defaultData,
+    nameField = 'name',
+    runningField = 'running',
+    selectedField = 'selected',
+    statusField = 'status',
     width = 400,
     height = 200,
     style = {},
@@ -73,11 +85,11 @@ const VacuumPumpStatus: React.FC<VacuumPumpStatusProps> = function VacuumPumpSta
   const bc: BroadcastChannel = null;
 
   useEffect(() => {
-    const hasSelected = data.some((item) => item.selected);
+    const hasSelected = data.some((item) => (item as any)[selectedField]);
     setItems(
       data.map((item, index) => ({
         ...item,
-        selected: hasSelected ? !!item.selected : index === 0,
+        [selectedField]: hasSelected ? !!(item as any)[selectedField] : index === 0,
       })),
     );
   }, [data]);
@@ -85,7 +97,7 @@ const VacuumPumpStatus: React.FC<VacuumPumpStatusProps> = function VacuumPumpSta
   const handleSelect = (item: VacuumPumpStatusItem, index: number) => {
     const nextItems = items.map((current, currentIndex) => ({
       ...current,
-      selected: currentIndex === index,
+      [selectedField]: currentIndex === index,
     }));
 
     setItems(nextItems);
@@ -99,11 +111,11 @@ const VacuumPumpStatus: React.FC<VacuumPumpStatusProps> = function VacuumPumpSta
       chart: {
         changeData: (nextData: VacuumPumpStatusItem[]) => {
           if (Array.isArray(nextData)) {
-            const hasSelected = nextData.some((item) => item.selected);
+            const hasSelected = nextData.some((item) => (item as any)[selectedField]);
             setItems(
               nextData.map((item, index) => ({
                 ...item,
-                selected: hasSelected ? !!item.selected : index === 0,
+                [selectedField]: hasSelected ? !!(item as any)[selectedField] : index === 0,
               })),
             );
           }
@@ -130,9 +142,9 @@ const VacuumPumpStatus: React.FC<VacuumPumpStatusProps> = function VacuumPumpSta
         }`}
       >
         {items.map((item, index) => {
-          const running = !!item.running;
-          const isSelected = !!item.selected;
-          const isError = item.status === 'error';
+          const running = !!(item as any)[runningField];
+          const isSelected = !!(item as any)[selectedField];
+          const isError = (item as any)[statusField] === 'error';
 
           return (
             <div
@@ -142,13 +154,13 @@ const VacuumPumpStatus: React.FC<VacuumPumpStatusProps> = function VacuumPumpSta
               }`}
               onClick={() => handleSelect(item, index)}
             >
-              <div className="bizpack-vacuum-pump-status-name" title={item.name}>
+              <div className="bizpack-vacuum-pump-status-name" title={(item as any)[nameField]}>
                 <span
                   className={`bizpack-vacuum-pump-status-dot ${
                     isError ? 'bizpack-vacuum-pump-status-dot-error' : ''
                   }`}
                 />
-                <span className="bizpack-vacuum-pump-status-name-text">{item.name}</span>
+                <span className="bizpack-vacuum-pump-status-name-text">{(item as any)[nameField]}</span>
               </div>
 
               <div className="bizpack-vacuum-pump-status-state">

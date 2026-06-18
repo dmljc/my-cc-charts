@@ -16,6 +16,10 @@ export interface FlowRatePumpProps {
   title?: string;
   data?: FlowRatePumpItem[];
   pageSize?: number;
+  /** 标签对应的数据字段名，默认 'name' */
+  labelField?: string;
+  /** 数值对应的数据字段名，默认 'value' */
+  valueField?: string;
   width?: number | string;
   height?: number | string;
   style?: React.CSSProperties;
@@ -73,6 +77,8 @@ const FlowRatePump: React.FC<FlowRatePumpProps> = function FlowRatePump(props) {
   const {
     data = defaultData,
     pageSize = 3,
+    labelField = 'name',
+    valueField = 'value',
     width = 400,
     height = 92,
     style = {},
@@ -184,9 +190,9 @@ const FlowRatePump: React.FC<FlowRatePumpProps> = function FlowRatePump(props) {
                 }}
               >
                 <span className="bizpack-flow-rate-pump-value">
-                  {formatValue(item.value)}
+                  {formatValue((item as any)[valueField])}
                 </span>
-                <span className="bizpack-flow-rate-pump-name">{item.name}</span>
+                <span className="bizpack-flow-rate-pump-name">{(item as any)[labelField]}</span>
               </button>
             );
           })}

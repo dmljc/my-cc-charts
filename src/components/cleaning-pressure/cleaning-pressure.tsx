@@ -25,6 +25,14 @@ export interface CleaningPressurePanelData {
 export interface CleaningPressureProps {
   activeTab?: CleaningPressureTab;
   data?: CleaningPressurePanelData;
+  /** 名称对应的数据字段名，默认 'name' */
+  nameField?: string;
+  /** 状态对应的数据字段名，默认 'status' */
+  statusField?: string;
+  /** 压力对应的数据字段名，默认 'pressure' */
+  pressureField?: string;
+  /** 时长对应的数据字段名，默认 'duration' */
+  durationField?: string;
   width?: number | string;
   height?: number | string;
   style?: React.CSSProperties;
@@ -86,6 +94,10 @@ const CleaningPressure: React.FC<CleaningPressureProps> = function CleaningPress
   const {
     activeTab: activeTabProp = 'front',
     data = defaultData,
+    nameField = 'name',
+    statusField = 'status',
+    pressureField = 'pressure',
+    durationField = 'duration',
     width = 400,
     height = 108,
     style = {},
@@ -183,17 +195,17 @@ const CleaningPressure: React.FC<CleaningPressureProps> = function CleaningPress
               }
             }}
           >
-            <span className="bizpack-cleaning-pressure-cell bizpack-cleaning-pressure-cell-name" title={item.name}>
-              {item.name || '-'}
+            <span className="bizpack-cleaning-pressure-cell bizpack-cleaning-pressure-cell-name" title={(item as any)[nameField]}>
+              {(item as any)[nameField] || '-'}
             </span>
-            <span className="bizpack-cleaning-pressure-cell bizpack-cleaning-pressure-cell-status" title={item.status}>
-              {item.status || '-'}
+            <span className="bizpack-cleaning-pressure-cell bizpack-cleaning-pressure-cell-status" title={(item as any)[statusField]}>
+              {(item as any)[statusField] || '-'}
             </span>
-            <span className="bizpack-cleaning-pressure-cell bizpack-cleaning-pressure-cell-pressure" title={item.pressure}>
-              {item.pressure || '-'}
+            <span className="bizpack-cleaning-pressure-cell bizpack-cleaning-pressure-cell-pressure" title={(item as any)[pressureField]}>
+              {(item as any)[pressureField] || '-'}
             </span>
-            <span className="bizpack-cleaning-pressure-cell bizpack-cleaning-pressure-cell-duration" title={item.duration}>
-              {item.duration || '-'}
+            <span className="bizpack-cleaning-pressure-cell bizpack-cleaning-pressure-cell-duration" title={(item as any)[durationField]}>
+              {(item as any)[durationField] || '-'}
             </span>
           </div>
         ))}

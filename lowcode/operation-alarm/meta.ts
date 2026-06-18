@@ -1,6 +1,8 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
+const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
+
 const defaultData = [
   { id: 1, name: '取取样泵01-停止故障', status: 'alarm' },
   { id: 2, name: '取取样泵01-停止故障', status: 'alarm' },
@@ -68,7 +70,34 @@ const OperationAlarmMeta: ComponentMetadata = {
           label: '数据',
         },
         items: [
-          ...ChartMetaIot,
+          ...dataSourceMeta,
+          {
+            name: 'data',
+            title: {
+              label: '警报数据',
+              tip: '{ id, name, status }[]',
+            },
+            setter: 'JsonSetter',
+            condition: (target: any) => {
+              return target.getProps().getPropValue('dataType') === 'data';
+            },
+          },
+          {
+            name: 'nameField',
+            title: {
+              label: '名称字段名',
+              tip: '数据中名称对应的字段名，默认为 name',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'statusField',
+            title: {
+              label: '状态字段名',
+              tip: '数据中状态对应的字段名，默认为 status',
+            },
+            setter: 'StringSetter',
+          },
         ],
       },
       {
@@ -127,6 +156,8 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
+        nameField: 'name',
+        statusField: 'status',
         width: 400,
         height: 171,
       },

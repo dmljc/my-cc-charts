@@ -17,6 +17,14 @@ export interface ElectromagneticValveItem {
 export interface ElectromagneticValveGroupProps {
   title?: string;
   data?: ElectromagneticValveItem[];
+  /** 名称对应的数据字段名，默认 'name' */
+  nameField?: string;
+  /** 标签对应的数据字段名，默认 'label' */
+  labelField?: string;
+  /** 开关状态对应的数据字段名，默认 'open' */
+  openField?: string;
+  /** 状态对应的数据字段名，默认 'status' */
+  statusField?: string;
   width?: number | string;
   height?: number | string;
   columns?: number;
@@ -40,26 +48,6 @@ const defaultData: ElectromagneticValveItem[] = Array.from({ length: 12 }, (_, i
 
 const truthyStatusValues = ['open', 'on', 'true', '1', '开启', '开'];
 
-const isValveOpen = (item: ElectromagneticValveItem) => {
-  if (typeof item.open === 'boolean') {
-    return item.open;
-  }
-
-  if (typeof item.status === 'boolean') {
-    return item.status;
-  }
-
-  if (typeof item.status === 'number') {
-    return item.status === 1;
-  }
-
-  if (typeof item.status === 'string') {
-    return truthyStatusValues.indexOf(item.status.toLowerCase()) > -1;
-  }
-
-  return false;
-};
-
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
 
@@ -81,6 +69,10 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
 const ElectromagneticValveGroup: React.FC<ElectromagneticValveGroupProps> = function ElectromagneticValveGroup(props) {
   const {
     data = defaultData,
+    nameField = 'name',
+    labelField = 'label',
+    openField = 'open',
+    statusField = 'status',
     width = 400,
     height = 431,
     columns = 4,
@@ -98,6 +90,29 @@ const ElectromagneticValveGroup: React.FC<ElectromagneticValveGroupProps> = func
   useEffect(() => {
     setItems(data);
   }, [data]);
+
+  const isValveOpen = (item: ElectromagneticValveItem) => {
+    const open = (item as any)[openField];
+    const status = (item as any)[statusField];
+
+    if (typeof open === 'boolean') {
+      return open;
+    }
+
+    if (typeof status === 'boolean') {
+      return status;
+    }
+
+    if (typeof status === 'number') {
+      return status === 1;
+    }
+
+    if (typeof status === 'string') {
+      return truthyStatusValues.indexOf(status.toLowerCase()) > -1;
+    }
+
+    return false;
+  };
 
   useEffect(() => {
     bizRef.current = {
@@ -130,8 +145,8 @@ const ElectromagneticValveGroup: React.FC<ElectromagneticValveGroupProps> = func
       currentIndex === index
         ? {
           ...current,
-          open: nextOpen,
-          status: nextOpen ? 'open' : 'close',
+          [openField]: nextOpen,
+          [statusField]: nextOpen ? 'open' : 'close',
         }
         : current
     ));
@@ -168,7 +183,7 @@ const ElectromagneticValveGroup: React.FC<ElectromagneticValveGroupProps> = func
       >
         {items.map((item, index) => {
           const open = isValveOpen(item);
-          const label = item.label || item.name || `#${index + 1}`;
+          const label = (item as any)[labelField] || (item as any)[nameField] || `#${index + 1}`;
 
           return (
             <button

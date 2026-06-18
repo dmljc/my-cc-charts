@@ -81,6 +81,22 @@ const FlowRateMetricsMeta: ComponentMetadata = {
               return target.getProps().getPropValue('dataType') === 'data';
             },
           },
+          {
+            name: 'averageSpeedField',
+            title: {
+              label: '平均流速字段名',
+              tip: '数据中平均流速对应的字段名，默认为 averageSpeed',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'maxSpeedField',
+            title: {
+              label: '最大流速字段名',
+              tip: '数据中最大流速对应的字段名，默认为 maxSpeed',
+            },
+            setter: 'StringSetter',
+          },
         ],
       },
       {
@@ -92,16 +108,6 @@ const FlowRateMetricsMeta: ComponentMetadata = {
         },
         items: [
           {
-            name: 'averageSpeed',
-            title: '平均流速',
-            setter: 'NumberSetter',
-          },
-          {
-            name: 'maxSpeed',
-            title: '最大流速',
-            setter: 'NumberSetter',
-          },
-          {
             name: 'width',
             title: '宽度',
             setter: 'NumberSetter',
@@ -110,6 +116,42 @@ const FlowRateMetricsMeta: ComponentMetadata = {
             name: 'height',
             title: '高度',
             setter: 'NumberSetter',
+          },
+          {
+            name: 'averageLabel',
+            title: '平均流速标题',
+            setter: 'StringSetter',
+          },
+          {
+            name: 'averageSpeed',
+            title: '平均流速',
+            extraProps: {
+              defaultValue: 187.3,
+            },
+            setter: {
+              componentName: 'NumberSetter',
+              props: {
+                step: 0.01,
+              },
+            },
+          },
+          {
+            name: 'maxLabel',
+            title: '最大流速标题',
+            setter: 'StringSetter',
+          },
+          {
+            name: 'maxSpeed',
+            title: '最大流速',
+            extraProps: {
+              defaultValue: 321.5,
+            },
+            setter: {
+              componentName: 'NumberSetter',
+              props: {
+                step: 0.01,
+              },
+            },
           },
           {
             name: 'className',
@@ -131,6 +173,12 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
+        averageSpeed: 187.3,
+        maxSpeed: 321.5,
+        averageLabel: '平均流速',
+        maxLabel: '最大流速',
+        averageSpeedField: 'averageSpeed',
+        maxSpeedField: 'maxSpeed',
         width: 400,
         height: 108,
       },

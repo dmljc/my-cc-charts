@@ -1,6 +1,8 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
+const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
+
 const defaultData = Array.from({ length: 12 }, (_, index) => ({
   id: index + 1,
   name: `#${index + 1}`,
@@ -68,7 +70,50 @@ const MiniElectromagneticValveGroupMeta: ComponentMetadata = {
           label: '数据',
         },
         items: [
-          ...ChartMetaIot,
+          ...dataSourceMeta,
+          {
+            name: 'data',
+            title: {
+              label: '阀组数据',
+              tip: '{ id, name, label, open, status }[]',
+            },
+            setter: 'JsonSetter',
+            condition: (target: any) => {
+              return target.getProps().getPropValue('dataType') === 'data';
+            },
+          },
+          {
+            name: 'nameField',
+            title: {
+              label: '名称字段名',
+              tip: '数据中名称对应的字段名，默认为 name',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'labelField',
+            title: {
+              label: '标签字段名',
+              tip: '数据中标签对应的字段名，默认为 label',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'openField',
+            title: {
+              label: '开关字段名',
+              tip: '数据中开关状态对应的字段名，默认为 open',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'statusField',
+            title: {
+              label: '状态字段名',
+              tip: '数据中状态对应的字段名，默认为 status',
+            },
+            setter: 'StringSetter',
+          },
         ],
       },
       {
@@ -117,6 +162,14 @@ const MiniElectromagneticValveGroupMeta: ComponentMetadata = {
             },
             setter: 'FunctionSetter',
           },
+          {
+            name: 'onPageChange',
+            title: {
+              label: '翻页切换',
+              tip: '(pageIndex, pageSize, visibleItems) => void',
+            },
+            setter: 'FunctionSetter',
+          },
         ],
       },
     ],
@@ -133,6 +186,10 @@ const snippets: Snippet[] = [
         ...ChartSnippet,
         pageSize: 4,
         data: defaultData,
+        nameField: 'name',
+        labelField: 'label',
+        openField: 'open',
+        statusField: 'status',
         width: 400,
         height: 112,
       },

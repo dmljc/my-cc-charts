@@ -17,12 +17,21 @@ export interface MiniValveItem {
 export interface MiniElectromagneticValveGroupProps {
   title?: string;
   data?: MiniValveItem[];
+  /** 名称对应的数据字段名，默认 'name' */
+  nameField?: string;
+  /** 标签对应的数据字段名，默认 'label' */
+  labelField?: string;
+  /** 开关状态对应的数据字段名，默认 'open' */
+  openField?: string;
+  /** 状态对应的数据字段名，默认 'status' */
+  statusField?: string;
   pageSize?: number;
   width?: number | string;
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
   onToggle?: (item: MiniValveItem, nextOpen: boolean, index: number) => void;
+  onPageChange?: (pageIndex: number, pageSize: number, visibleItems: MiniValveItem[]) => void;
   [key: string]: unknown;
 }
 
@@ -39,26 +48,6 @@ const defaultData: MiniValveItem[] = Array.from({ length: 12 }, (_, index) => ({
 }));
 
 const truthyStatusValues = ['open', 'on', 'true', '1', '开启', '开'];
-
-const isValveOpen = (item: MiniValveItem) => {
-  if (typeof item.open === 'boolean') {
-    return item.open;
-  }
-
-  if (typeof item.status === 'boolean') {
-    return item.status;
-  }
-
-  if (typeof item.status === 'number') {
-    return item.status === 1;
-  }
-
-  if (typeof item.status === 'string') {
-    return truthyStatusValues.indexOf(item.status.toLowerCase()) > -1;
-  }
-
-  return false;
-};
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
@@ -81,12 +70,17 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
 const MiniElectromagneticValveGroup: React.FC<MiniElectromagneticValveGroupProps> = function MiniElectromagneticValveGroup(props) {
   const {
     data = defaultData,
+    nameField = 'name',
+    labelField = 'label',
+    openField = 'open',
+    statusField = 'status',
     pageSize = 4,
     width = 400,
     height = 112,
     style = {},
     className = '',
     onToggle,
+    onPageChange,
     ...otherProps
   } = props;
   const [items, setItems] = useState<MiniValveItem[]>(data);
@@ -103,6 +97,29 @@ const MiniElectromagneticValveGroup: React.FC<MiniElectromagneticValveGroupProps
   );
   const canGoPrev = currentPageIndex > 0;
   const canGoNext = currentPageIndex < totalPages - 1;
+  const isValveOpen = (item: MiniValveItem) => {
+    const open = (item as any)[openField];
+    const status = (item as any)[statusField];
+
+    if (typeof open === 'boolean') {
+      return open;
+    }
+
+    if (typeof status === 'boolean') {
+      return status;
+    }
+
+    if (typeof status === 'number') {
+      return status === 1;
+    }
+
+    if (typeof status === 'string') {
+      return truthyStatusValues.indexOf(status.toLowerCase()) > -1;
+    }
+
+    return false;
+  };
+
   const openCount = useMemo(
     () => items.filter((item) => isValveOpen(item)).length,
     [items],
@@ -138,6 +155,15 @@ const MiniElectromagneticValveGroup: React.FC<MiniElectromagneticValveGroupProps
     };
   }, []);
 
+  const handlePageChange = (nextPage: number) => {
+    setPageIndex(nextPage);
+    if (onPageChange) {
+      const start = nextPage * safePageSize;
+      const pageItems = items.slice(start, start + safePageSize);
+      onPageChange(nextPage, safePageSize, pageItems);
+    }
+  };
+
   const handleToggle = (item: MiniValveItem, index: number) => {
     const globalIndex = currentPageIndex * safePageSize + index;
     const nextOpen = !isValveOpen(item);
@@ -145,8 +171,8 @@ const MiniElectromagneticValveGroup: React.FC<MiniElectromagneticValveGroupProps
       currentIndex === globalIndex
         ? {
             ...current,
-            open: nextOpen,
-            status: nextOpen ? 'open' : 'close',
+            [openField]: nextOpen,
+            [statusField]: nextOpen ? 'open' : 'close',
           }
         : current,
     );
@@ -188,7 +214,7 @@ const MiniElectromagneticValveGroup: React.FC<MiniElectromagneticValveGroupProps
             if (!canGoPrev) {
               return;
             }
-            setPageIndex(currentPageIndex - 1);
+            handlePageChange(currentPageIndex - 1);
           }}
         />
         <button
@@ -201,14 +227,14 @@ const MiniElectromagneticValveGroup: React.FC<MiniElectromagneticValveGroupProps
             if (!canGoNext) {
               return;
             }
-            setPageIndex(currentPageIndex + 1);
+            handlePageChange(currentPageIndex + 1);
           }}
         />
 
         <div className="bizpack-mini-electromagnetic-valve-group-list">
           {visibleItems.map((item, index) => {
             const open = isValveOpen(item);
-            const label = item.label || item.name || `#${currentPageIndex * safePageSize + index + 1}`;
+            const label = (item as any)[labelField] || (item as any)[nameField] || `#${currentPageIndex * safePageSize + index + 1}`;
 
             return (
               <button

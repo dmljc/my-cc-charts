@@ -14,6 +14,14 @@ export interface FlowRateMetricsProps {
   };
   averageSpeed?: number | string;
   maxSpeed?: number | string;
+  /** 数据中平均流速对应的字段名，默认 'averageSpeed' */
+  averageSpeedField?: string;
+  /** 数据中最大流速对应的字段名，默认 'maxSpeed' */
+  maxSpeedField?: string;
+  /** 平均流速标签文字，默认 '平均流速' */
+  averageLabel?: string;
+  /** 最大流速标签文字，默认 '最大流速' */
+  maxLabel?: string;
   width?: number | string;
   height?: number | string;
   style?: React.CSSProperties;
@@ -34,7 +42,7 @@ const formatValue = (value: number | string) => {
     return value;
   }
 
-  return numericValue.toFixed(1);
+  return numericValue.toFixed(2);
 };
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
@@ -60,6 +68,10 @@ const FlowRateMetrics: React.FC<FlowRateMetricsProps> = function FlowRateMetrics
     data,
     averageSpeed: averageSpeedProp,
     maxSpeed: maxSpeedProp,
+    averageSpeedField = 'averageSpeed',
+    maxSpeedField = 'maxSpeed',
+    averageLabel = '平均流速',
+    maxLabel = '最大流速',
     width = 400,
     height = 108,
     style = {},
@@ -71,8 +83,8 @@ const FlowRateMetrics: React.FC<FlowRateMetricsProps> = function FlowRateMetrics
     averageSpeed: number | string;
     maxSpeed: number | string;
   }>({
-    averageSpeed: averageSpeedProp ?? data?.averageSpeed ?? 187.3,
-    maxSpeed: maxSpeedProp ?? data?.maxSpeed ?? 321.5,
+    averageSpeed: averageSpeedProp ?? (data as any)?.[averageSpeedField] ?? 187.3,
+    maxSpeed: maxSpeedProp ?? (data as any)?.[maxSpeedField] ?? 321.5,
   });
 
   const rootDomProps = pickRootDomProps(otherProps);
@@ -81,10 +93,10 @@ const FlowRateMetrics: React.FC<FlowRateMetricsProps> = function FlowRateMetrics
 
   useEffect(() => {
     setMetrics({
-      averageSpeed: averageSpeedProp ?? data?.averageSpeed ?? 187.3,
-      maxSpeed: maxSpeedProp ?? data?.maxSpeed ?? 321.5,
+      averageSpeed: averageSpeedProp ?? (data as any)?.[averageSpeedField] ?? 187.3,
+      maxSpeed: maxSpeedProp ?? (data as any)?.[maxSpeedField] ?? 321.5,
     });
-  }, [data, averageSpeedProp, maxSpeedProp]);
+  }, [data, averageSpeedProp, maxSpeedProp, averageSpeedField, maxSpeedField]);
 
   useEffect(() => {
     bizRef.current = {
@@ -92,8 +104,8 @@ const FlowRateMetrics: React.FC<FlowRateMetricsProps> = function FlowRateMetrics
         changeData: (nextData: { averageSpeed?: number | string; maxSpeed?: number | string }) => {
           if (nextData) {
             setMetrics({
-              averageSpeed: nextData.averageSpeed ?? 187.3,
-              maxSpeed: nextData.maxSpeed ?? 321.5,
+              averageSpeed: (nextData as any)?.[averageSpeedField] ?? 187.3,
+              maxSpeed: (nextData as any)?.[maxSpeedField] ?? 321.5,
             });
           }
         },
@@ -120,7 +132,7 @@ const FlowRateMetrics: React.FC<FlowRateMetricsProps> = function FlowRateMetrics
             {formatValue(metrics.averageSpeed)}
           </div>
         </div>
-        <div className="bizpack-flow-rate-metrics-label">平均流速</div>
+        <div className="bizpack-flow-rate-metrics-label">{averageLabel}</div>
       </div>
       <div className="bizpack-flow-rate-metrics-item">
         <div className="bizpack-flow-rate-metrics-visual">
@@ -129,7 +141,7 @@ const FlowRateMetrics: React.FC<FlowRateMetricsProps> = function FlowRateMetrics
             {formatValue(metrics.maxSpeed)}
           </div>
         </div>
-        <div className="bizpack-flow-rate-metrics-label">最大流速</div>
+        <div className="bizpack-flow-rate-metrics-label">{maxLabel}</div>
       </div>
     </div>
   );
