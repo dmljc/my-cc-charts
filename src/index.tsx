@@ -27,6 +27,12 @@ export { default as FlowRatePump } from './components/flow-rate-pump';
 export type { ElectromagneticValveGroupProps } from './components/electromagnetic-valve-group';
 export { default as ElectromagneticValveGroup } from './components/electromagnetic-valve-group';
 
+export type { MiniElectromagneticValveGroupProps } from './components/mini-electromagnetic-valve-group';
+export { default as MiniElectromagneticValveGroup } from './components/mini-electromagnetic-valve-group';
+
+export type { InoutValveGroupProps, InoutValveItem } from './components/inout-valve-group';
+export { default as InoutValveGroup } from './components/inout-valve-group';
+
 export type { TodayTaskProps } from './components/today-task';
 export { default as TodayTask } from './components/today-task';
 
@@ -41,6 +47,12 @@ export { default as HistoryMonitorLineChart } from './components/history-monitor
 
 export type { BaseTableColumn, BaseTableItem, BaseTableProps } from './components/base-table';
 export { default as BaseTable } from './components/base-table';
+
+export type { CleaningPressureItem, CleaningPressurePanelData, CleaningPressureProps, CleaningPressureTab } from './components/cleaning-pressure';
+export { default as CleaningPressure } from './components/cleaning-pressure';
+
+export type { CumulativeFlowData, CumulativeFlowProps } from './components/cumulative-flow';
+export { default as CumulativeFlow } from './components/cumulative-flow';
 
 const bizCssPrefix = 'bizpack';
 

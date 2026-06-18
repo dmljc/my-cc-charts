@@ -1,0 +1,58 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-cumulative-flow {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+  background-image: url('./bg_@1x.webp');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+
+  // 数据项
+  &-item {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    gap: 1px;
+  }
+
+  &-item-label {
+    font-size: 16px;
+    font-weight: 400;
+    color: #fff;
+    font-family: PangMenZhengDao;
+  }
+
+  &-item-value {
+    font-family: D-DIN, D-DIN;
+    font-weight: bold;
+    font-size: 24px;
+    color: #ffffff;
+    line-height: 26px;
+  }
+
+  &-item-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &-dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #00c8f0;
+    box-shadow: 0 0 6px rgba(0, 200, 240, 0.85);
+  }
+}
