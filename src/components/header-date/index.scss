@@ -1,0 +1,32 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-header-date {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+  background: #002243;
+  border-radius: 999px 0 0 999px;
+  
+  &-content {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 20px 0 20px;
+    min-width: 0;
+  }
+
+  &-text,
+  &-week {
+    flex: none;
+    font-weight: 400;
+    font-size: 14px;
+    color: #31fcf0;
+    line-height: 1;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    text-shadow: 0 0 8px rgba(0, 216, 255, 0.35);
+  }
+}

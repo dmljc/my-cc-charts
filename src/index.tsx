@@ -54,6 +54,9 @@ export { default as CleaningPressure } from './components/cleaning-pressure';
 export type { CumulativeFlowData, CumulativeFlowProps } from './components/cumulative-flow';
 export { default as CumulativeFlow } from './components/cumulative-flow';
 
+export type { HeaderDateProps } from './components/header-date';
+export { default as HeaderDate } from './components/header-date';
+
 const bizCssPrefix = 'bizpack';
 
 export {
