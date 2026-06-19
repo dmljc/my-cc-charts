@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  padding: 20px 18px;
+  padding: 16px 0px;
   overflow: hidden;
   color: #eaf7ff;
   font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
@@ -16,9 +16,10 @@
     display: flex;
     align-items: baseline;
     gap: 24px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     font-size: 16px;
     font-weight: 600;
+    padding-left: 14px;
     line-height: 1;
     color: rgba(234, 247, 255, 0.9);
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.28);
@@ -47,9 +48,11 @@
   }
 
   &-content {
+    position: relative;
     display: flex;
+    flex: 1;
     align-items: center;
-    height: 100%;
+    min-height: 0;
   }
 
   &-list {
@@ -59,7 +62,7 @@
     align-items: center;
     justify-content: space-around;
     min-width: 0;
-    height: 100%;
+    padding: 0 24px;
     gap: 12px;
   }
 
@@ -67,12 +70,13 @@
     position: relative;
     box-sizing: border-box;
     display: flex;
+    flex-shrink: 0;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
     width: 64px;
     height: 64px;
-    padding: 8px 0 10px;
+    padding: 10px 0 12px;
     color: #dcebf5;
     cursor: pointer;
     background: linear-gradient(180deg, rgba(43, 69, 91, 0.92), rgba(23, 47, 67, 0.96)),
@@ -80,8 +84,7 @@
     border: 1px solid rgba(41, 177, 255, 0.82);
     border-radius: 6px;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(18, 126, 199, 0.38), 0 0 12px rgba(20, 177, 255, 0.7),
-      inset 0 0 14px rgba(31, 146, 213, 0.38);
+    box-shadow: 0 0 8px rgba(20, 177, 255, 0.52), inset 0 0 12px rgba(31, 146, 213, 0.34);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
 
     &::before {
@@ -96,15 +99,13 @@
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 0 0 3px rgba(18, 126, 199, 0.5), 0 0 18px rgba(20, 177, 255, 0.86),
-        inset 0 0 16px rgba(31, 146, 213, 0.46);
+      box-shadow: 0 0 12px rgba(20, 177, 255, 0.72), inset 0 0 14px rgba(31, 146, 213, 0.42);
     }
   }
 
   &-card-label {
     position: relative;
     z-index: 1;
-    margin-bottom: 8px;
     font-size: 16px;
     font-weight: 700;
     line-height: 18px;

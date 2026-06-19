@@ -38,7 +38,6 @@ export interface InoutValveGroupProps {
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
-  onToggle?: (item: InoutValveItem, nextOpen: boolean, index: number, type: 'inlet' | 'outlet') => void;
   [key: string]: unknown;
 }
 
@@ -92,10 +91,9 @@ const InoutValveGroup: React.FC<InoutValveGroupProps> = function InoutValveGroup
     inletTitle = '入口阀',
     outletTitle = '出口阀',
     width = 400,
-    height = 90,
+    height = 120,
     style = {},
     className = '',
-    onToggle,
     ...otherProps
   } = props;
   const [inletItems, setInletItems] = useState<InoutValveItem[]>(inletData);
@@ -190,27 +188,6 @@ const InoutValveGroup: React.FC<InoutValveGroupProps> = function InoutValveGroup
     };
   }, []);
 
-  const handleToggle = (item: InoutValveItem, index: number, type: 'inlet' | 'outlet') => {
-    const nextOpen = !isValveOpen(item);
-    const targetItems = type === 'inlet' ? inletItems : outletItems;
-    const setItems = type === 'inlet' ? setInletItems : setOutletItems;
-
-    const nextItems = targetItems.map((current, currentIndex) =>
-      currentIndex === index
-        ? {
-            ...current,
-            [openField]: nextOpen,
-            [statusField]: nextOpen ? 'open' : 'close',
-          }
-        : current,
-    );
-
-    setItems(nextItems);
-    if (onToggle) {
-      onToggle(nextItems[index], nextOpen, index, type);
-    }
-  };
-
   const renderRows = (items: InoutValveItem[], type: 'inlet' | 'outlet') =>
     items.map((item, index) => {
       const open = isValveOpen(item);
@@ -218,11 +195,9 @@ const InoutValveGroup: React.FC<InoutValveGroupProps> = function InoutValveGroup
       const statusText = getStatusText(item, open);
 
       return (
-        <button
+        <div
           key={item.id || index}
-          type="button"
           className="bizpack-inout-valve-group-row"
-          onClick={() => handleToggle(item, index, type)}
         >
           <span className="bizpack-inout-valve-group-row-name">{name}</span>
           <span
@@ -234,7 +209,7 @@ const InoutValveGroup: React.FC<InoutValveGroupProps> = function InoutValveGroup
           >
             {statusText}
           </span>
-        </button>
+        </div>
       );
     });
 

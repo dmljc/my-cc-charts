@@ -173,24 +173,6 @@ const InoutValveGroupMeta: ComponentMetadata = {
           },
         ],
       },
-      {
-        name: '',
-        type: 'group',
-        display: 'accordion',
-        title: {
-          label: '交互事件',
-        },
-        items: [
-          {
-            name: 'onToggle',
-            title: {
-              label: '切换开关',
-              tip: '(item, nextOpen, index, type) => void',
-            },
-            setter: 'FunctionSetter',
-          },
-        ],
-      },
     ],
   },
 };
@@ -213,7 +195,7 @@ const snippets: Snippet[] = [
         inletTitle: '入口阀',
         outletTitle: '出口阀',
         width: 400,
-        height: 90,
+        height: 120,
       },
     },
   },
