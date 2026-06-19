@@ -18,22 +18,17 @@
     gap: 24px;
     margin-bottom: 16px;
     font-size: 16px;
-    font-weight: 600;
+    font-weight: 400;
     padding-left: 14px;
     line-height: 1;
     color: rgba(234, 247, 255, 0.9);
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.28);
   }
 
-  &-summary-label {
-    font-weight: 400;
-    font-size: 14px;
-  }
-
   &-summary-open,
   &-summary-close {
     font-size: 16px;
-    font-weight: 700;
+    font-weight: bold;
     font-family: DIN Alternate, Arial, sans-serif;
   }
 

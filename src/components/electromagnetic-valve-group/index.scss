@@ -17,23 +17,18 @@
     display: flex;
     align-items: baseline;
     gap: 24px;
-    margin-bottom: 29px;
-    font-size: 18px;
-    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: 400;
     line-height: 1;
     color: rgba(234, 247, 255, 0.9);
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.28);
   }
 
-  &-summary-label {
-    font-weight: 400;
-    font-size: 16px;
-  }
-
   &-summary-open,
   &-summary-close {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 16px;
+    font-weight: bold;
     font-family: DIN Alternate, Arial, sans-serif;
   }
 
@@ -52,8 +47,8 @@
     z-index: 1;
     display: grid;
     justify-items: center;
-    column-gap: 32px;
-    row-gap: 32px;
+    column-gap: 30px;
+    row-gap: 30px;
     flex: 1;
     align-content: start;
     padding: 8px 0;
