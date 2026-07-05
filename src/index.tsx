@@ -74,6 +74,9 @@ export { default as AlarmStatusOverview } from './components/alarm-status-overvi
 export type { DeviceCheckItem, DeviceCheckProps, DeviceCheckStatus } from './components/device-check';
 export { default as DeviceCheck } from './components/device-check';
 
+export type { DeviceWarningItem, DeviceWarningLevel, DeviceWarningProps } from './components/device-warning';
+export { default as DeviceWarning } from './components/device-warning';
+
 const bizCssPrefix = 'bizpack';
 
 export {

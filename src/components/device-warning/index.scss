@@ -1,0 +1,125 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-device-warning {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: #eaf7ff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+
+  &-list {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    @include bizpack-scroll-area;
+  }
+
+  &-row {
+    position: relative;
+    display: flex;
+    flex: none;
+    align-items: center;
+    box-sizing: border-box;
+    height: 32px;
+    padding: 0;
+    color: #ffffff;
+    text-align: left;
+    cursor: pointer;
+    background: linear-gradient(90deg, #559ee6 0%, rgba(13, 129, 247, 0) 100%);
+    border: 0;
+    border-radius: 5px;
+    outline: none;
+  }
+
+  &-icon-wrap {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 32px;
+  }
+
+  &-icon {
+    display: block;
+    width: 28px;
+    height: 28px;
+    background-image: url('./icon_@2x.webp');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 28px 28px;
+  }
+
+  &-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 400;
+    color: #ffffff;
+    letter-spacing: 1px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &-level {
+    flex: none;
+    margin-left: 12px;
+    margin-right: 16px;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  &-row-urgent &-level {
+    color: #ff2f2f;
+  }
+
+  &-row-normal &-level {
+    color: #ffbe2f;
+  }
+
+  &-row-regular &-level {
+    color: #3399ff;
+  }
+
+  &-empty {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  &-empty-bg {
+    display: block;
+    flex: none;
+    width: 137px;
+    height: 78px;
+    background: url('./success_@x.webp') center / 137px 78px no-repeat;
+  }
+
+  &-empty-text {
+    display: block;
+    overflow: visible;
+    font-family: SourceHanSansSC, SourceHanSansSC;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: rgba(255, 255, 255, 0.88);
+    text-align: center;
+    white-space: nowrap;
+  }
+}

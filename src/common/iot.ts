@@ -84,8 +84,7 @@ export async function init(props: any, bizRef: any, bc: BroadcastChannel) {
   }else if(dataType === 'excel' && props.dataExcel && props.dataExcel.length > 0) {
     console.log(props.dataExcel, 'props.dataExcel');
     bizRef.current?.chart?.changeData(props.dataExcel);
-  } else {
-    console.log(props.data, 'props.data');
+  } else if (Array.isArray(props.data)) {
     bizRef.current?.chart?.changeData(props.data);
   }
 }
