@@ -1,0 +1,165 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-alarm-status-overview {
+  position: relative;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+
+  &-card {
+    position: relative;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    overflow: hidden;
+    color: #ffffff;
+    cursor: pointer;
+  }
+
+  &-dot {
+    position: absolute;
+    top: 6px;
+    left: 4px;
+    box-sizing: border-box;
+    width: 10px;
+    height: 10px;
+    border: 1px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  &-dot-normal {
+    color: #31fa3c;
+    background: #31fa3c;
+  }
+
+  &-dot-alarm {
+    color: #ff4f25;
+    background: #ff4f25;
+  }
+
+  &-name {
+    position: absolute;
+    top: 0;
+    left: 32px;
+    width: 30px;
+    height: 22px;
+    overflow: visible;
+    font-family: PangMenZhengDaoBiaoTiTiMianFeiBan, SourceHanSansCN, Arial, sans-serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 26px;
+    color: #ffffff;
+    text-align: left;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+  }
+
+  &-arrow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 26px;
+    height: 26px;
+    background: url('./arrow_@2x.png') center / 26px 26px no-repeat;
+  }
+
+  &-running {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  &-running-bg {
+    display: block;
+    width: 137px;
+    height: 78px;
+    background: url('./bg_@2x.png') center / 137px 78px no-repeat;
+  }
+
+  &-running-text {
+    display: block;
+    width: 56px;
+    height: 20px;
+    margin-top: -2px;
+    overflow: visible;
+    font-family: SourceHanSansSC, SourceHanSansSC;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px;
+    color: #ffffff;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  &-stats {
+    position: absolute;
+    right: 20px;
+    bottom: 0;
+    left: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: end;
+  }
+
+  &-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+  }
+
+  &-stat-value {
+    display: block;
+    height: 24px;
+    overflow: visible;
+    font-family: D-DIN, D-DIN;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: bold;
+    line-height: 26px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  &-stat-value-emergency {
+    width: 13px;
+    color: #ff2a2a;
+  }
+
+  &-stat-value-severe {
+    width: 12px;
+    color: #ffb027;
+  }
+
+  &-stat-value-general {
+    width: 21px;
+    color: #0eeaff;
+  }
+
+  &-stat-label {
+    display: block;
+    width: 36px;
+    height: 20px;
+    margin-top: 8px;
+    overflow: visible;
+    font-family: SourceHanSansCN, SourceHanSansCN;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 20px;
+    color: rgba(255, 255, 255, 0.8);
+    letter-spacing: 1px;
+    text-align: center;
+    white-space: nowrap;
+  }
+}

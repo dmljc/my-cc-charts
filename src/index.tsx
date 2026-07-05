@@ -63,6 +63,14 @@ export { default as VariableYStepLineChart } from './components/variable-y-step-
 export type { EffluentItem, EffluentProps, EffluentTrend } from './components/effluent';
 export { default as Effluent } from './components/effluent';
 
+export type {
+  AlarmStatusOverviewData,
+  AlarmStatusOverviewItem,
+  AlarmStatusOverviewProps,
+  AlarmStatusOverviewStatus,
+} from './components/alarm-status-overview';
+export { default as AlarmStatusOverview } from './components/alarm-status-overview';
+
 const bizCssPrefix = 'bizpack';
 
 export {
