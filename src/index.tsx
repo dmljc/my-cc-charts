@@ -60,6 +60,9 @@ export { default as HeaderDate } from './components/header-date';
 export type { VariableYStepLineChartProps, YAxisSeriesConfig } from './components/variable-y-step-line-chart';
 export { default as VariableYStepLineChart } from './components/variable-y-step-line-chart';
 
+export type { EffluentItem, EffluentProps, EffluentTrend } from './components/effluent';
+export { default as Effluent } from './components/effluent';
+
 const bizCssPrefix = 'bizpack';
 
 export {
