@@ -1,0 +1,64 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-variable-y-step-line-chart {
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: #eaf7ff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+}
+
+.bizpack-variable-y-step-line-chart-tooltip {
+  min-width: 140px;
+  color: #333;
+  font-size: 12px;
+  line-height: 1.5;
+
+  &__content {
+    min-width: 140px;
+  }
+
+  &__title {
+    margin-bottom: 8px;
+    color: #666;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 18px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+    line-height: 20px;
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+
+  &__marker {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border-radius: 50%;
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    margin-right: 16px;
+    overflow: hidden;
+    color: #333;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__value {
+    flex-shrink: 0;
+    color: #333;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+}

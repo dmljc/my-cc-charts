@@ -57,6 +57,9 @@ export { default as CumulativeFlow } from './components/cumulative-flow';
 export type { HeaderDateProps } from './components/header-date';
 export { default as HeaderDate } from './components/header-date';
 
+export type { VariableYStepLineChartProps, YAxisSeriesConfig } from './components/variable-y-step-line-chart';
+export { default as VariableYStepLineChart } from './components/variable-y-step-line-chart';
+
 const bizCssPrefix = 'bizpack';
 
 export {

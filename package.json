@@ -59,12 +59,13 @@
   "devDependencies": {
     "@alib/build-scripts": "^0.1.3",
     "@alifd/theme-2": "^0.1.0",
-    "cc-plugin-lowcode": "^0.1.0",
+    "@alilc/build-plugin-alt": "^1.3.4",
     "@types/react": "^16.14.24",
     "@types/react-dom": "^16.9.4",
     "@umijs/plugin-sass": "^1.1.1",
     "build-plugin-component": "^1.12.1",
     "build-plugin-fusion": "^0.1.0",
+    "cc-plugin-lowcode": "^0.1.0",
     "cross-env": "^7.0.3",
     "dumi": "^1.1.49",
     "dumi-theme-default": "^1.1.24",
@@ -72,13 +73,14 @@
   },
   "dependencies": {
     "@alifd/next": "^1.25.27",
+    "@babel/runtime": "^7.0.0",
     "axios": "^1.10.0",
     "bizcharts": "^4.1.23",
+    "echarts": "^6.1.0",
     "moment": "latest",
     "prop-types": "^15.5.8",
     "react": "^16.x",
-    "react-dom": "^16.x",
-    "@babel/runtime": "^7.0.0"
+    "react-dom": "^16.x"
   },
   "acceptDependencies": {
     "webpack": "^4.46.x"
@@ -92,5 +94,6 @@
   },
   "lcMeta": {
     "type": "component"
-  }
+  },
+  "homepage": "https://unpkg.com/my-cc-charts@0.1.0/build/index.html"
 }
