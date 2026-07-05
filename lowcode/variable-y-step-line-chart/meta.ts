@@ -94,7 +94,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'title',
             title: {
               label: '图表标题',
-              tip: '图表顶部显示的标题文本，默认为 Log Axis',
+              tip: '图表顶部显示的标题文本，默认不显示',
             },
             setter: 'StringSetter',
           },
@@ -168,12 +168,12 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'legendPosition',
             title: {
               label: '图例位置',
-              tip: '图例显示位置：left / right / top / bottom，默认 left',
+              tip: '图例显示位置：left / right / top / bottom，默认 top（水平居中显示）',
             },
             setter: {
               componentName: 'SelectSetter',
               props: {
-                defaultValue: 'left',
+                defaultValue: 'top',
                 options: [
                   { label: '左侧', value: 'left' },
                   { label: '右侧', value: 'right' },
@@ -182,6 +182,30 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
                 ],
               },
             },
+          },
+          {
+            name: 'showTimeRangeTabs',
+            title: {
+              label: '显示时间范围按钮',
+              tip: '是否显示顶部时间范围筛选按钮，默认 true',
+            },
+            setter: 'BoolSetter',
+          },
+          {
+            name: 'timeRangeOptions',
+            title: {
+              label: '时间范围选项',
+              tip: '顶部时间范围筛选按钮的选项数组，默认 ["实时", "半小时", "1小时"]',
+            },
+            setter: 'JsonSetter',
+          },
+          {
+            name: 'defaultActiveTimeRange',
+            title: {
+              label: '默认选中时间范围',
+              tip: '默认选中的时间范围，不传则取时间范围选项第一项',
+            },
+            setter: 'StringSetter',
           },
           {
             name: 'width',
@@ -217,6 +241,14 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             },
             setter: 'FunctionSetter',
           },
+          {
+            name: 'onTimeRangeChange',
+            title: {
+              label: '切换时间范围',
+              tip: '(value: string, index: number) => void',
+            },
+            setter: 'FunctionSetter',
+          },
         ],
       },
     ].concat(actionConfigure as any),
@@ -231,12 +263,14 @@ const snippets: Snippet[] = [
       componentName: 'VariableYStepLineChart',
       props: {
         ...ChartSnippet,
-        title: 'Y轴可变步长线图',
+        title: '',
         xAxisData: defaultXAxisData,
         yAxisData: defaultYAxisData,
         logBase: 10,
         showLegend: true,
-        legendPosition: 'left',
+        legendPosition: 'top',
+        showTimeRangeTabs: true,
+        timeRangeOptions: ['实时', '半小时', '1小时'],
         width: 400,
         height: 300,
       },

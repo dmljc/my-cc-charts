@@ -2,7 +2,7 @@ import * as React from 'react';
 import '../jsx-shim';
 // createElement is required by tsconfig jsxFactory
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { createElement, useEffect, useMemo, useRef } from 'react';
+import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import * as echarts from 'echarts';
 import { destroy, init } from '../../common/iot';
 import './index.scss';
@@ -40,6 +40,16 @@ export interface VariableYStepLineChartProps {
   showLegend?: boolean;
   /** 图例位置 */
   legendPosition?: 'left' | 'right' | 'top' | 'bottom';
+  /** 是否显示顶部时间范围筛选按钮，默认 true */
+  showTimeRangeTabs?: boolean;
+  /** 顶部时间范围筛选选项，默认 ['实时', '半小时', '1小时'] */
+  timeRangeOptions?: string[];
+  /** 当前选中的时间范围（受控），不传则组件内部维护选中态 */
+  activeTimeRange?: string;
+  /** 默认选中的时间范围，默认取 timeRangeOptions 第一项 */
+  defaultActiveTimeRange?: string;
+  /** 切换时间范围时触发 */
+  onTimeRangeChange?: (value: string, index: number) => void;
   onPointClick?: (item: any, seriesIndex: number, dataIndex: number) => void;
   [key: string]: unknown;
 }
@@ -82,6 +92,9 @@ const DEFAULT_SERIES: YAxisSeriesConfig[] = [
 /** 默认系列颜色 */
 const DEFAULT_COLORS = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4'];
 
+/** 默认顶部时间范围筛选选项 */
+const DEFAULT_TIME_RANGE_OPTIONS = ['实时', '半小时', '1小时'];
+
 const TOOLTIP_CLASS_NAME = 'bizpack-variable-y-step-line-chart-tooltip';
 
 /** 格式化 tooltip 数值 */
@@ -118,15 +131,15 @@ const buildAxisTooltipConfig = () => ({
   trigger: 'axis',
   confine: true,
   className: TOOLTIP_CLASS_NAME,
-  backgroundColor: '#ffffff',
-  borderColor: '#e8e8e8',
+  backgroundColor: 'rgba(8, 24, 46, 0.92)',
+  borderColor: 'rgba(80, 160, 220, 0.4)',
   borderWidth: 1,
-  padding: [10, 12],
-  extraCssText: 'box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); border-radius: 2px;',
+  padding: [14, 16],
+  extraCssText: 'border-radius: 8px; box-shadow: 0 0 24px rgba(20, 130, 220, 0.35), inset 0 0 30px rgba(30, 120, 200, 0.12); backdrop-filter: blur(6px);',
   axisPointer: {
     type: 'line',
     lineStyle: {
-      color: 'rgba(150, 150, 150, 0.65)',
+      color: 'rgba(150, 200, 230, 0.5)',
       type: 'dashed',
       width: 1,
     },
@@ -140,12 +153,10 @@ const buildAxisTooltipConfig = () => ({
 
     const axisLabel = items[0].axisValue ?? items[0].name ?? '';
     const rows = items.map((item: any) => {
-      const color = item.color ?? '#5470c6';
       const value = Array.isArray(item.value) ? item.value[item.value.length - 1] : item.value;
 
       return (
         `<div class="${TOOLTIP_CLASS_NAME}__row">`
-        + `<span class="${TOOLTIP_CLASS_NAME}__marker" style="background-color:${color};"></span>`
         + `<span class="${TOOLTIP_CLASS_NAME}__name">${item.seriesName ?? ''}</span>`
         + `<span class="${TOOLTIP_CLASS_NAME}__value">${formatTooltipValue(value)}</span>`
         + '</div>'
@@ -214,7 +225,7 @@ const transformFlatData = (
 
 const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function VariableYStepLineChart(props) {
   const {
-    title = 'Y轴可变步长线图',
+    title = '',
     data = [],
     xAxisData: propXAxisData,
     yAxisData: propYAxisData,
@@ -227,7 +238,12 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
     yField = 'value',
     logBase = 10,
     showLegend = true,
-    legendPosition = 'left',
+    legendPosition = 'top',
+    showTimeRangeTabs = true,
+    timeRangeOptions = DEFAULT_TIME_RANGE_OPTIONS,
+    activeTimeRange: activeTimeRangeProp,
+    defaultActiveTimeRange,
+    onTimeRangeChange,
     onPointClick,
     ...otherProps
   } = props;
@@ -237,6 +253,25 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
   const bizRef = useRef<BizRef | null>(null);
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
   const rootDomProps = pickRootDomProps(otherProps);
+  const [internalActiveTimeRange, setInternalActiveTimeRange] = useState<string>(
+    activeTimeRangeProp ?? defaultActiveTimeRange ?? timeRangeOptions[0],
+  );
+  const activeTimeRange = activeTimeRangeProp ?? internalActiveTimeRange;
+
+  useEffect(() => {
+    if (activeTimeRangeProp !== undefined) {
+      setInternalActiveTimeRange(activeTimeRangeProp);
+    }
+  }, [activeTimeRangeProp]);
+
+  const handleTimeRangeChange = (value: string, index: number) => {
+    if (activeTimeRangeProp === undefined) {
+      setInternalActiveTimeRange(value);
+    }
+    if (onTimeRangeChange) {
+      onTimeRangeChange(value, index);
+    }
+  };
 
   // 处理数据
   const { xAxisData, yAxisData } = useMemo(() => {
@@ -252,15 +287,17 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
   // 构建 ECharts 配置
   const buildOption = useMemo(() => {
     const option: any = {
-      title: {
-        text: title,
-        left: 'center',
-        textStyle: {
-          color: '#eaf7ff',
-          fontSize: 14,
-          fontWeight: 'normal',
-        },
-      },
+      title: title
+        ? {
+          text: title,
+          left: 'center',
+          textStyle: {
+            color: '#eaf7ff',
+            fontSize: 14,
+            fontWeight: 'normal',
+          },
+        }
+        : undefined,
       tooltip: buildAxisTooltipConfig(),
       legend: {
         show: showLegend,
@@ -435,10 +472,23 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
       style={{ width, height, ...style }}
       {...rootDomProps}
     >
-      <div
-        ref={chartRef}
-        style={{ width: '100%', height: '100%' }}
-      />
+      {showTimeRangeTabs && timeRangeOptions.length > 0 ? (
+        <div className="bizpack-variable-y-step-line-chart-tabs">
+          {timeRangeOptions.map((option, index) => (
+            <button
+              key={option}
+              type="button"
+              className={`bizpack-variable-y-step-line-chart-tab ${
+                option === activeTimeRange ? 'bizpack-variable-y-step-line-chart-tab-active' : ''
+              }`}
+              onClick={() => handleTimeRangeChange(option, index)}
+            >
+              <span className="bizpack-variable-y-step-line-chart-tab-text">{option}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <div className="bizpack-variable-y-step-line-chart-chart" ref={chartRef} />
     </div>
   );
 };
