@@ -164,7 +164,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...PairedVacuumPumpStatusMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

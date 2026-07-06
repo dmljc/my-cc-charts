@@ -218,7 +218,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...CleaningPressureMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

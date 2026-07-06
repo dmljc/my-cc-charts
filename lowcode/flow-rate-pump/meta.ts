@@ -190,7 +190,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...FlowRatePumpMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

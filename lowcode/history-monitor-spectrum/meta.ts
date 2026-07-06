@@ -165,7 +165,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...HistoryMonitorSpectrumMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

@@ -159,7 +159,9 @@ const snippets: Snippet[] = [
     },
 ];
 
+const hideFromLibrary = true;
+
 export default {
     ...CumulativeFlowMeta,
-    snippets,
+    snippets: hideFromLibrary ? [] : snippets,
 };

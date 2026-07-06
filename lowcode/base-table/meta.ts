@@ -162,7 +162,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...BaseTableMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

@@ -158,7 +158,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...TodayTaskMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

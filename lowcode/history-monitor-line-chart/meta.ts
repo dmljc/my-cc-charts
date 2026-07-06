@@ -203,7 +203,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...HistoryMonitorLineChartMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

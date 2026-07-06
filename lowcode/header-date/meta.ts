@@ -98,7 +98,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...HeaderDateMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

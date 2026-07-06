@@ -165,7 +165,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...OperationAlarmMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

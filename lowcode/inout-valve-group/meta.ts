@@ -201,7 +201,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...InoutValveGroupMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

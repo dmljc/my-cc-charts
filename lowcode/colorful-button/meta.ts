@@ -113,7 +113,9 @@ const snippets: IPublicTypeSnippet[] = [
   }
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...ColorfulButtonMeta,
-  snippets
+  snippets: hideFromLibrary ? [] : snippets
 };

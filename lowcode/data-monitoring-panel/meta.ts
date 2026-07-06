@@ -106,11 +106,13 @@ const DataMonitoringPanelMeta: ComponentMetadata = {
           {
             name: 'showXAxisLabels',
             title: '显示横轴标签',
+            defaultValue: true,
             setter: 'BoolSetter',
           },
           {
             name: 'showScrollbar',
             title: '显示滚动条',
+            defaultValue: true,
             setter: 'BoolSetter',
           },
           {
@@ -131,16 +133,19 @@ const DataMonitoringPanelMeta: ComponentMetadata = {
           {
             name: 'autoScroll',
             title: '自动滚动',
+            defaultValue: true,
             setter: 'BoolSetter',
           },
           {
             name: 'scrollDuration',
             title: '滚动时长',
+            defaultValue: 50,
             setter: 'NumberSetter',
           },
           {
             name: 'pauseOnHover',
             title: '悬停暂停',
+            defaultValue: true,
             setter: 'BoolSetter',
           },
         ],
@@ -184,9 +189,9 @@ const snippets: Snippet[] = [
         chartHeight: 120,
         showXAxisLabels: true,
         autoScroll: true,
-        scrollDuration: 36,
+        scrollDuration: 50,
         pauseOnHover: true,
-        showScrollbar: false,
+        showScrollbar: true,
       },
     },
   },

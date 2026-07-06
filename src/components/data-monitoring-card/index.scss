@@ -17,12 +17,72 @@
 
   &-info {
     flex: none;
-    margin-top: 2px;
+    margin-top: 12px;
     background: rgba(26, 42, 54, 0.78);
   }
 
   &-chart {
     flex: none;
+    margin-top: 12px;
     background: rgba(18, 44, 68, 0.78);
+  }
+
+  &-scroll {
+    box-sizing: border-box;
+    flex: 1 1 0;
+    width: 100%;
+    height: 0;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  &-scroll-auto {
+    overflow-y: hidden;
+  }
+
+  &-scroll-visible {
+    overflow-y: scroll;
+    @include bizpack-scrollbar;
+  }
+
+  &-scroll-hidden {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &-list-marquee {
+    min-height: 100%;
+    animation: bizpack-data-monitoring-card-scroll var(--bizpack-data-monitoring-card-scroll-duration, 50s) linear infinite;
+  }
+
+  &-list-pause:hover {
+    animation-play-state: paused;
+  }
+
+  &-item {
+    flex: none;
+
+    & + & {
+      margin-top: var(--bizpack-data-monitoring-card-gap, 16px);
+    }
+  }
+}
+
+@keyframes bizpack-data-monitoring-card-scroll {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-50%);
   }
 }

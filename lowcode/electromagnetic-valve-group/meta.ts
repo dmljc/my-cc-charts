@@ -189,7 +189,9 @@ const snippets: Snippet[] = [
   },
 ];
 
+const hideFromLibrary = true;
+
 export default {
   ...ElectromagneticValveGroupMeta,
-  snippets,
+  snippets: hideFromLibrary ? [] : snippets,
 };

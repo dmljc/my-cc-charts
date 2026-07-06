@@ -77,7 +77,7 @@ export { default as DeviceCheck } from './components/device-check';
 export type { DeviceWarningItem, DeviceWarningLevel, DeviceWarningProps } from './components/device-warning';
 export { default as DeviceWarning } from './components/device-warning';
 
-export type { OperationLogItem, OperationLogProps } from './components/operation-log';
+export type { OperationLogItem, OperationLogProps, OperationLogScrollMode } from './components/operation-log';
 export { default as OperationLog } from './components/operation-log';
 
 export type { DataMonitoringHeaderProps } from './components/data-monitoring-header';
@@ -92,7 +92,7 @@ export type {
 } from './components/data-monitoring-line-chart';
 export { default as DataMonitoringLineChart } from './components/data-monitoring-line-chart';
 
-export type { DataMonitoringCardData, DataMonitoringCardProps } from './components/data-monitoring-card';
+export type { DataMonitoringCardData, DataMonitoringCardProps, DataMonitoringScrollMode } from './components/data-monitoring-card';
 export { default as DataMonitoringCard } from './components/data-monitoring-card';
 
 export type { DataMonitoringPanelProps } from './components/data-monitoring-panel';

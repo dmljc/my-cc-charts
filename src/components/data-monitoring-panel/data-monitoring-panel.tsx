@@ -28,7 +28,7 @@ export interface DataMonitoringPanelProps {
   showXAxisLabels?: boolean;
   /** 是否自动纵向滚动，默认 false */
   autoScroll?: boolean;
-  /** 自动滚动完整一轮的时长，单位秒，默认 36 */
+  /** 自动滚动完整一轮的时长，单位秒，默认 120 */
   scrollDuration?: number;
   /** 鼠标悬停时暂停自动滚动，默认 true */
   pauseOnHover?: boolean;
@@ -77,8 +77,8 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
     infoHeight = 60,
     chartHeight = 120,
     showXAxisLabels = true,
-    autoScroll = false,
-    scrollDuration = 36,
+    autoScroll = true,
+    scrollDuration = 50,
     pauseOnHover = true,
     showScrollbar = true,
     onCardClick,
