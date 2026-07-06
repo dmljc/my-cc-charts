@@ -1,6 +1,8 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
+const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
+
 const defaultData = [
   { id: 1, name: '设备1', status: 'normal', days: 50 },
   { id: 2, name: '设备1', status: 'expiring', days: 50 },
@@ -67,7 +69,20 @@ const DeviceCheckMeta: ComponentMetadata = {
         title: {
           label: '数据',
         },
-        items: [...ChartMetaIot],
+        items: [
+          ...dataSourceMeta,
+          {
+            name: 'data',
+            title: {
+              label: '设备定检数据',
+              tip: '每一项包含 id、name、status、statusText、days、daysText 字段，status 取值 normal/expiring/overdue',
+            },
+            setter: 'JsonSetter',
+            condition: (target: any) => {
+              return target.getProps().getPropValue('dataType') === 'data';
+            },
+          },
+        ],
       },
       {
         name: '',

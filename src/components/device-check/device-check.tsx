@@ -20,6 +20,7 @@ export interface DeviceCheckItem {
   days?: number;
   /** 天数展示文案，不传则根据 status + days 自动拼接 */
   daysText?: string;
+  [key: string]: unknown;
 }
 
 export interface DeviceCheckProps {
@@ -139,7 +140,7 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
 
           return (
             <button
-              key={item.id || index}
+              key={item.id != null ? String(item.id) : index}
               type="button"
               className="bizpack-device-check-row"
               onClick={() => {

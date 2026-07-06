@@ -14,6 +14,7 @@ export interface DeviceWarningItem {
   name: string;
   level?: DeviceWarningLevel;
   levelText?: string;
+  [key: string]: unknown;
 }
 
 export interface DeviceWarningProps {
@@ -128,7 +129,7 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
 
             return (
               <button
-                key={item.id || index}
+                key={item.id != null ? String(item.id) : index}
                 type="button"
                 className={`bizpack-device-warning-row bizpack-device-warning-row-${level}`}
                 onClick={() => {

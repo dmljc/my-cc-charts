@@ -1,6 +1,8 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
+const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
+
 const defaultData = [
   { id: 1, name: '取样泵1流量计保养', level: 'urgent', levelText: '紧急' },
   { id: 2, name: '取样泵1流量计保养', level: 'normal', levelText: '一般' },
@@ -69,7 +71,18 @@ const DeviceWarningMeta: ComponentMetadata = {
           label: '数据',
         },
         items: [
-          ...ChartMetaIot,
+          ...dataSourceMeta,
+          {
+            name: 'data',
+            title: {
+              label: '设备警告数据',
+              tip: '每一项包含 id、name、level、levelText 字段，level 取值 urgent/normal/regular；数组为空时展示无警告文案',
+            },
+            setter: 'JsonSetter',
+            condition: (target: any) => {
+              return target.getProps().getPropValue('dataType') === 'data';
+            },
+          },
           {
             name: 'emptyText',
             title: {
