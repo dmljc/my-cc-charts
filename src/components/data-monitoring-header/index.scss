@@ -1,0 +1,58 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-data-monitoring-header {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 11px 16px;
+    overflow: hidden;
+    color: #ffffff;
+    font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+    border-radius: 8px;
+
+    &-item {
+        display: flex;
+        flex: 1;
+        align-items: center;
+        min-width: 0;
+    }
+
+    &-room {
+        flex: none;
+        align-items: baseline;
+        gap: 12px;
+    }
+
+    &-device {
+        gap: 8px;
+    }
+
+    &-label {
+        flex: none;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 22px;
+        color: #cdd9e5;
+        white-space: nowrap;
+    }
+
+    &-value {
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 22px;
+        color: #ffffff;
+    }
+
+    &-value-wrap {
+        flex: 1;
+        min-width: 0;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 22px;
+        color: #ffffff;
+        word-break: break-all;
+    }
+}
