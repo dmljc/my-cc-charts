@@ -4,6 +4,7 @@ import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
+import { DEFAULT_OPERATION_LOG_TEST_DATA } from './test-data';
 import './index.scss';
 
 export interface OperationLogItem {
@@ -39,12 +40,7 @@ interface BizRef {
   };
 }
 
-const defaultData: OperationLogItem[] = Array.from({ length: 5 }, (_, index) => ({
-  id: index + 1,
-  action: '电磁阀0101开启',
-  name: '张三',
-  time: '12:12:12',
-}));
+const defaultData = DEFAULT_OPERATION_LOG_TEST_DATA as OperationLogItem[];
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
@@ -140,9 +136,9 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
             </span>
             <span
               className="bizpack-operation-log-cell bizpack-operation-log-cell-name"
-              title={resolveFieldValue(item, nameField)}
+              title={`操作人：${resolveFieldValue(item, nameField)}`}
             >
-              {resolveFieldValue(item, nameField)}
+              {`操作人：${resolveFieldValue(item, nameField)}`}
             </span>
             <span
               className="bizpack-operation-log-cell bizpack-operation-log-cell-time"

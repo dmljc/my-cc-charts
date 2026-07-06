@@ -1,14 +1,10 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
+import { DEFAULT_OPERATION_LOG_TEST_DATA } from '../../src/components/operation-log/test-data';
 
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
-const defaultData = Array.from({ length: 5 }, (_, index) => ({
-  id: index + 1,
-  action: '电磁阀0101开启',
-  name: '张三',
-  time: '12:12:12',
-}));
+const defaultData = DEFAULT_OPERATION_LOG_TEST_DATA;
 
 const OperationLogMeta: ComponentMetadata = {
   componentName: 'OperationLog',
