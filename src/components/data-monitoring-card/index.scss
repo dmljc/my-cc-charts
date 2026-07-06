@@ -1,0 +1,28 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-data-monitoring-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  color: #eaf7ff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+
+  &-header {
+    flex: none;
+    background: rgba(26, 42, 54, 0.86);
+    border-radius: 8px 8px 0 0;
+  }
+
+  &-info {
+    flex: none;
+    margin-top: 2px;
+    background: rgba(26, 42, 54, 0.78);
+  }
+
+  &-chart {
+    flex: none;
+    background: rgba(18, 44, 68, 0.78);
+  }
+}

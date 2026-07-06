@@ -92,6 +92,16 @@ export type {
 } from './components/data-monitoring-line-chart';
 export { default as DataMonitoringLineChart } from './components/data-monitoring-line-chart';
 
+export type { DataMonitoringCardData, DataMonitoringCardProps } from './components/data-monitoring-card';
+export { default as DataMonitoringCard } from './components/data-monitoring-card';
+
+export type { DataMonitoringPanelProps } from './components/data-monitoring-panel';
+export {
+  createDataMonitoringPanelTestData,
+  DEFAULT_DATA_MONITORING_PANEL_TEST_DATA,
+  default as DataMonitoringPanel,
+} from './components/data-monitoring-panel';
+
 const bizCssPrefix = 'bizpack';
 
 export {

@@ -1,0 +1,65 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-data-monitoring-panel {
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: #eaf7ff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+
+  &-scroll {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  &-scroll-auto {
+    overflow-y: hidden;
+  }
+
+  &-scroll-hidden {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bizpack-data-monitoring-card-gap, 16px);
+    min-height: 100%;
+  }
+
+  &-content-marquee {
+    animation: bizpack-data-monitoring-panel-scroll var(--bizpack-data-monitoring-scroll-duration, 36s) linear infinite;
+  }
+
+  &-content-pause:hover {
+    animation-play-state: paused;
+  }
+
+  &-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bizpack-data-monitoring-card-gap, 16px);
+  }
+
+  &-item {
+    flex: none;
+    min-width: 0;
+  }
+}
+
+@keyframes bizpack-data-monitoring-panel-scroll {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-50%);
+  }
+}
