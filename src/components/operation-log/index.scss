@@ -1,0 +1,66 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-operation-log {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: #ffffff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+
+  &-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow-y: auto;
+    @include bizpack-scroll-area;
+  }
+
+  &-row {
+    display: grid;
+    flex: none;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    box-sizing: border-box;
+    height: 32px;
+    padding: 0 12px;
+    color: #ffffff;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
+    outline: none;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba(20, 100, 180, 0.18) !important;
+    }
+  }
+
+  &-cell {
+    min-width: 0;
+    overflow: hidden;
+    font-family: SourceHanSansCN, SourceHanSansCN;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 21px;
+    color: #ffffff;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &-cell-action {
+    text-align: left;
+  }
+
+  &-cell-name {
+    text-align: center;
+  }
+
+  &-cell-time {
+    text-align: right;
+  }
+}

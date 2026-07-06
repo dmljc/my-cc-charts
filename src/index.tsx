@@ -77,6 +77,9 @@ export { default as DeviceCheck } from './components/device-check';
 export type { DeviceWarningItem, DeviceWarningLevel, DeviceWarningProps } from './components/device-warning';
 export { default as DeviceWarning } from './components/device-warning';
 
+export type { OperationLogItem, OperationLogProps } from './components/operation-log';
+export { default as OperationLog } from './components/operation-log';
+
 const bizCssPrefix = 'bizpack';
 
 export {
