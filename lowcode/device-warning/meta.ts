@@ -1,14 +1,10 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
+import { DEFAULT_DEVICE_WARNING_TEST_DATA } from '../../src/components/device-warning/test-data';
 
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
-const defaultData = [
-  { id: 1, name: '取样泵1流量计保养', level: 'urgent', levelText: '紧急' },
-  { id: 2, name: '取样泵1流量计保养', level: 'normal', levelText: '一般' },
-  { id: 3, name: '取样泵1流量计保养', level: 'regular', levelText: '常规' },
-  { id: 4, name: '取样泵1流量计保养', level: 'regular', levelText: '常规' },
-];
+const defaultData = DEFAULT_DEVICE_WARNING_TEST_DATA;
 
 const DeviceWarningMeta: ComponentMetadata = {
   componentName: 'DeviceWarning',

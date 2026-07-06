@@ -4,6 +4,7 @@ import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
+import { DEFAULT_DEVICE_CHECK_TEST_DATA } from './test-data';
 import './index.scss';
 
 export type DeviceCheckStatus = 'normal' | 'expiring' | 'overdue';
@@ -39,11 +40,7 @@ interface BizRef {
   };
 }
 
-const defaultData: DeviceCheckItem[] = [
-  { id: 1, name: '设备1', status: 'normal', days: 50 },
-  { id: 2, name: '设备1', status: 'expiring', days: 50 },
-  { id: 3, name: '设备1', status: 'overdue', days: 30 },
-];
+const defaultData = DEFAULT_DEVICE_CHECK_TEST_DATA as DeviceCheckItem[];
 
 const statusTextMap: Record<DeviceCheckStatus, string> = {
   normal: '正常',

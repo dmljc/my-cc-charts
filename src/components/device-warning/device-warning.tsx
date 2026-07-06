@@ -5,6 +5,7 @@ import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
+import { DEFAULT_DEVICE_WARNING_TEST_DATA } from './test-data';
 import './index.scss';
 
 export type DeviceWarningLevel = 'urgent' | 'normal' | 'regular' | string;
@@ -35,12 +36,7 @@ interface BizRef {
   };
 }
 
-const defaultData: DeviceWarningItem[] = [
-  { id: 1, name: '取样泵1流量计保养', level: 'urgent', levelText: '紧急' },
-  { id: 2, name: '取样泵1流量计保养', level: 'normal', levelText: '一般' },
-  { id: 3, name: '取样泵1流量计保养', level: 'regular', levelText: '常规' },
-  { id: 4, name: '取样泵1流量计保养', level: 'regular', levelText: '常规' },
-];
+const defaultData = DEFAULT_DEVICE_WARNING_TEST_DATA as DeviceWarningItem[];
 
 const levelTextMap: Record<string, string> = {
   urgent: '紧急',

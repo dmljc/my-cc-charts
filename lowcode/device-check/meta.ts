@@ -1,13 +1,10 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
+import { DEFAULT_DEVICE_CHECK_TEST_DATA } from '../../src/components/device-check/test-data';
 
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
-const defaultData = [
-  { id: 1, name: '设备1', status: 'normal', days: 50 },
-  { id: 2, name: '设备1', status: 'expiring', days: 50 },
-  { id: 3, name: '设备1', status: 'overdue', days: 30 },
-];
+const defaultData = DEFAULT_DEVICE_CHECK_TEST_DATA;
 
 const DeviceCheckMeta: ComponentMetadata = {
   componentName: 'DeviceCheck',
