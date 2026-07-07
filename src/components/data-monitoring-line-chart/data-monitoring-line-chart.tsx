@@ -283,7 +283,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
           const value = Array.isArray(item?.value) ? item.value[item.value.length - 1] : item?.value;
           const timeText = formatTimeLabel(item?.axisValue ?? item?.name);
 
-          return `时间：${timeText}<br />数值：${formatTooltipValue(value)}`;
+          return `数值：${formatTooltipValue(value)}<br />时间：${timeText}`;
         },
       },
     };
