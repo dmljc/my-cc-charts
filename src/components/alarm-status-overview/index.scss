@@ -7,6 +7,7 @@
   overflow: hidden;
   color: #ffffff;
   font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+  background: url('./bg-card_@2x.png') center / 100% 100% no-repeat;
 
   &-card {
     position: relative;
@@ -18,12 +19,16 @@
     overflow: hidden;
     color: #ffffff;
     cursor: pointer;
+    border: 0;
+    outline: none;
+    appearance: none;
+    background: transparent;
   }
 
   &-dot {
     position: absolute;
-    top: 6px;
-    left: 4px;
+    top: 14px;
+    left: 12px;
     box-sizing: border-box;
     width: 10px;
     height: 10px;
@@ -44,16 +49,16 @@
 
   &-name {
     position: absolute;
-    top: 0;
-    left: 24px;
-    width: 30px;
-    height: 22px;
+    top: 8px;
+    left: 40px;
+    max-width: 120px;
+    height: 34px;
     overflow: visible;
     font-family: PangMenZhengDaoBiaoTiTiMianFeiBan, SourceHanSansCN, Arial, sans-serif;
     font-size: 18px;
     font-style: normal;
     font-weight: normal;
-    line-height: 26px;
+    line-height: 34px;
     color: #ffffff;
     text-align: left;
     text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
@@ -62,8 +67,8 @@
 
   &-arrow {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 10px;
+    right: 12px;
     width: 26px;
     height: 26px;
     background: url('./arrow_@2x.png') center / 26px 26px no-repeat;
@@ -75,21 +80,24 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     pointer-events: none;
   }
 
   &-running-bg {
     display: block;
-    width: 137px;
-    height: 78px;
-    background: url('./bg_@2x.png') center / 137px 78px no-repeat;
+    width: 34%;
+    max-width: 160px;
+    min-width: 96px;
+    aspect-ratio: 274 / 156;
+    background: url('./success_@2x.png') center / contain no-repeat;
   }
 
   &-running-text {
     display: block;
     width: 56px;
     height: 20px;
-    margin-top: -2px;
+    margin-top: 2px;
     overflow: visible;
     font-family: SourceHanSansSC, SourceHanSansSC;
     font-size: 14px;
