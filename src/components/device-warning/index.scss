@@ -48,12 +48,13 @@
 
   &-icon {
     display: block;
-    width: 28px;
-    height: 28px;
-    background-image: url('./icon_@2x.webp');
+    width: 32px;
+    height: 32px;
+    background-image: url('./icon_@x.webp');
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 28px 28px;
+    background-size: 32px 32px;
+    border-radius: 4px;
   }
 
   &-name {
@@ -107,7 +108,7 @@
     flex: none;
     width: 137px;
     height: 78px;
-    background: url('./success_@x.webp') center / 137px 78px no-repeat;
+    background: url('./success_@x.png') center / 137px 78px no-repeat;
   }
 
   &-empty-text {

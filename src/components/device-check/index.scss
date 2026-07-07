@@ -28,7 +28,7 @@
     justify-content: flex-start;
     box-sizing: border-box;
     height: 44px;
-    padding: 0 16px;
+    padding: 0;
     color: #ffffff;
     text-align: left;
     cursor: pointer;
@@ -44,9 +44,8 @@
     flex: none;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
-    margin-right: 6px;
+    width: 40px;
+    height: 44px;
   }
 
   &-icon {
@@ -104,6 +103,7 @@
     width: 90px;
     align-items: center;
     justify-content: center;
+    margin-right: 16px;
     white-space: nowrap;
     gap: 6px;
   }
