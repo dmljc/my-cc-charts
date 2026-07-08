@@ -11,6 +11,7 @@
       {
         "themePackage": "@alifd/theme-2"
       }
-    ]
+    ],
+    "./build-plugins/fix-assets-public-path.js"
   ]
 }
