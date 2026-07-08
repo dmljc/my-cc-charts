@@ -99,10 +99,10 @@
   &-status {
     box-sizing: border-box;
     display: flex;
-    flex: 0 0 90px;
-    width: 90px;
+    flex: 0 0 70px;
+    width: 70px;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     margin-right: 16px;
     white-space: nowrap;
     gap: 6px;
@@ -134,6 +134,7 @@
     flex: none;
     font-size: 14px;
     font-weight: 400;
+    text-align: left;
     white-space: nowrap;
   }
 
