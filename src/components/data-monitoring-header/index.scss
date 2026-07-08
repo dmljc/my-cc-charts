@@ -5,54 +5,78 @@
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    padding: 11px 16px;
+    padding: 0 28px;
     overflow: hidden;
-    color: #ffffff;
-    font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
-    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: SourceHanSansSC, SourceHanSansSC;
+    background-color: #102b3f;
+    background-image: url('./bg_@2x.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 90%;
+    border-radius: 6px;
 
     &-item {
         display: flex;
-        flex: 1;
         align-items: center;
         min-width: 0;
     }
 
     &-room {
-        flex: none;
-        align-items: baseline;
-        gap: 12px;
+        flex: 0 0 132px;
+        gap: 14px;
     }
 
     &-device {
-        gap: 8px;
+        flex: 1;
+        min-width: 0;
+        gap: 14px;
     }
 
     &-label {
         flex: none;
+        min-width: 34px;
+        height: 24px;
+        font-style: normal;
         font-weight: 400;
         font-size: 16px;
-        line-height: 22px;
-        color: #cdd9e5;
+        line-height: 24px;
+        color: rgba(255, 255, 255, 0.9);
+        letter-spacing: 1px;
+        text-align: center;
         white-space: nowrap;
     }
 
     &-value {
+        flex: none;
+        min-height: 24px;
+        font-style: normal;
         font-weight: 400;
         font-size: 16px;
-        line-height: 22px;
-        color: #ffffff;
+        line-height: 24px;
+        color: rgba(255, 255, 255, 0.9);
+        letter-spacing: 1px;
+        text-align: center;
+    }
+
+    &-room &-value {
+        white-space: nowrap;
     }
 
     &-value-wrap {
+        display: block;
         flex: 1;
         min-width: 0;
+        min-height: 24px;
+        font-style: normal;
         font-weight: 400;
         font-size: 16px;
-        line-height: 22px;
-        color: #ffffff;
+        line-height: 24px;
+        color: rgba(255, 255, 255, 0.9);
+        letter-spacing: 1px;
+        text-align: center;
+        white-space: normal;
+        overflow-wrap: anywhere;
         word-break: break-all;
     }
 }
