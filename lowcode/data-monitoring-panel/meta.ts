@@ -110,6 +110,15 @@ const DataMonitoringPanelMeta: ComponentMetadata = {
             setter: 'BoolSetter',
           },
           {
+            name: 'showLatestValue',
+            title: {
+              label: '显示末端数值',
+              tip: '在折线图末端展示最新数值标注，默认 true',
+            },
+            defaultValue: true,
+            setter: 'BoolSetter',
+          },
+          {
             name: 'showScrollbar',
             title: '显示滚动条',
             defaultValue: true,
@@ -188,6 +197,7 @@ const snippets: Snippet[] = [
         infoHeight: 60,
         chartHeight: 120,
         showXAxisLabels: true,
+        showLatestValue: true,
         autoScroll: true,
         scrollDuration: 50,
         pauseOnHover: true,

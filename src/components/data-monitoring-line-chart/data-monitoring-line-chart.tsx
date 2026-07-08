@@ -33,6 +33,10 @@ export interface DataMonitoringLineChartProps {
   showXAxisLabels?: boolean;
   /** 横轴最多展示几个标签，默认 5 */
   xAxisLabelCount?: number;
+  /** 横轴末尾单位标注，仅在 showXAxisLabels 为 false 时显示，默认 't' */
+  xAxisUnitLabel?: string;
+  /** 是否在曲线末端展示最新数值标注，默认 true */
+  showLatestValue?: boolean;
   /** 是否开启鼠标/触控缩放，默认 true */
   enableDataZoom?: boolean;
   width?: number | string;
@@ -140,6 +144,8 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     areaColor = DEFAULT_AREA_COLOR,
     showXAxisLabels = true,
     xAxisLabelCount = 5,
+    xAxisUnitLabel = 't',
+    showLatestValue = true,
     enableDataZoom = true,
     width = 400,
     height = 100,
@@ -172,7 +178,12 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
 
   const buildOption = useMemo(() => {
     const xAxisData = items.map((item) => (item as any)[xField]);
+    const showUnitLabel = !showXAxisLabels && Boolean(xAxisUnitLabel);
     const seriesData = items.map((item) => (item as any)[yField]);
+    const lastRawValue = items.length > 0 ? (items[items.length - 1] as any)[yField] : undefined;
+    const latestText = showLatestValue && lastRawValue !== null && lastRawValue !== undefined
+      ? formatTooltipValue(lastRawValue)
+      : null;
     const isLargeData = items.length > 500;
     const labelStep = Math.max(1, Math.ceil(items.length / Math.max(xAxisLabelCount, 1)));
     const splitNumber = Math.max(1, Math.round(max - min));
@@ -191,11 +202,46 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
           },
         ]
         : undefined,
+      graphic: [
+        ...(latestText !== null ? [
+          {
+            type: 'text',
+            right: 4,
+            top: 20,
+            z: 100,
+            style: {
+              text: latestText,
+              fill: 'rgba(234, 247, 255, 0.95)',
+              fontSize: 12,
+              fontWeight: 'bold',
+              fontFamily: 'DIN Alternate, Arial, sans-serif',
+              textAlign: 'right',
+              textVerticalAlign: 'middle',
+            },
+          },
+        ] : []),
+        ...(showUnitLabel && xAxisUnitLabel ? [
+          {
+            type: 'text',
+            right: 4,
+            bottom: 4,
+            z: 100,
+            style: {
+              text: xAxisUnitLabel,
+              fill: 'rgba(218, 230, 235, 0.75)',
+              fontSize: 12,
+              fontFamily: 'PingFang SC, Microsoft YaHei, Arial, sans-serif',
+              textAlign: 'right',
+              textVerticalAlign: 'bottom',
+            },
+          },
+        ] : []),
+      ],
       grid: {
-        top: 12,
+        top: latestText !== null ? 30 : 12,
         left: 8,
-        right: 8,
-        bottom: showXAxisLabels ? 8 : 2,
+        right: 16,
+        bottom: showXAxisLabels ? 8 : (showUnitLabel ? 18 : 2),
         containLabel: true,
       },
       xAxis: {
@@ -207,6 +253,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
         axisTick: { show: false },
         splitLine: { show: false },
         axisLabel: {
+          show: showXAxisLabels,
           interval: (index: number) => (
             index === 0 || index === items.length - 1 || index % labelStep === 0
           ),
@@ -297,6 +344,8 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     areaColor,
     showXAxisLabels,
     xAxisLabelCount,
+    xAxisUnitLabel,
+    showLatestValue,
     enableDataZoom,
   ]);
 

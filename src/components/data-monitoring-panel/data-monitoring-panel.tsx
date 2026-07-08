@@ -26,6 +26,8 @@ export interface DataMonitoringPanelProps {
   chartHeight?: number;
   /** 是否显示横轴时间标签，默认 true */
   showXAxisLabels?: boolean;
+  /** 折线图末端是否展示最新数值标注，默认 true */
+  showLatestValue?: boolean;
   /** 是否自动纵向滚动，默认 false */
   autoScroll?: boolean;
   /** 自动滚动完整一轮的时长，单位秒，默认 120 */
@@ -77,6 +79,7 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
     infoHeight = 60,
     chartHeight = 120,
     showXAxisLabels = true,
+    showLatestValue = true,
     autoScroll = true,
     scrollDuration = 50,
     pauseOnHover = true,
@@ -147,6 +150,7 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
             infoHeight={infoHeight}
             chartHeight={chartHeight}
             showXAxisLabels={showXAxisLabels}
+            showLatestValue={showLatestValue}
           />
         </div>
       ))}

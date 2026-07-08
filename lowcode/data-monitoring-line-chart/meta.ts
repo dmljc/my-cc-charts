@@ -148,6 +148,22 @@ const DataMonitoringLineChartMeta: ComponentMetadata = {
             setter: 'NumberSetter',
           },
           {
+            name: 'xAxisUnitLabel',
+            title: {
+              label: '横轴末尾单位标注',
+              tip: '仅在关闭横轴标签时显示，默认 t',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'showLatestValue',
+            title: {
+              label: '显示末端数值标注',
+              tip: '在曲线末端展示最新数值，默认 true',
+            },
+            setter: 'BoolSetter',
+          },
+          {
             name: 'enableDataZoom',
             title: {
               label: '启用内部缩放',
@@ -207,8 +223,10 @@ const snippets: Snippet[] = [
         yField: 'value',
         min: 0,
         max: 5,
-        showXAxisLabels: true,
+        showXAxisLabels: false,
         xAxisLabelCount: 5,
+        xAxisUnitLabel: 't',
+        showLatestValue: true,
         enableDataZoom: true,
         width: 400,
         height: 100,

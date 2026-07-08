@@ -38,6 +38,8 @@ export interface DataMonitoringCardProps {
   pauseOnHover?: boolean;
   showScrollbar?: boolean;
   showXAxisLabels?: boolean;
+  /** 折线图末端是否展示最新数值标注，默认 true */
+  showLatestValue?: boolean;
   className?: string;
   style?: React.CSSProperties;
   [key: string]: unknown;
@@ -69,6 +71,7 @@ const renderCardContent = (
   infoHeight: number,
   chartHeight: number,
   showXAxisLabels: boolean,
+  showLatestValue: boolean,
 ) => (
   <React.Fragment>
     <DataMonitoringHeader
@@ -88,6 +91,7 @@ const renderCardContent = (
       height={chartHeight}
       data={data?.chart}
       showXAxisLabels={showXAxisLabels}
+      showLatestValue={showLatestValue}
       className="bizpack-data-monitoring-card-chart"
     />
   </React.Fragment>
@@ -142,6 +146,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     pauseOnHover = true,
     showScrollbar = true,
     showXAxisLabels = true,
+    showLatestValue = true,
     className = '',
     style = {},
     ...otherProps
@@ -280,7 +285,14 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
       key={`${groupKey}-${item.id != null ? String(item.id) : index}`}
       className="bizpack-data-monitoring-card-item"
     >
-      {renderCardContent(item, resolvedHeaderHeight, resolvedInfoHeight, resolvedChartHeight, showXAxisLabels)}
+      {renderCardContent(
+        item,
+        resolvedHeaderHeight,
+        resolvedInfoHeight,
+        resolvedChartHeight,
+        showXAxisLabels,
+        showLatestValue,
+      )}
     </div>
   ));
 
@@ -328,7 +340,14 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
             </div>
           </div>
         )
-        : renderCardContent(singleData, resolvedHeaderHeight, resolvedInfoHeight, resolvedChartHeight, showXAxisLabels)}
+        : renderCardContent(
+          singleData,
+          resolvedHeaderHeight,
+          resolvedInfoHeight,
+          resolvedChartHeight,
+          showXAxisLabels,
+          showLatestValue,
+        )}
     </div>
   );
 };

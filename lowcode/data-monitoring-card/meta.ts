@@ -110,6 +110,15 @@ const DataMonitoringCardMeta: ComponentMetadata = {
             setter: 'BoolSetter',
           },
           {
+            name: 'showLatestValue',
+            title: {
+              label: '显示末端数值',
+              tip: '在折线图末端展示最新数值标注，默认 true',
+            },
+            defaultValue: true,
+            setter: 'BoolSetter',
+          },
+          {
             name: 'className',
             title: '自定义类名',
             setter: 'StringSetter',
@@ -206,6 +215,7 @@ const snippets: Snippet[] = [
         pauseOnHover: true,
         showScrollbar: true,
         showXAxisLabels: true,
+        showLatestValue: true,
       },
     },
   },
