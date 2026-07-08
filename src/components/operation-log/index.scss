@@ -39,7 +39,8 @@
     grid-template-columns: minmax(0, 1fr) 126px 70px;
     align-items: center;
     box-sizing: border-box;
-    height: 32px;
+    width: 100%;
+    height: 40px;
     min-height: 0;
     margin: 0;
     padding: 0 12px;
@@ -51,13 +52,12 @@
     appearance: none;
     background: transparent;
     border: 0;
-    border-radius: 4px;
+    border-radius: 3px;
     outline: none;
     transition: background 0.15s ease;
 
     &:nth-child(odd) {
-      background: #1b5997;
-      opacity: 0.55;
+      background: rgba(27, 89, 151, 0.55);
     }
 
     &:hover {
@@ -66,17 +66,19 @@
   }
 
   &-cell {
+    box-sizing: border-box;
     min-width: 0;
     overflow: hidden;
     font-family: SourceHanSansCN, SourceHanSansCN;
     font-style: normal;
     font-weight: 400;
-    font-size: 14px;
-    line-height: 21px;
+    font-size: 16px;
+    line-height: 24px;
     color: #ffffff;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
   &-cell-time {
     text-align: right;
   }
