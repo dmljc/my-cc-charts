@@ -1,5 +1,4 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
-import { actionConfigure } from '../common/chart-action';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
 const defaultXAxisData = [
@@ -12,19 +11,19 @@ const defaultXAxisData = [
 const defaultYAxisData = [
   {
     name: '曲线A',
-    data: [0.015, 0.03, 0.045, 0.06, 0.075, 0.09, 0.105, 0.12, 0.135, 0.15, 0.165, 0.18, 0.195, 0.21, 0.225, 0.24, 0.255, 0.27, 0.285, 0.3],
+    data: [0.12, 0.45, 0.78, 0.45, 0.12, 0.12, 0.45, 0.78, 0.45, 0.12, 0.12, 0.45, 0.78, 0.45, 0.12, 0.12, 0.45, 0.78, 0.45, 0.12],
   },
   {
     name: '曲线B',
-    data: [0.03, 0.015, 0.06, 0.045, 0.09, 0.075, 0.12, 0.105, 0.15, 0.135, 0.18, 0.165, 0.21, 0.195, 0.24, 0.225, 0.27, 0.255, 0.3, 0.285],
+    data: [0.05, 0.35, 0.65, 0.35, 0.05, 0.05, 0.35, 0.65, 0.35, 0.05, 0.05, 0.35, 0.65, 0.35, 0.05, 0.05, 0.35, 0.65, 0.35, 0.05],
   },
   {
     name: '曲线C',
-    data: [0.075, 0.06, 0.09, 0.105, 0.045, 0.12, 0.135, 0.09, 0.165, 0.18, 0.12, 0.21, 0.15, 0.24, 0.18, 0.27, 0.21, 0.3, 0.24, 0.285],
+    data: [0.22, 0.55, 0.88, 0.55, 0.22, 0.22, 0.55, 0.88, 0.55, 0.22, 0.22, 0.55, 0.88, 0.55, 0.22, 0.22, 0.55, 0.88, 0.55, 0.22],
   },
   {
     name: '高值曲线',
-    data: [1, 1.5, 2, 2.8, 3.2, 3.9, 4.5, 5.1, 5.8, 6.2, 6.9, 7.3, 7.8, 8.2, 8.6, 9, 9.3, 9.5, 9.8, 10],
+    data: [2800, 6200, 9600, 6200, 2800, 2800, 6200, 9600, 6200, 2800, 2800, 6200, 9600, 6200, 2800, 2800, 6200, 9600, 6200, 2800],
   },
 ];
 
@@ -104,6 +103,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
               label: 'x轴字段名',
               tip: 'x 方向映射对应的数据字段名，默认为 label（flat 数据模式）',
             },
+            defaultValue: 'label',
             setter: 'StringSetter',
           },
           {
@@ -112,6 +112,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
               label: '系列字段名',
               tip: '系列分组对应的数据字段名，默认为 type（flat 数据模式）',
             },
+            defaultValue: 'type',
             setter: 'StringSetter',
           },
           {
@@ -120,6 +121,16 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
               label: 'y轴字段名',
               tip: 'y 方向映射对应的数据字段名，默认为 value（flat 数据模式）',
             },
+            defaultValue: 'value',
+            setter: 'StringSetter',
+          },
+          {
+            name: 'timeField',
+            title: {
+              label: '时间字段名',
+              tip: 'flat 数据中用于时间范围过滤的字段名，默认为 time；也可使用可解析的时间字符串作为 x 轴字段',
+            },
+            defaultValue: 'time',
             setter: 'StringSetter',
           },
         ],
@@ -136,7 +147,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'xAxisData',
             title: {
               label: 'x轴类别数据',
-              tip: 'x 轴类别标签数组，例如 ["A", "B", "C"]',
+              tip: 'x 轴类别标签数组，例如 ["A", "B", "C"]；与 yAxisData 同时配置时优先使用结构化数据',
             },
             setter: 'JsonSetter',
           },
@@ -144,7 +155,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'yAxisData',
             title: {
               label: 'y轴系列数据',
-              tip: 'y 轴系列数据数组，每项包含 name（系列名）、data（数值数组）、color（可选颜色）',
+              tip: 'y 轴系列数据数组，每项包含 name（系列名）、data（数值数组）、color（可选颜色）。Y 轴等距刻度：0 / 0.5 / 1 / 5000 / 10000',
             },
             setter: 'JsonSetter',
           },
@@ -152,8 +163,9 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'logBase',
             title: {
               label: '对数底数',
-              tip: 'y 轴对数刻度底数，默认 10。设置为 0 则使用线性轴',
+              tip: '兼容旧配置，当前 Y 轴固定为等距分段刻度 0 / 0.5 / 1 / 5000 / 10000（仅 0.5/1/5000/10000 画虚线）',
             },
+            defaultValue: 10,
             setter: 'NumberSetter',
           },
           {
@@ -162,13 +174,14 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
               label: '显示图例',
               tip: '是否显示图例，默认 true',
             },
+            defaultValue: true,
             setter: 'BoolSetter',
           },
           {
             name: 'legendPosition',
             title: {
               label: '图例位置',
-              tip: '图例显示位置：left / right / top / bottom，默认 top（水平居中显示）',
+              tip: '图例显示位置：left / right / top / bottom，默认 top',
             },
             setter: {
               componentName: 'SelectSetter',
@@ -187,8 +200,9 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'showTimeRangeTabs',
             title: {
               label: '显示时间范围按钮',
-              tip: '是否显示顶部时间范围筛选按钮，默认 true',
+              tip: '是否显示顶部时间范围筛选按钮，默认 true。切换后会按实时/半小时/1小时过滤数据',
             },
+            defaultValue: true,
             setter: 'BoolSetter',
           },
           {
@@ -197,6 +211,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
               label: '时间范围选项',
               tip: '顶部时间范围筛选按钮的选项数组，默认 ["实时", "半小时", "1小时"]',
             },
+            defaultValue: ['实时', '半小时', '1小时'],
             setter: 'JsonSetter',
           },
           {
@@ -210,11 +225,13 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
           {
             name: 'width',
             title: '宽度',
+            defaultValue: 400,
             setter: 'NumberSetter',
           },
           {
             name: 'height',
             title: '高度',
+            defaultValue: 300,
             setter: 'NumberSetter',
           },
           {
@@ -224,7 +241,6 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
           },
         ],
       },
-      // 交互事件
       {
         name: '',
         type: 'group',
@@ -251,7 +267,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
           },
         ],
       },
-    ].concat(actionConfigure as any),
+    ],
   },
 };
 
@@ -264,6 +280,10 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         title: '',
+        xField: 'label',
+        seriesField: 'type',
+        yField: 'value',
+        timeField: 'time',
         xAxisData: defaultXAxisData,
         yAxisData: defaultYAxisData,
         logBase: 10,
@@ -271,6 +291,7 @@ const snippets: Snippet[] = [
         legendPosition: 'top',
         showTimeRangeTabs: true,
         timeRangeOptions: ['实时', '半小时', '1小时'],
+        defaultActiveTimeRange: '实时',
         width: 400,
         height: 300,
       },
