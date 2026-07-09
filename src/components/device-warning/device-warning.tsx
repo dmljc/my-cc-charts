@@ -24,6 +24,12 @@ export interface DeviceWarningProps {
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
+  /** 警告名称字段名，默认 name */
+  nameField?: string;
+  /** 警告等级字段名，默认 level，取值 urgent/normal/regular */
+  levelField?: string;
+  /** 警告等级文案字段名，默认 levelText */
+  levelTextField?: string;
   /** 无警告数据时展示的文案，默认 '正常' */
   emptyText?: string;
   onItemClick?: (item: DeviceWarningItem, index: number) => void;
@@ -70,12 +76,25 @@ const resolveListData = (value?: DeviceWarningItem[] | null): DeviceWarningItem[
   return defaultData;
 };
 
+const resolveFieldValue = (item: DeviceWarningItem, field: string) => {
+  const value = item[field];
+
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  return String(value);
+};
+
 const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props) {
   const {
     width = 400,
     height = 200,
     style = {},
     className = '',
+    nameField = 'name',
+    levelField = 'level',
+    levelTextField = 'levelText',
     emptyText = '正常',
     onItemClick,
     ...otherProps
@@ -110,6 +129,9 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
   }, []);
 
   const hasWarning = items.length > 0;
+  const safeNameField = nameField || 'name';
+  const safeLevelField = levelField || 'level';
+  const safeLevelTextField = levelTextField || 'levelText';
 
   return (
     <div
@@ -120,8 +142,10 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
       {hasWarning ? (
         <div className="bizpack-device-warning-list">
           {items.map((item, index) => {
-            const level = item.level || 'regular';
-            const levelText = item.levelText || levelTextMap[level] || level;
+            const name = resolveFieldValue(item, safeNameField);
+            const level = resolveFieldValue(item, safeLevelField) || 'regular';
+            const levelText =
+              resolveFieldValue(item, safeLevelTextField) || levelTextMap[level] || level;
 
             return (
               <button
@@ -137,8 +161,8 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
                 <span className="bizpack-device-warning-icon-wrap">
                   <span className="bizpack-device-warning-icon" />
                 </span>
-                <span className="bizpack-device-warning-name" title={item.name}>
-                  {item.name}
+                <span className="bizpack-device-warning-name" title={name}>
+                  {name}
                 </span>
                 <span className="bizpack-device-warning-level">{levelText}</span>
               </button>

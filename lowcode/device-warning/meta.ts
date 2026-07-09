@@ -72,12 +72,36 @@ const DeviceWarningMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '设备警告数据',
-              tip: '每一项包含 id、name、level、levelText 字段，level 取值 urgent/normal/regular；数组为空时展示无警告文案',
+              tip: '每一项字段名需与下方字段映射一致；level 取值 urgent/normal/regular；数组为空时展示无警告文案',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
               return target.getProps().getPropValue('dataType') === 'data';
             },
+          },
+          {
+            name: 'nameField',
+            title: {
+              label: '名称字段名',
+              tip: '数据中警告名称对应的字段名，默认为 name',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'levelField',
+            title: {
+              label: '等级字段名',
+              tip: '数据中警告等级对应的字段名，默认为 level，取值 urgent/normal/regular',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'levelTextField',
+            title: {
+              label: '等级文案字段名',
+              tip: '数据中等级文案对应的字段名，默认为 levelText；为空时按等级映射紧急/一般/常规',
+            },
+            setter: 'StringSetter',
           },
           {
             name: 'emptyText',
@@ -145,6 +169,9 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
+        nameField: 'name',
+        levelField: 'level',
+        levelTextField: 'levelText',
         width: 400,
         height: 200,
       },
