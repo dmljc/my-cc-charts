@@ -71,6 +71,9 @@ export type {
 } from './components/alarm-status-overview';
 export { default as AlarmStatusOverview } from './components/alarm-status-overview';
 
+export type { DetailPopupItem, DetailPopupProps } from './components/detail-popup';
+export { default as DetailPopup } from './components/detail-popup';
+
 export type { DeviceCheckItem, DeviceCheckProps, DeviceCheckStatus } from './components/device-check';
 export { default as DeviceCheck } from './components/device-check';
 
