@@ -172,7 +172,7 @@ const AlarmStatusOverviewMeta: ComponentMetadata = {
           {
             name: 'onItemClick',
             title: {
-              label: '点击卡片',
+              label: '点击箭头',
               tip: '(item) => void',
             },
             setter: 'FunctionSetter',
