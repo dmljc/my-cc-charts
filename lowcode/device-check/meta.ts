@@ -72,12 +72,36 @@ const DeviceCheckMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '设备定检数据',
-              tip: '每一项包含 id、name、status、statusText、days、daysText 字段，status 取值 normal/expiring/overdue',
+              tip: '每一项字段名需与下方字段映射一致；status 取值 normal/expiring/overdue；状态文案与天数文案由 status、days 自动生成',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
               return target.getProps().getPropValue('dataType') === 'data';
             },
+          },
+          {
+            name: 'nameField',
+            title: {
+              label: '名称字段名',
+              tip: '数据中设备名称对应的字段名，默认为 name',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'statusField',
+            title: {
+              label: '状态字段名',
+              tip: '数据中定检状态对应的字段名，默认为 status，取值 normal/expiring/overdue',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'daysField',
+            title: {
+              label: '天数字段名',
+              tip: '数据中天数对应的字段名，默认为 days；正常/即将到期表示剩余天数，延期表示已延期天数',
+            },
+            setter: 'StringSetter',
           },
         ],
       },
@@ -137,6 +161,9 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
+        nameField: 'name',
+        statusField: 'status',
+        daysField: 'days',
         width: 400,
         height: 200,
       },

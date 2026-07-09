@@ -12,15 +12,11 @@ export type DeviceCheckStatus = 'normal' | 'expiring' | 'overdue';
 export interface DeviceCheckItem {
   id?: string | number;
   /** 设备名称 */
-  name: string;
+  name?: string;
   /** 定检状态，默认 normal */
   status?: DeviceCheckStatus;
-  /** 状态文案，不传则根据 status 自动映射 */
-  statusText?: string;
   /** 天数，正常/即将到期时表示剩余天数，延期时表示已延期天数 */
   days?: number;
-  /** 天数展示文案，不传则根据 status + days 自动拼接 */
-  daysText?: string;
   [key: string]: unknown;
 }
 
@@ -30,6 +26,12 @@ export interface DeviceCheckProps {
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
+  /** 设备名称字段名，默认 name */
+  nameField?: string;
+  /** 定检状态字段名，默认 status，取值 normal/expiring/overdue */
+  statusField?: string;
+  /** 天数字段名，默认 days */
+  daysField?: string;
   onItemClick?: (item: DeviceCheckItem, index: number) => void;
   [key: string]: unknown;
 }
@@ -46,26 +48,6 @@ const statusTextMap: Record<DeviceCheckStatus, string> = {
   normal: '正常',
   expiring: '即将到期',
   overdue: '延期',
-};
-
-const normalizeStatus = (status?: string): DeviceCheckStatus => {
-  if (status === 'expiring' || status === 'overdue') {
-    return status;
-  }
-
-  return 'normal';
-};
-
-const resolveDaysText = (item: DeviceCheckItem, status: DeviceCheckStatus): string => {
-  if (item.daysText) {
-    return item.daysText;
-  }
-
-  if (item.days === undefined || item.days === null) {
-    return '-';
-  }
-
-  return status === 'overdue' ? `延期${item.days}天` : `剩余${item.days}天`;
 };
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
@@ -86,6 +68,62 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
   return domProps;
 };
 
+const resolveListData = (value?: DeviceCheckItem[] | null): DeviceCheckItem[] => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  return defaultData;
+};
+
+const resolveFieldValue = (item: DeviceCheckItem, field: string) => {
+  const value = item[field];
+
+  if (value === null || value === undefined || value === '') {
+    return undefined;
+  }
+
+  return value;
+};
+
+const normalizeStatus = (status?: unknown): DeviceCheckStatus => {
+  if (status === 'expiring' || status === 'overdue') {
+    return status;
+  }
+
+  return 'normal';
+};
+
+const resolveDaysNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim() !== '') {
+    const numeric = Number(value);
+
+    if (Number.isFinite(numeric)) {
+      return numeric;
+    }
+  }
+
+  return undefined;
+};
+
+const resolveDaysText = (
+  item: DeviceCheckItem,
+  status: DeviceCheckStatus,
+  daysField: string,
+): string => {
+  const days = resolveDaysNumber(resolveFieldValue(item, daysField));
+
+  if (days === undefined) {
+    return '-';
+  }
+
+  return status === 'overdue' ? `延期${days}天` : `剩余${days}天`;
+};
+
 const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
   const {
     data = defaultData,
@@ -93,17 +131,22 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
     height = 200,
     style = {},
     className = '',
+    nameField = 'name',
+    statusField = 'status',
+    daysField = 'days',
     onItemClick,
     ...otherProps
   } = props;
-  const [items, setItems] = useState<DeviceCheckItem[]>(data);
+  const [items, setItems] = useState<DeviceCheckItem[]>(() => resolveListData(data));
   const rootDomProps = pickRootDomProps(otherProps);
   const bizRef = React.useRef<BizRef | null>(null);
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
 
   useEffect(() => {
-    setItems(data);
-  }, [data]);
+    if (!props.dataType || props.dataType === 'data') {
+      setItems(resolveListData(data));
+    }
+  }, [data, props.dataType]);
 
   useEffect(() => {
     bizRef.current = {
@@ -123,6 +166,10 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
     };
   }, []);
 
+  const safeNameField = nameField || 'name';
+  const safeStatusField = statusField || 'status';
+  const safeDaysField = daysField || 'days';
+
   return (
     <div
       className={`bizpack-device-check ${className}`}
@@ -131,9 +178,11 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
     >
       <div className="bizpack-device-check-list">
         {items.map((item, index) => {
-          const status = normalizeStatus(item.status);
-          const statusText = item.statusText || statusTextMap[status];
-          const daysText = resolveDaysText(item, status);
+          const name = resolveFieldValue(item, safeNameField);
+          const displayName = name === undefined ? '' : String(name);
+          const status = normalizeStatus(resolveFieldValue(item, safeStatusField));
+          const statusText = statusTextMap[status];
+          const daysText = resolveDaysText(item, status, safeDaysField);
 
           return (
             <button
@@ -149,8 +198,8 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
               <span className="bizpack-device-check-icon-wrap">
                 <span className="bizpack-device-check-icon" />
               </span>
-              <span className="bizpack-device-check-name" title={item.name}>
-                {item.name}
+              <span className="bizpack-device-check-name" title={displayName}>
+                {displayName}
               </span>
               <span
                 className={`bizpack-device-check-days ${
