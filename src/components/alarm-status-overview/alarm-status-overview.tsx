@@ -24,10 +24,6 @@ export type AlarmStatusOverviewItem = AlarmStatusOverviewData;
 export interface AlarmStatusOverviewProps {
   title?: string;
   data?: AlarmStatusOverviewData | AlarmStatusOverviewData[];
-  /** 设备名称，数据字段无值时作为兜底展示 */
-  name?: string;
-  /** 正常运行文案，数据字段无值时作为兜底展示 */
-  runningText?: string;
   /** 设备名称对应的数据字段名，默认 'name' */
   nameField?: string;
   /** 状态对应的数据字段名，默认 'status'，normal 为正常运行，alarm 为异常告警 */
@@ -106,30 +102,9 @@ const resolveFieldValue = (item: AlarmStatusOverviewData, field: string) => {
   return String(value);
 };
 
-const resolveDisplayValue = (
-  item: AlarmStatusOverviewData,
-  field: string,
-  staticValue?: string,
-  fallback = '',
-) => {
-  const dataValue = resolveFieldValue(item, field);
-
-  if (dataValue !== undefined) {
-    return dataValue;
-  }
-
-  if (staticValue !== null && staticValue !== undefined && staticValue !== '') {
-    return staticValue;
-  }
-
-  return fallback;
-};
-
 const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmStatusOverview(props) {
   const {
     data = defaultData,
-    name,
-    runningText,
     nameField = 'name',
     statusField = 'status',
     runningTextField = 'runningText',
@@ -175,10 +150,10 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
   const safeSevereField = severeField || 'severe';
   const safeGeneralField = generalField || 'general';
 
-  const displayName = resolveDisplayValue(item, safeNameField, name, 'X12');
+  const displayName = resolveFieldValue(item, safeNameField) ?? 'X12';
   const status = normalizeStatus((item as Record<string, unknown>)[safeStatusField]);
   const isAlarm = status === 'alarm';
-  const displayRunningText = resolveDisplayValue(item, safeRunningTextField, runningText, '正常运行');
+  const displayRunningText = resolveFieldValue(item, safeRunningTextField) ?? '正常运行';
 
   return (
     <div

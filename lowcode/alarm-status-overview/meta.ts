@@ -87,22 +87,6 @@ const AlarmStatusOverviewMeta: ComponentMetadata = {
             },
           },
           {
-            name: 'name',
-            title: {
-              label: '设备名称',
-              tip: '静态配置的设备名称；接口/静态数据中有对应字段值时优先使用数据',
-            },
-            setter: 'StringSetter',
-          },
-          {
-            name: 'runningText',
-            title: {
-              label: '运行文案',
-              tip: '静态配置的正常运行文案，仅在 status 为 normal 时显示；数据中有对应字段值时优先使用数据',
-            },
-            setter: 'StringSetter',
-          },
-          {
             name: 'nameField',
             title: {
               label: '名称字段名',
