@@ -24,6 +24,10 @@ export type AlarmStatusOverviewItem = AlarmStatusOverviewData;
 export interface AlarmStatusOverviewProps {
   title?: string;
   data?: AlarmStatusOverviewData | AlarmStatusOverviewData[];
+  /** 设备名称，数据字段无值时作为兜底展示 */
+  name?: string;
+  /** 正常运行文案，数据字段无值时作为兜底展示 */
+  runningText?: string;
   /** 设备名称对应的数据字段名，默认 'name' */
   nameField?: string;
   /** 状态对应的数据字段名，默认 'status'，normal 为正常运行，alarm 为异常告警 */
@@ -92,9 +96,40 @@ const normalizeStatus = (status?: unknown): AlarmStatusOverviewStatus => {
   return status === 'alarm' ? 'alarm' : 'normal';
 };
 
+const resolveFieldValue = (item: AlarmStatusOverviewData, field: string) => {
+  const value = (item as Record<string, unknown>)[field];
+
+  if (value === null || value === undefined || value === '') {
+    return undefined;
+  }
+
+  return String(value);
+};
+
+const resolveDisplayValue = (
+  item: AlarmStatusOverviewData,
+  field: string,
+  staticValue?: string,
+  fallback = '',
+) => {
+  const dataValue = resolveFieldValue(item, field);
+
+  if (dataValue !== undefined) {
+    return dataValue;
+  }
+
+  if (staticValue !== null && staticValue !== undefined && staticValue !== '') {
+    return staticValue;
+  }
+
+  return fallback;
+};
+
 const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmStatusOverview(props) {
   const {
     data = defaultData,
+    name,
+    runningText,
     nameField = 'name',
     statusField = 'status',
     runningTextField = 'runningText',
@@ -133,10 +168,17 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
     };
   }, []);
 
-  const name = (item as any)[nameField] ?? 'X12';
-  const status = normalizeStatus((item as any)[statusField]);
+  const safeNameField = nameField || 'name';
+  const safeRunningTextField = runningTextField || 'runningText';
+  const safeStatusField = statusField || 'status';
+  const safeEmergencyField = emergencyField || 'emergency';
+  const safeSevereField = severeField || 'severe';
+  const safeGeneralField = generalField || 'general';
+
+  const displayName = resolveDisplayValue(item, safeNameField, name, 'X12');
+  const status = normalizeStatus((item as Record<string, unknown>)[safeStatusField]);
   const isAlarm = status === 'alarm';
-  const runningText = (item as any)[runningTextField] ?? '正常运行';
+  const displayRunningText = resolveDisplayValue(item, safeRunningTextField, runningText, '正常运行');
 
   return (
     <div
@@ -164,8 +206,8 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
               : 'bizpack-alarm-status-overview-dot-normal'
           }`}
         />
-        <span className="bizpack-alarm-status-overview-name" title={name}>
-          {name}
+        <span className="bizpack-alarm-status-overview-name" title={displayName}>
+          {displayName}
         </span>
         <span className="bizpack-alarm-status-overview-arrow" aria-hidden="true" />
 
@@ -173,19 +215,19 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
           <span className="bizpack-alarm-status-overview-stats">
             <span className="bizpack-alarm-status-overview-stat">
               <span className="bizpack-alarm-status-overview-stat-value bizpack-alarm-status-overview-stat-value-emergency">
-                {(item as any)[emergencyField] ?? 0}
+                {(item as Record<string, unknown>)[safeEmergencyField] ?? 0}
               </span>
               <span className="bizpack-alarm-status-overview-stat-label">紧急</span>
             </span>
             <span className="bizpack-alarm-status-overview-stat">
               <span className="bizpack-alarm-status-overview-stat-value bizpack-alarm-status-overview-stat-value-severe">
-                {(item as any)[severeField] ?? 0}
+                {(item as Record<string, unknown>)[safeSevereField] ?? 0}
               </span>
               <span className="bizpack-alarm-status-overview-stat-label">严重</span>
             </span>
             <span className="bizpack-alarm-status-overview-stat">
               <span className="bizpack-alarm-status-overview-stat-value bizpack-alarm-status-overview-stat-value-general">
-                {(item as any)[generalField] ?? 0}
+                {(item as Record<string, unknown>)[safeGeneralField] ?? 0}
               </span>
               <span className="bizpack-alarm-status-overview-stat-label">一般</span>
             </span>
@@ -193,7 +235,7 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
         ) : (
           <span className="bizpack-alarm-status-overview-running">
             <span className="bizpack-alarm-status-overview-running-bg" />
-            <span className="bizpack-alarm-status-overview-running-text">{runningText}</span>
+            <span className="bizpack-alarm-status-overview-running-text">{displayRunningText}</span>
           </span>
         )}
       </button>
