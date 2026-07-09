@@ -72,7 +72,7 @@ const DeviceWarningMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '设备警告数据',
-              tip: '每一项字段名需与下方字段映射一致；level 取值 urgent/normal/regular；数组为空时展示无警告文案',
+              tip: '每一项字段名需与下方字段映射一致；level 取值 urgent/normal/regular，文案按等级自动映射紧急/一般/常规；数组为空时展示无警告文案',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -96,19 +96,12 @@ const DeviceWarningMeta: ComponentMetadata = {
             setter: 'StringSetter',
           },
           {
-            name: 'levelTextField',
-            title: {
-              label: '等级文案字段名',
-              tip: '数据中等级文案对应的字段名，默认为 levelText；为空时按等级映射紧急/一般/常规',
-            },
-            setter: 'StringSetter',
-          },
-          {
             name: 'emptyText',
             title: {
               label: '无警告文案',
               tip: '警告列表为空时展示的文案，默认"正常"',
             },
+            defaultValue: '正常',
             setter: 'StringSetter',
           },
         ],
@@ -171,7 +164,7 @@ const snippets: Snippet[] = [
         data: defaultData,
         nameField: 'name',
         levelField: 'level',
-        levelTextField: 'levelText',
+        emptyText: '正常',
         width: 400,
         height: 200,
       },

@@ -14,7 +14,6 @@ export interface DeviceWarningItem {
   id?: string | number;
   name: string;
   level?: DeviceWarningLevel;
-  levelText?: string;
   [key: string]: unknown;
 }
 
@@ -28,8 +27,6 @@ export interface DeviceWarningProps {
   nameField?: string;
   /** 警告等级字段名，默认 level，取值 urgent/normal/regular */
   levelField?: string;
-  /** 警告等级文案字段名，默认 levelText */
-  levelTextField?: string;
   /** 无警告数据时展示的文案，默认 '正常' */
   emptyText?: string;
   onItemClick?: (item: DeviceWarningItem, index: number) => void;
@@ -94,7 +91,6 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
     className = '',
     nameField = 'name',
     levelField = 'level',
-    levelTextField = 'levelText',
     emptyText = '正常',
     onItemClick,
     ...otherProps
@@ -131,7 +127,6 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
   const hasWarning = items.length > 0;
   const safeNameField = nameField || 'name';
   const safeLevelField = levelField || 'level';
-  const safeLevelTextField = levelTextField || 'levelText';
 
   return (
     <div
@@ -144,8 +139,7 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
           {items.map((item, index) => {
             const name = resolveFieldValue(item, safeNameField);
             const level = resolveFieldValue(item, safeLevelField) || 'regular';
-            const levelText =
-              resolveFieldValue(item, safeLevelTextField) || levelTextMap[level] || level;
+            const levelText = levelTextMap[level] || level;
 
             return (
               <button
