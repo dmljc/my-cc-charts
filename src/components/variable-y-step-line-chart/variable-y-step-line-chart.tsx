@@ -149,13 +149,6 @@ const TIME_RANGE_MS: Record<string, number> = {
   '1小时': 60 * 60 * 1000,
 };
 
-/** 无真实时间戳时，按点数回退截取 */
-const TIME_RANGE_POINT_COUNT: Record<string, number> = {
-  实时: 10,
-  半小时: 30,
-  '1小时': 60,
-};
-
 const DEFAULT_COLORS = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4'];
 const TOOLTIP_CLASS_NAME = 'bizpack-variable-y-step-line-chart-tooltip';
 
@@ -222,15 +215,16 @@ const formatTooltipValue = (value: number | string | null | undefined): string =
 
   const abs = Math.abs(num);
 
-  if (abs >= 1000 || (abs > 0 && abs < 0.001)) {
+  // 仅对极小值使用科学计数法，避免 2800 显示成 2.80e+3
+  if (abs > 0 && abs < 0.001) {
     return num.toExponential(2);
   }
 
-  if (Number.isInteger(num)) {
-    return String(num);
+  if (Number.isInteger(num) || Math.abs(num - Math.round(num)) < 1e-9) {
+    return String(Math.round(num));
   }
 
-  return parseFloat(num.toPrecision(3)).toString();
+  return parseFloat(num.toPrecision(6)).toString();
 };
 
 const buildAxisTooltipConfig = () => ({
@@ -261,12 +255,15 @@ const buildAxisTooltipConfig = () => ({
     const axisLabel = items[0].axisValue ?? items[0].name ?? '';
     const rows = items
       .map((item: any) => {
+        const dataItem = item.data;
         const rawValue = Array.isArray(item.value) ? item.value[item.value.length - 1] : item.value;
-        // 显示坐标还原为真实值
+        // 优先用系列里保存的原始值，避免坐标映射往返误差
         const realValue =
-          typeof rawValue === 'number' && Number.isFinite(rawValue)
-            ? axisToValue(rawValue)
-            : rawValue;
+          dataItem && typeof dataItem === 'object' && dataItem.realValue != null
+            ? dataItem.realValue
+            : typeof rawValue === 'number' && Number.isFinite(rawValue)
+              ? axisToValue(rawValue)
+              : rawValue;
 
         return (
           `<div class="${TOOLTIP_CLASS_NAME}__row">`
@@ -342,22 +339,6 @@ const resolveTimeRangeMs = (range: string): number => {
   return TIME_RANGE_MS['实时'];
 };
 
-const resolveTimeRangePointCount = (range: string): number => {
-  if (TIME_RANGE_POINT_COUNT[range] != null) {
-    return TIME_RANGE_POINT_COUNT[range];
-  }
-
-  if (range.indexOf('半小时') >= 0) {
-    return TIME_RANGE_POINT_COUNT['半小时'];
-  }
-
-  if (range.indexOf('1小时') >= 0 || range.indexOf('一小时') >= 0) {
-    return TIME_RANGE_POINT_COUNT['1小时'];
-  }
-
-  return TIME_RANGE_POINT_COUNT['实时'];
-};
-
 /** 将 flat 数据按 x 轴标签对齐转换为 series 格式 */
 export const transformFlatData = (
   data: any[],
@@ -420,7 +401,7 @@ export const transformFlatData = (
   };
 };
 
-/** 按时间范围过滤结构化数据 */
+/** 按时间范围过滤结构化数据；无真实时间戳时不截取，避免静态 x/y 编辑的前段数据被「实时」裁掉 */
 export const filterSourceByTimeRange = (
   source: ChartSourceData,
   timeRange: string,
@@ -436,20 +417,18 @@ export const filterSourceByTimeRange = (
     && timestamps.length === xAxisData.length
     && timestamps.every((item) => Number.isFinite(item));
 
-  let startIndex = 0;
+  // 静态结构化数据（仅类别标签、无 time）不做点数回退截取
+  if (!hasValidTimestamp || !timestamps) {
+    return source;
+  }
 
-  if (hasValidTimestamp && timestamps) {
-    const latest = Math.max(...timestamps);
-    const windowMs = resolveTimeRangeMs(timeRange);
-    const threshold = latest - windowMs;
-    startIndex = timestamps.findIndex((item) => item >= threshold);
+  const latest = Math.max(...timestamps);
+  const windowMs = resolveTimeRangeMs(timeRange);
+  const threshold = latest - windowMs;
+  let startIndex = timestamps.findIndex((item) => item >= threshold);
 
-    if (startIndex < 0) {
-      startIndex = 0;
-    }
-  } else {
-    const keepCount = resolveTimeRangePointCount(timeRange);
-    startIndex = Math.max(0, xAxisData.length - keepCount);
+  if (startIndex < 0) {
+    startIndex = 0;
   }
 
   if (startIndex === 0) {
@@ -458,7 +437,7 @@ export const filterSourceByTimeRange = (
 
   return {
     xAxisData: xAxisData.slice(startIndex),
-    timestamps: timestamps ? timestamps.slice(startIndex) : undefined,
+    timestamps: timestamps.slice(startIndex),
     yAxisData: yAxisData.map((seriesItem) => ({
       ...seriesItem,
       data: seriesItem.data.slice(startIndex),
@@ -488,7 +467,19 @@ const buildSeriesOption = (yAxisData: YAxisSeriesConfig[]) =>
       name: seriesItem.name,
       type: 'line',
       smooth: true,
-      data: seriesItem.data.map((value) => valueToAxis(value)),
+      // 保留 realValue，tooltip/点击回调直接用原始值，避免坐标往返误差
+      data: seriesItem.data.map((value) => {
+        const axisValue = valueToAxis(value);
+
+        if (axisValue === null) {
+          return null;
+        }
+
+        return {
+          value: axisValue,
+          realValue: value,
+        };
+      }),
       connectNulls: false,
       showSymbol: true,
       symbol: 'circle',
@@ -719,7 +710,11 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
       if (params.componentType === 'series' && params.seriesName !== '__y-grid__' && onPointClickRef.current) {
         const raw = params.data;
         const realValue =
-          typeof raw === 'number' && Number.isFinite(raw) ? axisToValue(raw) : raw;
+          raw && typeof raw === 'object' && raw.realValue != null
+            ? raw.realValue
+            : typeof raw === 'number' && Number.isFinite(raw)
+              ? axisToValue(raw)
+              : raw;
         onPointClickRef.current(realValue, params.seriesIndex ?? 0, params.dataIndex ?? 0);
       }
     });

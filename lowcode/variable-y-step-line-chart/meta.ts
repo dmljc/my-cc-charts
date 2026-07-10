@@ -1,6 +1,8 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
+const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
+
 const defaultXAxisData = [
   '01-01', '01-02', '01-03', '01-04', '01-05',
   '01-06', '01-07', '01-08', '01-09', '01-10',
@@ -88,7 +90,34 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
           label: '数据',
         },
         items: [
-          ...ChartMetaIot,
+          ...dataSourceMeta,
+          {
+            name: 'xAxisData',
+            title: {
+              label: 'x轴类别数据',
+              tip: '当前图表默认使用该字段 + y轴系列数据渲染；例如 ["01-01", "01-02"]',
+            },
+            setter: 'JsonSetter',
+          },
+          {
+            name: 'yAxisData',
+            title: {
+              label: 'y轴系列数据',
+              tip: '当前图表默认使用该字段渲染。每项包含 name、data、color（可选）。Y 轴等距刻度：0 / 0.5 / 1 / 5000 / 10000',
+            },
+            setter: 'JsonSetter',
+          },
+          {
+            name: 'data',
+            title: {
+              label: 'Flat图表数据',
+              tip: '仅 flat 模式使用。默认演示走 xAxisData/yAxisData，所以这里为空是正常的；若填写 flat 数据且未配置 x/y 轴结构化数据，才会走该字段',
+            },
+            setter: 'JsonSetter',
+            condition: (target: any) => {
+              return target.getProps().getPropValue('dataType') === 'data';
+            },
+          },
           {
             name: 'title',
             title: {
@@ -101,7 +130,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'xField',
             title: {
               label: 'x轴字段名',
-              tip: 'x 方向映射对应的数据字段名，默认为 label（flat 数据模式）',
+              tip: '仅 flat 数据模式生效，默认为 label',
             },
             defaultValue: 'label',
             setter: 'StringSetter',
@@ -110,7 +139,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'seriesField',
             title: {
               label: '系列字段名',
-              tip: '系列分组对应的数据字段名，默认为 type（flat 数据模式）',
+              tip: '仅 flat 数据模式生效，默认为 type',
             },
             defaultValue: 'type',
             setter: 'StringSetter',
@@ -119,7 +148,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'yField',
             title: {
               label: 'y轴字段名',
-              tip: 'y 方向映射对应的数据字段名，默认为 value（flat 数据模式）',
+              tip: '仅 flat 数据模式生效，默认为 value',
             },
             defaultValue: 'value',
             setter: 'StringSetter',
@@ -128,7 +157,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'timeField',
             title: {
               label: '时间字段名',
-              tip: 'flat 数据中用于时间范围过滤的字段名，默认为 time；也可使用可解析的时间字符串作为 x 轴字段',
+              tip: '仅 flat 数据模式生效，默认为 time',
             },
             defaultValue: 'time',
             setter: 'StringSetter',
@@ -143,22 +172,6 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
           label: '图形属性',
         },
         items: [
-          {
-            name: 'xAxisData',
-            title: {
-              label: 'x轴类别数据',
-              tip: 'x 轴类别标签数组，例如 ["A", "B", "C"]；与 yAxisData 同时配置时优先使用结构化数据',
-            },
-            setter: 'JsonSetter',
-          },
-          {
-            name: 'yAxisData',
-            title: {
-              label: 'y轴系列数据',
-              tip: 'y 轴系列数据数组，每项包含 name（系列名）、data（数值数组）、color（可选颜色）。Y 轴等距刻度：0 / 0.5 / 1 / 5000 / 10000',
-            },
-            setter: 'JsonSetter',
-          },
           {
             name: 'logBase',
             title: {
@@ -200,7 +213,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'showTimeRangeTabs',
             title: {
               label: '显示时间范围按钮',
-              tip: '是否显示顶部时间范围筛选按钮，默认 true。切换后会按实时/半小时/1小时过滤数据',
+              tip: '是否显示顶部时间范围筛选按钮，默认 true。仅当数据含有效时间戳时，切换才会按实时/半小时/1小时过滤；纯 xAxisData/yAxisData 静态数据不会被截取',
             },
             defaultValue: true,
             setter: 'BoolSetter',
