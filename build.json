@@ -1,5 +1,5 @@
 {
-  "library": "ccCharts",
+  "library": "bizMyCcCharts",
   "libraryTarget": "umd",
   "sourceMap": true,
   "alias": {

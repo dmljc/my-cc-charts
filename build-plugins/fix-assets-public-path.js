@@ -6,7 +6,7 @@
  *      导致 CSS 里的大图路径变成 dist/assets/xxx.png，浏览器解析成 dist/dist/assets/xxx.png → 404。
  *
  *   2. 消费方二次打包问题（根本原因）：
- *      即使第一个问题解决，当消费方项目（如 openview）把 ccCharts.css 通过自己的 webpack
+ *      即使第一个问题解决，当消费方项目（如 openview）把 bizMyCcCharts.css 通过自己的 webpack
  *      再打包一次时，css-loader 会尝试把 CSS 里的 url(assets/xxx.png) 当作本地源文件重新解析。
  *      由于这个路径不是一个真实存在的本地文件，路径解析失败，图片无法显示。
  *
