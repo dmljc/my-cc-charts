@@ -265,7 +265,7 @@ const snippets: Snippet[] = [
   },
 ];
 
-const hideFromLibrary = true;
+const hideFromLibrary = false;
 
 export default {
   ...FilletColumnChartMeta,

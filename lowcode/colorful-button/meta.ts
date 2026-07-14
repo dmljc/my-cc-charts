@@ -4,6 +4,8 @@ import { IPublicTypeComponentMetadata, IPublicTypeSnippet } from '@alilc/lowcode
 const ColorfulButtonMeta: IPublicTypeComponentMetadata = {
   "componentName": "ColorfulButton",
   "title": "ColorfulButton",
+  "category": "状态组件",
+  "group": "图表库",
   "docUrl": "",
   "screenshot": "",
   "devMode": "proCode",
@@ -113,7 +115,7 @@ const snippets: IPublicTypeSnippet[] = [
   }
 ];
 
-const hideFromLibrary = true;
+const hideFromLibrary = false;
 
 export default {
   ...ColorfulButtonMeta,
