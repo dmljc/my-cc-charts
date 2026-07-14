@@ -34,7 +34,7 @@
     "start": "npm run dumi",
     "build": "build-scripts build",
     "dev": "build-scripts start --config ./build.lowcode.js",
-    "lowcode:build": "build-scripts build --config ./build.lowcode.js",
+    "lowcode:build": "build-scripts build --config ./build.lowcode.js && node build-plugins/rename-lowcode-outputs.js",
     "dumi": "cross-env APP_ROOT=docs dumi dev",
     "dumi:build": "cross-env APP_ROOT=docs dumi build",
     "prepublishOnly": "npm run build && npm run lowcode:build && npm run dumi:build"
