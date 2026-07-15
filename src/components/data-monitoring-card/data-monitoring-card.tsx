@@ -119,8 +119,10 @@ const resolveScrollMode = (
   scrollMode: unknown,
   autoScroll: unknown,
 ): DataMonitoringScrollMode => {
-  if (scrollMode === 'auto' || scrollMode === 'manual' || scrollMode === 'autoWithManual') {
-    return scrollMode;
+  const normalizedMode = typeof scrollMode === 'string' ? scrollMode.trim() : scrollMode;
+
+  if (normalizedMode === 'auto' || normalizedMode === 'manual' || normalizedMode === 'autoWithManual') {
+    return normalizedMode;
   }
 
   if (autoScroll === false || autoScroll === 'false') {
@@ -129,6 +131,8 @@ const resolveScrollMode = (
 
   return 'auto';
 };
+
+const getNow = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
 
 const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonitoringCard(props) {
   const {
@@ -175,8 +179,32 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const rafRef = useRef<number>();
   const hoverPausedRef = useRef(false);
   const userControlUntilRef = useRef(0);
-  const lastAutoScrollAtRef = useRef(0);
   const lastFrameTimeRef = useRef(0);
+  const lastAutoScrollAtRef = useRef(0);
+  const isProgrammaticScrollRef = useRef(false);
+  const programmaticScrollTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const pointerActiveRef = useRef(false);
+
+  const PROGRAMMATIC_SCROLL_GUARD_MS = 150;
+
+  const beginProgrammaticScroll = useCallback(() => {
+    isProgrammaticScrollRef.current = true;
+    lastAutoScrollAtRef.current = getNow();
+
+    if (programmaticScrollTimerRef.current) {
+      clearTimeout(programmaticScrollTimerRef.current);
+    }
+
+    programmaticScrollTimerRef.current = setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+      programmaticScrollTimerRef.current = undefined;
+    }, PROGRAMMATIC_SCROLL_GUARD_MS);
+  }, []);
+
+  const setScrollTopProgrammatically = useCallback((el: HTMLDivElement, nextScrollTop: number) => {
+    beginProgrammaticScroll();
+    el.scrollTop = nextScrollTop;
+  }, [beginProgrammaticScroll]);
 
   const normalizeLoopPosition = useCallback((el: HTMLDivElement) => {
     const loopHeight = el.scrollHeight / 2;
@@ -186,29 +214,42 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     }
 
     if (el.scrollTop >= loopHeight) {
-      el.scrollTop -= loopHeight;
+      setScrollTopProgrammatically(el, el.scrollTop - loopHeight);
     } else if (el.scrollTop < 0) {
-      el.scrollTop += loopHeight;
+      setScrollTopProgrammatically(el, el.scrollTop + loopHeight);
     }
-  }, []);
+  }, [setScrollTopProgrammatically]);
 
   const markUserInteraction = useCallback(() => {
-    if (!useJsAutoScroll) {
+    if (!useJsAutoScroll || isProgrammaticScrollRef.current) {
       return;
     }
 
-    userControlUntilRef.current = performance.now() + resolvedResumeDelay;
+    userControlUntilRef.current = getNow() + resolvedResumeDelay;
   }, [resolvedResumeDelay, useJsAutoScroll]);
 
   const handleUserScroll = useCallback(() => {
-    if (!useJsAutoScroll || performance.now() - lastAutoScrollAtRef.current < 80) {
+    const el = scrollRef.current;
+
+    if (!el) {
       return;
     }
 
-    userControlUntilRef.current = performance.now() + resolvedResumeDelay;
+    normalizeLoopPosition(el);
 
-    if (scrollRef.current) {
-      normalizeLoopPosition(scrollRef.current);
+    if (!useJsAutoScroll || isProgrammaticScrollRef.current) {
+      return;
+    }
+
+    const elapsedSinceAutoScroll = getNow() - lastAutoScrollAtRef.current;
+
+    if (elapsedSinceAutoScroll < PROGRAMMATIC_SCROLL_GUARD_MS) {
+      return;
+    }
+
+    // 滚轮/触摸已在对应事件中标记；此处主要覆盖滚动条拖拽等场景
+    if (pointerActiveRef.current) {
+      userControlUntilRef.current = getNow() + resolvedResumeDelay;
     }
   }, [normalizeLoopPosition, resolvedResumeDelay, useJsAutoScroll]);
 
@@ -219,13 +260,14 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
 
     hoverPausedRef.current = false;
     userControlUntilRef.current = 0;
-    lastFrameTimeRef.current = performance.now();
+    lastFrameTimeRef.current = getNow();
 
     const tick = (now: number) => {
       const el = scrollRef.current;
 
       if (el) {
         const loopHeight = el.scrollHeight / 2;
+        const maxScrollTop = el.scrollHeight - el.clientHeight;
         const isUserControlling = now < userControlUntilRef.current;
         const shouldPause = isUserControlling || (resolvedPauseOnHover && hoverPausedRef.current);
 
@@ -233,7 +275,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
           normalizeLoopPosition(el);
         }
 
-        if (!shouldPause && loopHeight > 0) {
+        if (!shouldPause && loopHeight > 0 && maxScrollTop > 0) {
           const delta = Math.max(now - lastFrameTimeRef.current, 0);
           const speed = loopHeight / (resolvedScrollDuration * 1000);
           let nextScrollTop = el.scrollTop + speed * delta;
@@ -242,8 +284,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
             nextScrollTop -= loopHeight;
           }
 
-          el.scrollTop = nextScrollTop;
-          lastAutoScrollAtRef.current = now;
+          setScrollTopProgrammatically(el, nextScrollTop);
         }
       }
 
@@ -257,6 +298,9 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
+      if (programmaticScrollTimerRef.current) {
+        clearTimeout(programmaticScrollTimerRef.current);
+      }
     };
   }, [
     items,
@@ -264,8 +308,29 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     resolvedPauseOnHover,
     resolvedResumeDelay,
     resolvedScrollDuration,
+    setScrollTopProgrammatically,
     useJsAutoScroll,
   ]);
+
+  useEffect(() => {
+    if (!useJsAutoScroll || !scrollRef.current || typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+
+    const el = scrollRef.current;
+    const observer = new ResizeObserver(() => {
+      normalizeLoopPosition(el);
+    });
+
+    observer.observe(el);
+    if (el.firstElementChild) {
+      observer.observe(el.firstElementChild);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [items, normalizeLoopPosition, useJsAutoScroll]);
 
   const rootDomProps = pickRootDomProps(otherProps);
   const rootStyle: React.CSSProperties = {
@@ -322,11 +387,24 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
           <div
             ref={useJsAutoScroll ? scrollRef : undefined}
             className={scrollClassName}
-            style={showNativeScrollbar ? { overflowY: 'scroll' } : undefined}
+            style={isListMode
+              ? {
+                height: '100%',
+                maxHeight: '100%',
+                overflowY: showNativeScrollbar ? 'scroll' : 'auto',
+              }
+              : undefined}
             onScroll={useJsAutoScroll ? handleUserScroll : undefined}
             onWheel={useJsAutoScroll ? markUserInteraction : undefined}
             onTouchStart={useJsAutoScroll ? markUserInteraction : undefined}
-            onPointerDown={useJsAutoScroll ? markUserInteraction : undefined}
+            onPointerDown={useJsAutoScroll
+              ? () => {
+                pointerActiveRef.current = true;
+              }
+              : undefined}
+            onPointerUp={useJsAutoScroll ? () => { pointerActiveRef.current = false; } : undefined}
+            onPointerCancel={useJsAutoScroll ? () => { pointerActiveRef.current = false; } : undefined}
+            onPointerLeave={useJsAutoScroll ? () => { pointerActiveRef.current = false; } : undefined}
             onMouseEnter={useJsAutoScroll && resolvedPauseOnHover
               ? () => { hoverPausedRef.current = true; }
               : undefined}
