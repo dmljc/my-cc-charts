@@ -3,31 +3,32 @@ import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
-const defaultXAxisData = [
-  '01-01', '01-02', '01-03', '01-04', '01-05',
-  '01-06', '01-07', '01-08', '01-09', '01-10',
-  '01-11', '01-12', '01-13', '01-14', '01-15',
-  '01-16', '01-17', '01-18', '01-19', '01-20',
-];
-
-const defaultYAxisData = [
-  {
-    name: '曲线A',
-    data: [0.12, 0.45, 0.78, 0.45, 0.12, 0.12, 0.45, 0.78, 0.45, 0.12, 0.12, 0.45, 0.78, 0.45, 0.12, 0.12, 0.45, 0.78, 0.45, 0.12],
-  },
-  {
-    name: '曲线B',
-    data: [0.05, 0.35, 0.65, 0.35, 0.05, 0.05, 0.35, 0.65, 0.35, 0.05, 0.05, 0.35, 0.65, 0.35, 0.05, 0.05, 0.35, 0.65, 0.35, 0.05],
-  },
-  {
-    name: '曲线C',
-    data: [0.22, 0.55, 0.88, 0.55, 0.22, 0.22, 0.55, 0.88, 0.55, 0.22, 0.22, 0.55, 0.88, 0.55, 0.22, 0.22, 0.55, 0.88, 0.55, 0.22],
-  },
-  {
-    name: '高值曲线',
-    data: [2800, 6200, 9600, 6200, 2800, 2800, 6200, 9600, 6200, 2800, 2800, 6200, 9600, 6200, 2800, 2800, 6200, 9600, 6200, 2800],
-  },
-];
+/** 与接口 qtcData 结构一致：xAxis + series[].name + topic 指定的数值字段 */
+const defaultApiData = {
+  topic: 'init_data',
+  xAxis: [
+    '04:44', '05:44', '06:44', '07:44', '08:44', '09:44', '10:44', '11:44',
+    '12:44', '13:44', '14:44', '15:44', '16:44',
+  ],
+  series: [
+    {
+      name: '设备1',
+      init_data: [0.015, 0.02, 0.03, 0.035, 0.045, 0.05, 0.06, 0.065, 0.075, 0.08, 0.09, 0.095, 0.105],
+    },
+    {
+      name: '设备2',
+      init_data: [0.03, 0.025, 0.015, 0.04, 0.06, 0.05, 0.045, 0.07, 0.09, 0.08, 0.075, 0.1, 0.12],
+    },
+    {
+      name: '设备3',
+      init_data: [0.02, 0.035, 0.04, 0.025, 0.05, 0.055, 0.07, 0.06, 0.08, 0.085, 0.095, 0.09, 0.11],
+    },
+    {
+      name: '设备4',
+      init_data: [1000, 120, 105, 187, 992, 2030, 2800, 1500, 900, 600, 400, 300, 200],
+    },
+  ],
+};
 
 const VariableYStepLineChartMeta: ComponentMetadata = {
   componentName: 'VariableYStepLineChart',
@@ -92,26 +93,10 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
         items: [
           ...dataSourceMeta,
           {
-            name: 'xAxisData',
-            title: {
-              label: 'x轴类别数据',
-              tip: '当前图表默认使用该字段 + y轴系列数据渲染；例如 ["01-01", "01-02"]',
-            },
-            setter: 'JsonSetter',
-          },
-          {
-            name: 'yAxisData',
-            title: {
-              label: 'y轴系列数据',
-              tip: '当前图表默认使用该字段渲染。每项包含 name、data、color（可选）。Y 轴等距刻度：0 / 0.5 / 1 / 5000 / 10000',
-            },
-            setter: 'JsonSetter',
-          },
-          {
             name: 'data',
             title: {
-              label: 'Flat图表数据',
-              tip: '仅 flat 模式使用。默认演示走 xAxisData/yAxisData，所以这里为空是正常的；若填写 flat 数据且未配置 x/y 轴结构化数据，才会走该字段',
+              label: '接口数据',
+              tip: '绑定整个接口对象。字段约定：xAxis→横轴；series[].name→图例；series[][topic]→折线值（topic 如 init_data / data）',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -124,42 +109,6 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
               label: '图表标题',
               tip: '图表顶部显示的标题文本，默认不显示',
             },
-            setter: 'StringSetter',
-          },
-          {
-            name: 'xField',
-            title: {
-              label: 'x轴字段名',
-              tip: '仅 flat 数据模式生效，默认为 label',
-            },
-            defaultValue: 'label',
-            setter: 'StringSetter',
-          },
-          {
-            name: 'seriesField',
-            title: {
-              label: '系列字段名',
-              tip: '仅 flat 数据模式生效，默认为 type',
-            },
-            defaultValue: 'type',
-            setter: 'StringSetter',
-          },
-          {
-            name: 'yField',
-            title: {
-              label: 'y轴字段名',
-              tip: '仅 flat 数据模式生效，默认为 value',
-            },
-            defaultValue: 'value',
-            setter: 'StringSetter',
-          },
-          {
-            name: 'timeField',
-            title: {
-              label: '时间字段名',
-              tip: '仅 flat 数据模式生效，默认为 time',
-            },
-            defaultValue: 'time',
             setter: 'StringSetter',
           },
         ],
@@ -176,7 +125,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'logBase',
             title: {
               label: '对数底数',
-              tip: '兼容旧配置，当前 Y 轴固定为等距分段刻度 0 / 0.5 / 1 / 5000 / 10000（仅 0.5/1/5000/10000 画虚线）',
+              tip: '兼容旧配置，当前 Y 轴固定为等距分段刻度 0 / 0.5 / 1 / 5000 / 10000',
             },
             defaultValue: 10,
             setter: 'NumberSetter',
@@ -185,7 +134,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'showLegend',
             title: {
               label: '显示图例',
-              tip: '是否显示图例，默认 true',
+              tip: '图例名称取自 series[].name',
             },
             defaultValue: true,
             setter: 'BoolSetter',
@@ -194,8 +143,9 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'legendPosition',
             title: {
               label: '图例位置',
-              tip: '图例显示位置：left / right / top / bottom，默认 top',
+              tip: '图例位置，默认 top',
             },
+            defaultValue: 'top',
             setter: {
               componentName: 'SelectSetter',
               props: {
@@ -208,32 +158,6 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
                 ],
               },
             },
-          },
-          {
-            name: 'showTimeRangeTabs',
-            title: {
-              label: '显示时间范围按钮',
-              tip: '是否显示顶部时间范围筛选按钮，默认 true。仅当数据含有效时间戳时，切换才会按实时/半小时/1小时过滤；纯 xAxisData/yAxisData 静态数据不会被截取',
-            },
-            defaultValue: true,
-            setter: 'BoolSetter',
-          },
-          {
-            name: 'timeRangeOptions',
-            title: {
-              label: '时间范围选项',
-              tip: '顶部时间范围筛选按钮的选项数组，默认 ["实时", "半小时", "1小时"]',
-            },
-            defaultValue: ['实时', '半小时', '1小时'],
-            setter: 'JsonSetter',
-          },
-          {
-            name: 'defaultActiveTimeRange',
-            title: {
-              label: '默认选中时间范围',
-              tip: '默认选中的时间范围，不传则取时间范围选项第一项',
-            },
-            setter: 'StringSetter',
           },
           {
             name: 'width',
@@ -270,14 +194,6 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             },
             setter: 'FunctionSetter',
           },
-          {
-            name: 'onTimeRangeChange',
-            title: {
-              label: '切换时间范围',
-              tip: '(value: string, index: number) => void',
-            },
-            setter: 'FunctionSetter',
-          },
         ],
       },
     ],
@@ -293,18 +209,10 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         title: '',
-        xField: 'label',
-        seriesField: 'type',
-        yField: 'value',
-        timeField: 'time',
-        xAxisData: defaultXAxisData,
-        yAxisData: defaultYAxisData,
+        data: defaultApiData,
         logBase: 10,
         showLegend: true,
         legendPosition: 'top',
-        showTimeRangeTabs: true,
-        timeRangeOptions: ['实时', '半小时', '1小时'],
-        defaultActiveTimeRange: '实时',
         width: 400,
         height: 300,
       },

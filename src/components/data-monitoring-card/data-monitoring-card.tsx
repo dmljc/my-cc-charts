@@ -13,9 +13,9 @@ import './index.scss';
 
 export interface DataMonitoringCardData {
   id?: string | number;
-  header?: DataMonitoringHeaderData;
-  info?: DataMonitoringInfoItem[];
-  chart?: DataMonitoringLineChartPoint[];
+  baseInfo?: DataMonitoringHeaderData;
+  runtimeParameters?: DataMonitoringInfoItem[];
+  tritiumConcentration?: DataMonitoringLineChartPoint[];
   [key: string]: unknown;
 }
 
@@ -77,19 +77,19 @@ const renderCardContent = (
     <DataMonitoringHeader
       width="100%"
       height={headerHeight}
-      data={data?.header}
+      data={data?.baseInfo}
       className="bizpack-data-monitoring-card-header"
     />
     <DataMonitoringInfo
       width="100%"
       height={infoHeight}
-      data={data?.info}
+      data={data?.runtimeParameters}
       className="bizpack-data-monitoring-card-info"
     />
     <DataMonitoringLineChart
       width="100%"
       height={chartHeight}
-      data={data?.chart}
+      data={data?.tritiumConcentration}
       showXAxisLabels={showXAxisLabels}
       showLatestValue={showLatestValue}
       className="bizpack-data-monitoring-card-chart"

@@ -10,11 +10,11 @@ import './index.scss';
 export interface OperationLogItem {
   id?: string | number;
   /** 操作内容 */
-  action?: string;
+  title?: string;
   /** 操作人 */
-  name?: string;
+  operName?: string;
   /** 操作时间 */
-  time?: string;
+  operTime?: string;
   [key: string]: unknown;
 }
 
@@ -24,12 +24,12 @@ export interface OperationLogProps {
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
-  /** 操作内容字段名，默认 action */
-  actionField?: string;
-  /** 操作人字段名，默认 name */
-  nameField?: string;
-  /** 操作时间字段名，默认 time */
-  timeField?: string;
+  /** 操作内容字段名，默认 title */
+  titleField?: string;
+  /** 操作人字段名，默认 operName */
+  operNameField?: string;
+  /** 操作时间字段名，默认 operTime */
+  operTimeField?: string;
   onRowClick?: (item: OperationLogItem, index: number) => void;
   [key: string]: unknown;
 }
@@ -98,9 +98,9 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
     height = 200,
     style = {},
     className = '',
-    actionField = 'action',
-    nameField = 'name',
-    timeField = 'time',
+    titleField = 'title',
+    operNameField = 'operName',
+    operTimeField = 'operTime',
     onRowClick,
     ...otherProps
   } = props;
@@ -161,6 +161,10 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
     };
   }, []);
 
+  const safeTitleField = titleField || 'title';
+  const safeOperNameField = operNameField || 'operName';
+  const safeOperTimeField = operTimeField || 'operTime';
+
   const renderRows = (source: OperationLogItem[]) => (
     <div className="bizpack-operation-log-group">
       {source.map((item, index) => (
@@ -176,21 +180,21 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
         >
           <span
             className="bizpack-operation-log-cell bizpack-operation-log-cell-action"
-            title={resolveFieldValue(item, actionField)}
+            title={resolveFieldValue(item, safeTitleField)}
           >
-            {resolveFieldValue(item, actionField)}
+            {resolveFieldValue(item, safeTitleField)}
           </span>
           <span
             className="bizpack-operation-log-cell bizpack-operation-log-cell-name"
-            title={`操作人：${resolveFieldValue(item, nameField)}`}
+            title={`操作人:${resolveFieldValue(item, safeOperNameField)}`}
           >
-            {`操作人：${resolveFieldValue(item, nameField)}`}
+            {`操作人:${resolveFieldValue(item, safeOperNameField)}`}
           </span>
           <span
             className="bizpack-operation-log-cell bizpack-operation-log-cell-time"
-            title={resolveFieldValue(item, timeField)}
+            title={resolveFieldValue(item, safeOperTimeField)}
           >
-            {resolveFieldValue(item, timeField)}
+            {resolveFieldValue(item, safeOperTimeField)}
           </span>
         </button>
       ))}

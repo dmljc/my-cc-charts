@@ -4,10 +4,10 @@ import { ChartSnippet, ChartMetaIot } from '../common/iot';
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
 const defaultData = [
-  { id: 1, label: '全排', value: 1.2, trend: 'up' },
-  { id: 2, label: '特排', value: 1.2, trend: 'flat' },
-  { id: 3, label: '局排', value: 1.2, trend: 'down' },
-  { id: 4, label: '特排', value: 1.2, trend: 'flat' },
+  { id: 1, name: '全排', value: 0.3, threshold: 1, arrow: 'down' },
+  { id: 2, name: '特排', value: 0.285, threshold: 100, arrow: 'down' },
+  { id: 3, name: '局排', value: 0.285, threshold: 10, arrow: 'down' },
+  { id: 4, name: '特排', value: 1000, threshold: 100, arrow: 'up' },
 ];
 
 const EffluentMeta: ComponentMetadata = {
@@ -76,7 +76,7 @@ const EffluentMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '流出物数据',
-              tip: '每一项包含 id、label、value、trend 字段，trend 取值 up/down/flat',
+              tip: '与接口一致：[{ name, value, threshold, arrow }]，arrow 取值 up/down',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -84,27 +84,39 @@ const EffluentMeta: ComponentMetadata = {
             },
           },
           {
-            name: 'labelField',
+            name: 'nameField',
             title: {
               label: '名称字段名',
-              tip: '数据中名称对应的字段名，默认为 label',
+              tip: '默认 name',
             },
+            defaultValue: 'name',
             setter: 'StringSetter',
           },
           {
             name: 'valueField',
             title: {
               label: '数值字段名',
-              tip: '数据中数值对应的字段名，默认为 value',
+              tip: '默认 value',
             },
+            defaultValue: 'value',
             setter: 'StringSetter',
           },
           {
-            name: 'trendField',
+            name: 'thresholdField',
             title: {
-              label: '趋势字段名',
-              tip: '数据中趋势对应的字段名，默认为 trend，取值 up/down/flat',
+              label: '阈值字段名',
+              tip: '默认 threshold',
             },
+            defaultValue: 'threshold',
+            setter: 'StringSetter',
+          },
+          {
+            name: 'arrowField',
+            title: {
+              label: '箭头字段名',
+              tip: '默认 arrow，取值 up/down',
+            },
+            defaultValue: 'arrow',
             setter: 'StringSetter',
           },
         ],
@@ -119,12 +131,18 @@ const EffluentMeta: ComponentMetadata = {
         items: [
           {
             name: 'width',
-            title: '宽度',
+            title: {
+              label: '宽度',
+              tip: '可选；不填则由内容自适应撑开',
+            },
             setter: 'NumberSetter',
           },
           {
             name: 'height',
-            title: '高度',
+            title: {
+              label: '高度',
+              tip: '可选；不填则由内容自适应撑开',
+            },
             setter: 'NumberSetter',
           },
           {
@@ -170,11 +188,10 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
-        labelField: 'label',
+        nameField: 'name',
         valueField: 'value',
-        trendField: 'trend',
-        width: 400,
-        height: 60,
+        thresholdField: 'threshold',
+        arrowField: 'arrow',
       },
     },
   },

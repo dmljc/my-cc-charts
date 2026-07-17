@@ -56,7 +56,7 @@ const DataMonitoringPanelMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '监测卡片列表',
-              tip: '数组项包含 header、info、chart 三段数据，默认提供 12 条测试数据',
+              tip: '数组项包含 baseInfo、runtimeParameters、tritiumConcentration 三段数据，默认提供 12 条测试数据',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {

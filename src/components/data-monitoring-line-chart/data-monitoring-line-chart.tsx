@@ -23,7 +23,7 @@ export interface DataMonitoringLineChartProps {
   yField?: string;
   /** y 轴最小值，默认 0 */
   min?: number;
-  /** y 轴最大值，默认 5 */
+  /** y 轴最大值，默认 10000 */
   max?: number;
   /** 曲线颜色，默认浅蓝色 */
   lineColor?: string;
@@ -139,7 +139,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     xField = 'label',
     yField = 'value',
     min = 0,
-    max = 5,
+    max = 10000,
     lineColor = DEFAULT_LINE_COLOR,
     areaColor = DEFAULT_AREA_COLOR,
     showXAxisLabels = true,
@@ -186,7 +186,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       : null;
     const isLargeData = items.length > 500;
     const labelStep = Math.max(1, Math.ceil(items.length / Math.max(xAxisLabelCount, 1)));
-    const splitNumber = Math.max(1, Math.round(max - min));
+    const yAxisTicks = [min, (min + max) / 2, max];
 
     return {
       animation: !isLargeData,
@@ -268,9 +268,12 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
         type: 'value',
         min,
         max,
-        splitNumber,
+        interval: (max - min) / 2,
         axisLine: { show: false },
-        axisTick: { show: false },
+        axisTick: {
+          show: false,
+          customValues: yAxisTicks,
+        },
         splitLine: {
           show: true,
           lineStyle: {
@@ -279,6 +282,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
           },
         },
         axisLabel: {
+          customValues: yAxisTicks,
           color: 'rgba(218, 230, 235, 0.75)',
           fontSize: 12,
         },

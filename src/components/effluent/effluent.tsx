@@ -7,27 +7,40 @@ import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
 import './index.scss';
 
-export type EffluentTrend = 'up' | 'down' | 'flat' | string;
+/** 箭头方向，与接口字段 arrow 一致 */
+export type EffluentArrow = 'up' | 'down' | 'flat' | string;
+/** @deprecated 请使用 EffluentArrow */
+export type EffluentTrend = EffluentArrow;
 
 export interface EffluentItem {
   id?: string | number;
-  label: string;
+  /** 名称，接口字段 name */
+  name?: string;
+  /** 当前值，接口字段 value */
   value?: number | string;
-  trend?: EffluentTrend;
+  /** 阈值，接口字段 threshold */
+  threshold?: number | string;
+  /** 箭头方向，接口字段 arrow，取值 up/down */
+  arrow?: EffluentArrow;
+  [key: string]: unknown;
 }
 
 export interface EffluentProps {
   title?: string;
   data?: EffluentItem[];
-  /** 名称对应的数据字段名，默认 'label' */
-  labelField?: string;
-  /** 数值对应的数据字段名，默认 'value' */
+  /** 名称字段名，默认 name */
+  nameField?: string;
+  /** 数值字段名，默认 value */
   valueField?: string;
-  /** 趋势对应的数据字段名，默认 'trend'，取值 up/down/flat */
-  trendField?: string;
+  /** 阈值字段名，默认 threshold */
+  thresholdField?: string;
+  /** 箭头字段名，默认 arrow，取值 up/down */
+  arrowField?: string;
   /** 数值单位后缀 */
   unit?: string;
+  /** 可选；不传则由内容自适应撑开 */
   width?: number | string;
+  /** 可选；不传则由内容自适应撑开 */
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
@@ -63,10 +76,10 @@ const ArrowIcon: React.FC = function ArrowIcon() {
 };
 
 const defaultData: EffluentItem[] = [
-  { id: 1, label: '全排', value: 1.2, trend: 'up' },
-  { id: 2, label: '特排', value: 1.2, trend: 'flat' },
-  { id: 3, label: '局排', value: 1.2, trend: 'down' },
-  { id: 4, label: '特排', value: 1.2, trend: 'flat' },
+  { id: 1, name: '全排', value: 0.3, threshold: 1, arrow: 'down' },
+  { id: 2, name: '特排', value: 0.285, threshold: 100, arrow: 'down' },
+  { id: 3, name: '局排', value: 0.285, threshold: 10, arrow: 'down' },
+  { id: 4, name: '特排', value: 1000, threshold: 100, arrow: 'up' },
 ];
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
@@ -87,28 +100,68 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
   return domProps;
 };
 
+const resolveFieldValue = (item: EffluentItem, field: string) => {
+  const value = item[field];
+
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  return value;
+};
+
+const resolveArrow = (
+  arrowRaw: unknown,
+  valueRaw: unknown,
+  thresholdRaw: unknown,
+): EffluentArrow => {
+  const arrow = String(arrowRaw ?? '').trim().toLowerCase();
+
+  if (arrow === 'up' || arrow === 'down' || arrow === 'flat') {
+    return arrow;
+  }
+
+  const value = Number(valueRaw);
+  const threshold = Number(thresholdRaw);
+
+  if (Number.isFinite(value) && Number.isFinite(threshold)) {
+    if (value > threshold) {
+      return 'up';
+    }
+
+    if (value < threshold) {
+      return 'down';
+    }
+  }
+
+  return 'flat';
+};
+
 const Effluent: React.FC<EffluentProps> = function Effluent(props) {
   const {
     data = defaultData,
-    labelField = 'label',
+    nameField = 'name',
     valueField = 'value',
-    trendField = 'trend',
+    thresholdField = 'threshold',
+    arrowField = 'arrow',
     unit = '',
-    width = 400,
-    height = 60,
+    width,
+    height,
     style = {},
     className = '',
     onItemClick,
     ...otherProps
   } = props;
-  const [items, setItems] = useState<EffluentItem[]>(data);
+  const [items, setItems] = useState<EffluentItem[]>(Array.isArray(data) ? data : defaultData);
   const rootDomProps = pickRootDomProps(otherProps);
   const bizRef = React.useRef<BizRef | null>(null);
-  const bc: BroadcastChannel = null;
+  const bc: BroadcastChannel = null as unknown as BroadcastChannel;
 
   useEffect(() => {
-    setItems(data);
-  }, [data]);
+    if (!props.dataType || props.dataType === 'data') {
+      setItems(Array.isArray(data) ? data : defaultData);
+    }
+  }, [data, props.dataType]);
 
   useEffect(() => {
     bizRef.current = {
@@ -128,22 +181,43 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
     };
   }, []);
 
+  const safeNameField = nameField || 'name';
+  const safeValueField = valueField || 'value';
+  const safeThresholdField = thresholdField || 'threshold';
+  const safeArrowField = arrowField || 'arrow';
+  const rootStyle: React.CSSProperties = {
+    ...(width !== undefined && width !== null && width !== '' ? { width } : {}),
+    ...(height !== undefined && height !== null && height !== '' ? { height } : {}),
+    ...style,
+  };
+
   return (
     <div
       className={`bizpack-effluent ${className}`}
-      style={{ width, height, ...style }}
+      style={rootStyle}
       {...rootDomProps}
     >
       {items.map((item, index) => {
-        const label = (item as any)[labelField] ?? '-';
-        const value = (item as any)[valueField];
-        const trend = ((item as any)[trendField] || 'flat') as EffluentTrend;
+        const name = String(resolveFieldValue(item, safeNameField) || '-');
+        const value = resolveFieldValue(item, safeValueField);
+        const threshold = resolveFieldValue(item, safeThresholdField);
+        const arrow = resolveArrow(
+          resolveFieldValue(item, safeArrowField),
+          value,
+          threshold,
+        );
+        const tipParts = [
+          name,
+          value !== '' ? `值 ${value}` : '',
+          threshold !== '' ? `阈值 ${threshold}` : '',
+        ].filter(Boolean);
 
         return (
           <button
             type="button"
-            key={item.id != null ? String(item.id) : index}
+            key={item.id != null ? String(item.id) : `${name}-${index}`}
             className="bizpack-effluent-item"
+            title={tipParts.join(' / ')}
             onClick={() => {
               if (onItemClick) {
                 onItemClick(item, index);
@@ -152,15 +226,15 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
           >
             <span className="bizpack-effluent-box">
               <span className="bizpack-effluent-value">
-                {value ?? '-'}
+                {value !== '' ? value : '-'}
                 {unit ? <span className="bizpack-effluent-unit">{unit}</span> : null}
               </span>
-              <span className={`bizpack-effluent-arrow bizpack-effluent-arrow-${trend}`}>
+              <span className={`bizpack-effluent-arrow bizpack-effluent-arrow-${arrow}`}>
                 <ArrowIcon />
               </span>
             </span>
-            <span className="bizpack-effluent-label" title={label}>
-              {label}
+            <span className="bizpack-effluent-label" title={name}>
+              {name}
             </span>
           </button>
         );

@@ -7,16 +7,18 @@ import { destroy, init } from '../../common/iot';
 import { DEFAULT_DEVICE_CHECK_TEST_DATA } from './test-data';
 import './index.scss';
 
-export type DeviceCheckStatus = 'normal' | 'expiring' | 'overdue';
+export type DeviceCheckStatusTone = 'normal' | 'expiring' | 'overdue';
+/** @deprecated 请使用 DeviceCheckStatusTone，status 字段现为接口文案 */
+export type DeviceCheckStatus = DeviceCheckStatusTone;
 
 export interface DeviceCheckItem {
   id?: string | number;
   /** 设备名称 */
-  name?: string;
-  /** 定检状态，默认 normal */
-  status?: DeviceCheckStatus;
-  /** 天数，正常/即将到期时表示剩余天数，延期时表示已延期天数 */
-  days?: number;
+  deviceName?: string;
+  /** 剩余/延期天数文案，如：剩余50天、延期3天 */
+  remainingDaysText?: string;
+  /** 定检状态文案，如：正常、即将到期、逾期 */
+  status?: string;
   [key: string]: unknown;
 }
 
@@ -26,12 +28,12 @@ export interface DeviceCheckProps {
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
-  /** 设备名称字段名，默认 name */
-  nameField?: string;
-  /** 定检状态字段名，默认 status，取值 normal/expiring/overdue */
+  /** 设备名称字段名，默认 deviceName */
+  deviceNameField?: string;
+  /** 天数文案字段名，默认 remainingDaysText */
+  remainingDaysTextField?: string;
+  /** 状态字段名，默认 status */
   statusField?: string;
-  /** 天数字段名，默认 days */
-  daysField?: string;
   onItemClick?: (item: DeviceCheckItem, index: number) => void;
   [key: string]: unknown;
 }
@@ -43,12 +45,6 @@ interface BizRef {
 }
 
 const defaultData = DEFAULT_DEVICE_CHECK_TEST_DATA as DeviceCheckItem[];
-
-const statusTextMap: Record<DeviceCheckStatus, string> = {
-  normal: '正常',
-  expiring: '即将到期',
-  overdue: '延期',
-};
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
@@ -80,48 +76,33 @@ const resolveFieldValue = (item: DeviceCheckItem, field: string) => {
   const value = item[field];
 
   if (value === null || value === undefined || value === '') {
-    return undefined;
+    return '';
   }
 
-  return value;
+  return String(value);
 };
 
-const normalizeStatus = (status?: unknown): DeviceCheckStatus => {
-  if (status === 'expiring' || status === 'overdue') {
-    return status;
+/** 根据状态文案推断样式色调 */
+const resolveStatusTone = (statusText: string): DeviceCheckStatusTone => {
+  const text = statusText.trim();
+
+  if (
+    text === 'overdue' ||
+    text.indexOf('逾期') >= 0 ||
+    text.indexOf('延期') >= 0
+  ) {
+    return 'overdue';
+  }
+
+  if (
+    text === 'expiring' ||
+    text.indexOf('即将到期') >= 0 ||
+    text.indexOf('临期') >= 0
+  ) {
+    return 'expiring';
   }
 
   return 'normal';
-};
-
-const resolveDaysNumber = (value: unknown): number | undefined => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === 'string' && value.trim() !== '') {
-    const numeric = Number(value);
-
-    if (Number.isFinite(numeric)) {
-      return numeric;
-    }
-  }
-
-  return undefined;
-};
-
-const resolveDaysText = (
-  item: DeviceCheckItem,
-  status: DeviceCheckStatus,
-  daysField: string,
-): string => {
-  const days = resolveDaysNumber(resolveFieldValue(item, daysField));
-
-  if (days === undefined) {
-    return '-';
-  }
-
-  return status === 'overdue' ? `延期${days}天` : `剩余${days}天`;
 };
 
 const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
@@ -131,9 +112,9 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
     height = 200,
     style = {},
     className = '',
-    nameField = 'name',
+    deviceNameField = 'deviceName',
+    remainingDaysTextField = 'remainingDaysText',
     statusField = 'status',
-    daysField = 'days',
     onItemClick,
     ...otherProps
   } = props;
@@ -166,9 +147,9 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
     };
   }, []);
 
-  const safeNameField = nameField || 'name';
+  const safeDeviceNameField = deviceNameField || 'deviceName';
+  const safeRemainingDaysTextField = remainingDaysTextField || 'remainingDaysText';
   const safeStatusField = statusField || 'status';
-  const safeDaysField = daysField || 'days';
 
   return (
     <div
@@ -178,15 +159,14 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
     >
       <div className="bizpack-device-check-list">
         {items.map((item, index) => {
-          const name = resolveFieldValue(item, safeNameField);
-          const displayName = name === undefined ? '' : String(name);
-          const status = normalizeStatus(resolveFieldValue(item, safeStatusField));
-          const statusText = statusTextMap[status];
-          const daysText = resolveDaysText(item, status, safeDaysField);
+          const deviceName = resolveFieldValue(item, safeDeviceNameField);
+          const remainingDaysText = resolveFieldValue(item, safeRemainingDaysTextField);
+          const statusText = resolveFieldValue(item, safeStatusField);
+          const tone = resolveStatusTone(statusText || remainingDaysText);
 
           return (
             <button
-              key={item.id != null ? String(item.id) : index}
+              key={item.id != null ? String(item.id) : `${deviceName}-${index}`}
               type="button"
               className="bizpack-device-check-row"
               onClick={() => {
@@ -198,19 +178,24 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
               <span className="bizpack-device-check-icon-wrap">
                 <span className="bizpack-device-check-icon" />
               </span>
-              <span className="bizpack-device-check-name" title={displayName}>
-                {displayName}
+              <span className="bizpack-device-check-name" title={deviceName}>
+                {deviceName}
               </span>
               <span
                 className={`bizpack-device-check-days ${
-                  status === 'overdue' ? 'bizpack-device-check-days-overdue' : ''
+                  tone === 'overdue' ? 'bizpack-device-check-days-overdue' : ''
                 }`}
+                title={remainingDaysText}
               >
-                {daysText}
+                {remainingDaysText || '-'}
               </span>
               <span className="bizpack-device-check-status">
-                <span className={`bizpack-device-check-status-dot bizpack-device-check-status-dot-${status}`} />
-                <span className={`bizpack-device-check-status-text bizpack-device-check-status-text-${status}`}>
+                <span
+                  className={`bizpack-device-check-status-dot bizpack-device-check-status-dot-${tone}`}
+                />
+                <span
+                  className={`bizpack-device-check-status-text bizpack-device-check-status-text-${tone}`}
+                >
                   {statusText}
                 </span>
               </span>

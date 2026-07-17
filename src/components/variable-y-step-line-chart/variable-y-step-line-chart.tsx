@@ -16,25 +16,54 @@ export interface YAxisSeriesConfig {
   color?: string;
 }
 
+/** 接口返回的系列项（series[]） */
+export interface VariableYStepSeriesItem {
+  /** 系列名称，同时作为图例项 */
+  name?: string;
+  /** 数值数组（字段名可能是 data / init_data，由 topic 指定） */
+  data?: Array<number | null>;
+  init_data?: Array<number | null>;
+  color?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * 接口数据结构（如 qtcData / res.data.data）
+ * - xAxis: 横轴标签
+ * - series: 折线系列，name 用于 legend
+ * - topic: 系列数值字段名，如 "init_data" / "data"；不传则自动探测
+ * - legend: 可选，显式指定图例顺序；不传则取 series[].name
+ */
+export interface VariableYStepChartPayload {
+  xAxis?: string[];
+  series?: VariableYStepSeriesItem[];
+  topic?: string;
+  legend?: string[];
+  [key: string]: unknown;
+}
+
 export interface VariableYStepLineChartProps {
   title?: string;
-  /** x 轴类别数据 */
+  /** @deprecated 请使用 data.xAxis */
   xAxisData?: string[];
-  /** y 轴系列配置 */
+  /** @deprecated 请使用 data.series */
   yAxisData?: YAxisSeriesConfig[];
-  /** 图表数据（兼容 flat 格式，配合 xField/seriesField 使用） */
-  data?: any[];
+  /**
+   * 图表数据（接口对象）：
+   * { xAxis, series: [{ name, data|init_data }], topic?, legend? }
+   */
+  data?: VariableYStepChartPayload | any[];
   width?: number | string;
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
-  /** x 轴映射字段名（flat 数据模式），默认 'label' */
+  /** @deprecated flat 模式保留 */
   xField?: string;
-  /** 系列分组字段名（flat 数据模式），默认 'type' */
+  /** @deprecated flat 模式保留 */
   seriesField?: string;
-  /** y 轴数值字段名（flat 数据模式），默认 'value' */
+  /** @deprecated flat 模式保留 */
   yField?: string;
-  /** 时间字段名（flat 数据模式），默认 'time'，用于时间范围过滤 */
+  /** @deprecated flat 模式保留 */
   timeField?: string;
   /** y 轴对数底数（兼容旧配置，当前固定使用等距分段刻度 0 / 0.5 / 1 / 5000 / 10000） */
   logBase?: number;
@@ -42,30 +71,22 @@ export interface VariableYStepLineChartProps {
   showLegend?: boolean;
   /** 图例位置 */
   legendPosition?: 'left' | 'right' | 'top' | 'bottom';
-  /** 是否显示顶部时间范围筛选按钮，默认 true */
-  showTimeRangeTabs?: boolean;
-  /** 顶部时间范围筛选选项，默认 ['实时', '半小时', '1小时'] */
-  timeRangeOptions?: string[];
-  /** 当前选中的时间范围（受控），不传则组件内部维护选中态 */
-  activeTimeRange?: string;
-  /** 默认选中的时间范围，默认取 timeRangeOptions 第一项 */
-  defaultActiveTimeRange?: string;
-  /** 切换时间范围时触发 */
-  onTimeRangeChange?: (value: string, index: number) => void;
   onPointClick?: (item: any, seriesIndex: number, dataIndex: number) => void;
   [key: string]: unknown;
 }
 
 interface BizRef {
   chart: {
-    changeData: (nextData: any[]) => void;
-    getData: () => any[];
+    changeData: (nextData: VariableYStepChartPayload | any[]) => void;
+    getData: () => VariableYStepChartPayload | any[];
   };
 }
 
 interface ChartSourceData {
   xAxisData: string[];
   yAxisData: YAxisSeriesConfig[];
+  /** 图例名称列表 */
+  legend?: string[];
   /** 与 xAxisData 对齐的时间戳（毫秒），可选 */
   timestamps?: number[];
 }
@@ -139,20 +160,10 @@ export const axisToValue = (axisValue: number): number => {
   return start + (end - start) * ratio;
 };
 
-/** 默认时间范围选项 */
-const DEFAULT_TIME_RANGE_OPTIONS = ['实时', '半小时', '1小时'];
-
-/** 时间范围对应的毫秒窗口；实时取最近 5 分钟 */
-const TIME_RANGE_MS: Record<string, number> = {
-  实时: 5 * 60 * 1000,
-  半小时: 30 * 60 * 1000,
-  '1小时': 60 * 60 * 1000,
-};
-
 const DEFAULT_COLORS = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4'];
 const TOOLTIP_CLASS_NAME = 'bizpack-variable-y-step-line-chart-tooltip';
 
-/** 按「升→降」循环 4 次生成演示数据，覆盖 0-1 与 1-10000 */
+/** 按「升→降」循环 4 次生成演示数据；图例名与接口 series[].name 一致（设备1…） */
 const createDefaultSourceData = (): ChartSourceData => {
   const now = Date.now();
   const intervalMs = 60 * 1000;
@@ -161,7 +172,11 @@ const createDefaultSourceData = (): ChartSourceData => {
   const pointCount = cycles * pointsPerCycle;
   const xAxisData = Array.from(
     { length: pointCount },
-    (_, index) => `01-${String(index + 1).padStart(2, '0')}`,
+    (_, index) => {
+      const date = new Date(now - (pointCount - 1 - index) * intervalMs);
+
+      return `${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+    },
   );
   const timestamps = Array.from(
     { length: pointCount },
@@ -184,15 +199,18 @@ const createDefaultSourceData = (): ChartSourceData => {
     return data;
   };
 
+  const seriesNames = ['设备1', '设备2', '设备3', '设备4'];
+
   return {
     xAxisData,
     timestamps,
     yAxisData: [
-      { name: '曲线A', data: buildWave(0.12, 0.78, 3) },
-      { name: '曲线B', data: buildWave(0.05, 0.65, 3) },
-      { name: '曲线C', data: buildWave(0.22, 0.88, 3) },
-      { name: '高值曲线', data: buildWave(2800, 9600, 2) },
+      { name: seriesNames[0], data: buildWave(0.015, 0.105, 3) },
+      { name: seriesNames[1], data: buildWave(0.03, 0.12, 3) },
+      { name: seriesNames[2], data: buildWave(0.02, 0.09, 3) },
+      { name: seriesNames[3], data: buildWave(0.05, 0.15, 3) },
     ],
+    legend: seriesNames,
   };
 };
 
@@ -323,22 +341,6 @@ const parseTimestamp = (value: unknown): number | undefined => {
   return undefined;
 };
 
-const resolveTimeRangeMs = (range: string): number => {
-  if (TIME_RANGE_MS[range] != null) {
-    return TIME_RANGE_MS[range];
-  }
-
-  if (range.indexOf('半小时') >= 0) {
-    return TIME_RANGE_MS['半小时'];
-  }
-
-  if (range.indexOf('1小时') >= 0 || range.indexOf('一小时') >= 0) {
-    return TIME_RANGE_MS['1小时'];
-  }
-
-  return TIME_RANGE_MS['实时'];
-};
-
 /** 将 flat 数据按 x 轴标签对齐转换为 series 格式 */
 export const transformFlatData = (
   data: any[],
@@ -398,51 +400,140 @@ export const transformFlatData = (
         return value == null || !Number.isFinite(value) ? null : value;
       }) as unknown as number[],
     })),
+    legend: seriesNames,
   };
 };
 
-/** 按时间范围过滤结构化数据；无真实时间戳时不截取，避免静态 x/y 编辑的前段数据被「实时」裁掉 */
-export const filterSourceByTimeRange = (
-  source: ChartSourceData,
-  timeRange: string,
-): ChartSourceData => {
-  const { xAxisData, yAxisData, timestamps } = source;
-
-  if (!xAxisData.length) {
-    return source;
+/** 按 topic / data / init_data 取出系列数值数组 */
+const pickSeriesValues = (
+  item: VariableYStepSeriesItem | undefined,
+  topic?: string,
+): Array<number | null> => {
+  if (!item || typeof item !== 'object') {
+    return [];
   }
 
-  const hasValidTimestamp =
-    Array.isArray(timestamps)
-    && timestamps.length === xAxisData.length
-    && timestamps.every((item) => Number.isFinite(item));
+  const candidates: unknown[] = [];
 
-  // 静态结构化数据（仅类别标签、无 time）不做点数回退截取
-  if (!hasValidTimestamp || !timestamps) {
-    return source;
+  if (topic && typeof topic === 'string' && topic.trim() !== '') {
+    candidates.push(item[topic]);
   }
 
-  const latest = Math.max(...timestamps);
-  const windowMs = resolveTimeRangeMs(timeRange);
-  const threshold = latest - windowMs;
-  let startIndex = timestamps.findIndex((item) => item >= threshold);
+  candidates.push(item.data, item.init_data);
 
-  if (startIndex < 0) {
-    startIndex = 0;
+  // 兜底：取系列对象里第一个数组字段（排除非数值结构）
+  Object.keys(item).forEach((key) => {
+    if (key === 'name' || key === 'color') {
+      return;
+    }
+
+    candidates.push(item[key]);
+  });
+
+  const matched = candidates.find((value) => Array.isArray(value));
+
+  return Array.isArray(matched) ? matched as Array<number | null> : [];
+};
+
+/** 将接口对象 { xAxis, series, topic?, legend? } 转为内部渲染结构 */
+export const normalizeApiPayload = (payload: unknown): ChartSourceData | null => {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return null;
   }
 
-  if (startIndex === 0) {
-    return source;
+  const root = payload as VariableYStepChartPayload & { data?: unknown };
+  // 兼容 res.data.data 再包一层，或直接传入 { xAxis, series, topic }
+  const candidate = (
+    Array.isArray(root.series) && Array.isArray(root.xAxis)
+      ? root
+      : root.data && typeof root.data === 'object' && !Array.isArray(root.data)
+        ? root.data as VariableYStepChartPayload
+        : root
+  );
+
+  const { xAxis, series, legend, topic } = candidate;
+
+  if (!Array.isArray(xAxis) || !Array.isArray(series) || series.length === 0) {
+    return null;
+  }
+
+  const topicField = typeof topic === 'string' && topic.trim() !== '' ? topic.trim() : undefined;
+
+  const normalizeSeriesData = (raw: Array<number | null>): number[] => (
+    raw.map((value) => {
+      if (value === null || value === undefined || value === '') {
+        return null as unknown as number;
+      }
+
+      const num = Number(value);
+
+      return Number.isFinite(num) ? num : (null as unknown as number);
+    })
+  );
+
+  // 图例取 series[].name（设备1/2/3…）；数值取 topic 指定字段（如 init_data）
+  const yAxisData: YAxisSeriesConfig[] = series.map((item, index) => {
+    const legendName = Array.isArray(legend) ? legend[index] : undefined;
+
+    return {
+      name: String(item?.name ?? legendName ?? `设备${index + 1}`),
+      data: normalizeSeriesData(pickSeriesValues(item, topicField)),
+      color: typeof item?.color === 'string' ? item.color : undefined,
+    };
+  });
+
+  let orderedSeries = yAxisData;
+
+  if (Array.isArray(legend) && legend.length > 0) {
+    const byName = new Map(yAxisData.map((item) => [item.name, item]));
+    const fromLegend = legend
+      .map((name) => byName.get(String(name)))
+      .filter(Boolean) as YAxisSeriesConfig[];
+    const used = new Set(fromLegend.map((item) => item.name));
+    const rest = yAxisData.filter((item) => !used.has(item.name));
+    orderedSeries = [...fromLegend, ...rest];
   }
 
   return {
-    xAxisData: xAxisData.slice(startIndex),
-    timestamps: timestamps.slice(startIndex),
-    yAxisData: yAxisData.map((seriesItem) => ({
-      ...seriesItem,
-      data: seriesItem.data.slice(startIndex),
-    })),
+    xAxisData: xAxis.map((label) => String(label ?? '')),
+    yAxisData: orderedSeries,
+    legend: Array.isArray(legend) && legend.length > 0
+      ? legend.map((item) => String(item))
+      : orderedSeries.map((item) => item.name),
   };
+};
+
+/** 从 changeData / props.data 中解析可用载荷 */
+const resolveIncomingData = (nextData: unknown): VariableYStepChartPayload | any[] | null => {
+  if (nextData == null) {
+    return null;
+  }
+
+  if (Array.isArray(nextData)) {
+    return nextData;
+  }
+
+  if (typeof nextData === 'object') {
+    const payload = nextData as VariableYStepChartPayload & { data?: unknown };
+
+    if (Array.isArray(payload.series) && Array.isArray(payload.xAxis)) {
+      return payload;
+    }
+
+    if (payload.data && typeof payload.data === 'object') {
+      const nested = payload.data as VariableYStepChartPayload;
+
+      if (Array.isArray(nested.series) && Array.isArray(nested.xAxis)) {
+        return nested;
+      }
+
+      if (Array.isArray(payload.data)) {
+        return payload.data;
+      }
+    }
+  }
+
+  return null;
 };
 
 const normalizeStructuredSource = (
@@ -456,6 +547,7 @@ const normalizeStructuredSource = (
   return {
     xAxisData,
     yAxisData,
+    legend: yAxisData.map((item) => item.name),
   };
 };
 
@@ -521,11 +613,6 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
     logBase = 10,
     showLegend = true,
     legendPosition = 'top',
-    showTimeRangeTabs = true,
-    timeRangeOptions = DEFAULT_TIME_RANGE_OPTIONS,
-    activeTimeRange: activeTimeRangeProp,
-    defaultActiveTimeRange,
-    onTimeRangeChange,
     onPointClick,
     ...otherProps
   } = props;
@@ -537,42 +624,33 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
   const bcRef = useRef<BroadcastChannel | null>(null);
   const rootDomProps = pickRootDomProps(otherProps);
 
-  const [internalActiveTimeRange, setInternalActiveTimeRange] = useState<string>(
-    activeTimeRangeProp ?? defaultActiveTimeRange ?? timeRangeOptions[0],
-  );
-  const activeTimeRange = activeTimeRangeProp ?? internalActiveTimeRange;
-
-  const [iotFlatData, setIotFlatData] = useState<any[] | null>(null);
+  const [iotData, setIotData] = useState<VariableYStepChartPayload | any[] | null>(null);
 
   useEffect(() => {
     onPointClickRef.current = onPointClick;
   }, [onPointClick]);
 
   useEffect(() => {
-    if (activeTimeRangeProp !== undefined) {
-      setInternalActiveTimeRange(activeTimeRangeProp);
-    }
-  }, [activeTimeRangeProp]);
-
-  useEffect(() => {
     if (!props.dataType || props.dataType === 'data') {
-      setIotFlatData(null);
+      setIotData(null);
     }
   }, [data, propXAxisData, propYAxisData, props.dataType]);
 
-  const handleTimeRangeChange = (value: string, index: number) => {
-    if (activeTimeRangeProp === undefined) {
-      setInternalActiveTimeRange(value);
-    }
-
-    if (onTimeRangeChange) {
-      onTimeRangeChange(value, index);
-    }
-  };
-
   const sourceData = useMemo(() => {
-    if (iotFlatData && iotFlatData.length > 0) {
-      return transformFlatData(iotFlatData, xField, seriesField, yField, timeField);
+    const fromIotPayload = normalizeApiPayload(iotData);
+
+    if (fromIotPayload) {
+      return fromIotPayload;
+    }
+
+    if (Array.isArray(iotData) && iotData.length > 0) {
+      return transformFlatData(iotData, xField, seriesField, yField, timeField);
+    }
+
+    const fromDataPayload = normalizeApiPayload(data);
+
+    if (fromDataPayload) {
+      return fromDataPayload;
     }
 
     const structured = normalizeStructuredSource(propXAxisData, propYAxisData);
@@ -586,14 +664,10 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
     }
 
     return DEFAULT_SOURCE;
-  }, [iotFlatData, data, propXAxisData, propYAxisData, xField, seriesField, yField, timeField]);
-
-  const filteredData = useMemo(
-    () => filterSourceByTimeRange(sourceData, activeTimeRange),
-    [sourceData, activeTimeRange],
-  );
+  }, [iotData, data, propXAxisData, propYAxisData, xField, seriesField, yField, timeField]);
 
   const buildOption = useMemo(() => {
+    const legendData = sourceData.legend ?? sourceData.yAxisData.map((item) => item.name);
     const option: any = {
       title: title
         ? {
@@ -612,7 +686,7 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
         left: legendPosition === 'left' ? 'left' : legendPosition === 'right' ? 'right' : 'center',
         top: legendPosition === 'top' ? 'top' : undefined,
         bottom: legendPosition === 'bottom' ? 'bottom' : undefined,
-        data: filteredData.yAxisData.map((item) => item.name),
+        data: legendData,
         textStyle: {
           color: 'rgba(218, 230, 235, 0.8)',
           fontSize: 12,
@@ -626,7 +700,7 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
       },
       xAxis: {
         type: 'category',
-        data: filteredData.xAxisData,
+        data: sourceData.xAxisData,
         boundaryGap: false,
         splitLine: { show: false },
         axisLine: {
@@ -671,7 +745,7 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
         },
       },
       series: [
-        ...buildSeriesOption(filteredData.yAxisData),
+        ...buildSeriesOption(sourceData.yAxisData),
         {
           type: 'line',
           name: '__y-grid__',
@@ -695,7 +769,7 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
     };
 
     return option;
-  }, [title, filteredData, showLegend, legendPosition]);
+  }, [title, sourceData, showLegend, legendPosition]);
 
   useEffect(() => {
     if (!chartRef.current) {
@@ -721,12 +795,14 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
 
     bizRef.current = {
       chart: {
-        changeData: (nextData: any[]) => {
-          if (Array.isArray(nextData)) {
-            setIotFlatData(nextData);
+        changeData: (nextData) => {
+          const resolved = resolveIncomingData(nextData);
+
+          if (resolved != null) {
+            setIotData(resolved);
           }
         },
-        getData: () => iotFlatData ?? (Array.isArray(data) ? data : []),
+        getData: () => iotData ?? (data as VariableYStepChartPayload | any[]) ?? [],
       },
     };
 
@@ -744,9 +820,9 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
 
   useEffect(() => {
     if (bizRef.current) {
-      bizRef.current.chart.getData = () => iotFlatData ?? (Array.isArray(data) ? data : []);
+      bizRef.current.chart.getData = () => iotData ?? (data as VariableYStepChartPayload | any[]) ?? [];
     }
-  }, [iotFlatData, data]);
+  }, [iotData, data]);
 
   useEffect(() => {
     if (echartsRef.current) {
@@ -768,22 +844,6 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
       style={{ width, height, ...style }}
       {...rootDomProps}
     >
-      {showTimeRangeTabs && timeRangeOptions.length > 0 ? (
-        <div className="bizpack-variable-y-step-line-chart-tabs">
-          {timeRangeOptions.map((option, index) => (
-            <button
-              key={option}
-              type="button"
-              className={`bizpack-variable-y-step-line-chart-tab ${
-                option === activeTimeRange ? 'bizpack-variable-y-step-line-chart-tab-active' : ''
-              }`}
-              onClick={() => handleTimeRangeChange(option, index)}
-            >
-              <span className="bizpack-variable-y-step-line-chart-tab-text">{option}</span>
-            </button>
-          ))}
-        </div>
-      ) : null}
       <div className="bizpack-variable-y-step-line-chart-chart" ref={chartRef} />
     </div>
   );

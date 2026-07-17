@@ -117,7 +117,7 @@ const DataMonitoringLineChartMeta: ComponentMetadata = {
             name: 'max',
             title: {
               label: 'y轴最大值',
-              tip: '默认 5',
+              tip: '默认 10000',
             },
             setter: 'NumberSetter',
           },
@@ -222,7 +222,7 @@ const snippets: Snippet[] = [
         xField: 'label',
         yField: 'value',
         min: 0,
-        max: 5,
+        max: 10000,
         showXAxisLabels: false,
         xAxisLabelCount: 5,
         xAxisUnitLabel: 't',

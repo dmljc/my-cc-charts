@@ -472,42 +472,45 @@
                                                     "componentName": "Effluent",
                                                     "id": "node_ocmraemdrm1",
                                                     "props": {
-                                                        "height": 62,
                                                         "dataType": "data",
-                                                        "width": 376,
                                                         "baseFetchUri": "/tenant-api/humerus/api/dashboard/data/execute/:id",
                                                         "baseWsUri": "wss://spring.space.czy3d.com/iot/open/api/ws",
                                                         "token": "21CE4D20DF8E404DAF52DF2D69DA02B2",
                                                         "data": [
                                                             {
                                                                 "id": 1,
-                                                                "label": "全排",
-                                                                "value": 1.2,
-                                                                "trend": "up"
+                                                                "name": "全排",
+                                                                "value": 0.3,
+                                                                "threshold": 1,
+                                                                "arrow": "down"
                                                             },
                                                             {
                                                                 "id": 2,
-                                                                "label": "特排",
-                                                                "value": 1.2,
-                                                                "trend": "flat"
+                                                                "name": "特排",
+                                                                "value": 0.285,
+                                                                "threshold": 100,
+                                                                "arrow": "down"
                                                             },
                                                             {
                                                                 "id": 3,
-                                                                "label": "局排",
-                                                                "value": 1.2,
-                                                                "trend": "down"
+                                                                "name": "局排",
+                                                                "value": 0.285,
+                                                                "threshold": 10,
+                                                                "arrow": "down"
                                                             },
                                                             {
                                                                 "id": 4,
-                                                                "label": "特排",
-                                                                "value": 1.2,
-                                                                "trend": "flat"
+                                                                "name": "特排",
+                                                                "value": 1000,
+                                                                "threshold": 100,
+                                                                "arrow": "up"
                                                             }
                                                         ],
-                                                        "labelField": "label",
                                                         "valueField": "value",
-                                                        "trendField": "trend",
-                                                        "ref": "effluent-cbddb1a0"
+                                                        "ref": "effluent-cbddb1a0",
+                                                        "nameField": "name",
+                                                        "thresholdField": "threshold",
+                                                        "arrowField": "arrow"
                                                     },
                                                     "hidden": false,
                                                     "title": "",
@@ -828,11 +831,11 @@
                                                         "data": [
                                                             {
                                                                 "id": "monitoring-101",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "101",
                                                                     "deviceValue": "设备名称设备名称名称0253333"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "101-流量",
                                                                         "value": 10,
@@ -852,7 +855,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:00:00",
                                                                         "value": 2.1
@@ -937,11 +940,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-102",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "102",
                                                                     "deviceValue": "设备名称设备名称名称0253334"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "102-流量",
                                                                         "value": 11.2,
@@ -961,7 +964,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:01:00",
                                                                         "value": 1.8
@@ -1046,11 +1049,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-103",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "103",
                                                                     "deviceValue": "设备名称设备名称名称0253335"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "103-流量",
                                                                         "value": 12.4,
@@ -1070,7 +1073,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:02:00",
                                                                         "value": 3
@@ -1155,11 +1158,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-104",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "104",
                                                                     "deviceValue": "设备名称设备名称名称0253336"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "104-流量",
                                                                         "value": 13.6,
@@ -1179,7 +1182,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:03:00",
                                                                         "value": 2.5
@@ -1264,11 +1267,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-105",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "105",
                                                                     "deviceValue": "设备名称设备名称名称0253337"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "105-流量",
                                                                         "value": 14.8,
@@ -1288,7 +1291,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:04:00",
                                                                         "value": 4
@@ -1373,11 +1376,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-106",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "106",
                                                                     "deviceValue": "设备名称设备名称名称0253338"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "106-流量",
                                                                         "value": 10,
@@ -1397,7 +1400,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:05:00",
                                                                         "value": 1.2
@@ -1482,11 +1485,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-107",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "107",
                                                                     "deviceValue": "设备名称设备名称名称0253339"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "107-流量",
                                                                         "value": 11.2,
@@ -1506,7 +1509,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:06:00",
                                                                         "value": 3.2
@@ -1591,11 +1594,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-108",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "108",
                                                                     "deviceValue": "设备名称设备名称名称0253340"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "108-流量",
                                                                         "value": 12.4,
@@ -1615,7 +1618,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:07:00",
                                                                         "value": 2.3
@@ -1700,11 +1703,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-109",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "109",
                                                                     "deviceValue": "设备名称设备名称名称0253341"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "109-流量",
                                                                         "value": 13.6,
@@ -1724,7 +1727,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:08:00",
                                                                         "value": 4.1
@@ -1809,11 +1812,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-110",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "110",
                                                                     "deviceValue": "设备名称设备名称名称0253342"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "110-流量",
                                                                         "value": 14.8,
@@ -1833,7 +1836,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:09:00",
                                                                         "value": 1.6
@@ -1918,11 +1921,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-111",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "111",
                                                                     "deviceValue": "设备名称设备名称名称0253343"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "111-流量",
                                                                         "value": 10,
@@ -1942,7 +1945,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:10:00",
                                                                         "value": 2.9
@@ -2027,11 +2030,11 @@
                                                             },
                                                             {
                                                                 "id": "monitoring-112",
-                                                                "header": {
+                                                                "baseInfo": {
                                                                     "roomValue": "112",
                                                                     "deviceValue": "设备名称设备名称名称0253344"
                                                                 },
-                                                                "info": [
+                                                                "runtimeParameters": [
                                                                     {
                                                                         "id": "112-流量",
                                                                         "value": 11.2,
@@ -2051,7 +2054,7 @@
                                                                         "label": "压力"
                                                                     }
                                                                 ],
-                                                                "chart": [
+                                                                "tritiumConcentration": [
                                                                     {
                                                                         "label": "00:11:00",
                                                                         "value": 1.9
@@ -2895,95 +2898,98 @@
                                                         "data": [
                                                             {
                                                                 "id": 1,
-                                                                "name": "取样泵1定检",
-                                                                "status": "normal",
-                                                                "days": 50
+                                                                "deviceName": "取样泵1定检",
+                                                                "remainingDaysText": "剩余50天",
+                                                                "status": "正常"
                                                             },
                                                             {
                                                                 "id": 2,
-                                                                "name": "真空泵2定检",
-                                                                "status": "expiring",
-                                                                "days": 7
+                                                                "deviceName": "真空泵2定检",
+                                                                "remainingDaysText": "剩余7天",
+                                                                "status": "即将到期"
                                                             },
                                                             {
                                                                 "id": 3,
-                                                                "name": "电磁阀0101定检",
-                                                                "status": "overdue",
-                                                                "days": 3
+                                                                "deviceName": "电磁阀0101定检",
+                                                                "remainingDaysText": "延期3天",
+                                                                "status": "逾期"
                                                             },
                                                             {
                                                                 "id": 4,
-                                                                "name": "温度传感器T03校准",
-                                                                "status": "normal",
-                                                                "days": 45
+                                                                "deviceName": "温度传感器T03校准",
+                                                                "remainingDaysText": "剩余45天",
+                                                                "status": "正常"
                                                             },
                                                             {
                                                                 "id": 5,
-                                                                "name": "冷却水循环泵保养",
-                                                                "status": "expiring",
-                                                                "days": 5
+                                                                "deviceName": "冷却水循环泵保养",
+                                                                "remainingDaysText": "剩余5天",
+                                                                "status": "即将到期"
                                                             },
                                                             {
                                                                 "id": 6,
-                                                                "name": "液位计L02定检",
-                                                                "status": "overdue",
-                                                                "days": 12
+                                                                "deviceName": "液位计L02定检",
+                                                                "remainingDaysText": "延期12天",
+                                                                "status": "逾期"
                                                             },
                                                             {
                                                                 "id": 7,
-                                                                "name": "压力表P05校准",
-                                                                "status": "normal",
-                                                                "days": 60
+                                                                "deviceName": "压力表P05校准",
+                                                                "remainingDaysText": "剩余60天",
+                                                                "status": "正常"
                                                             },
                                                             {
                                                                 "id": 8,
-                                                                "name": "风机F01巡检",
-                                                                "status": "expiring",
-                                                                "days": 9
+                                                                "deviceName": "风机F01巡检",
+                                                                "remainingDaysText": "剩余9天",
+                                                                "status": "即将到期"
                                                             },
                                                             {
                                                                 "id": 9,
-                                                                "name": "过滤器F02更换",
-                                                                "status": "overdue",
-                                                                "days": 6
+                                                                "deviceName": "过滤器F02更换",
+                                                                "remainingDaysText": "延期6天",
+                                                                "status": "逾期"
                                                             },
                                                             {
                                                                 "id": 10,
-                                                                "name": "电机M03绝缘检测",
-                                                                "status": "normal",
-                                                                "days": 35
+                                                                "deviceName": "电机M03绝缘检测",
+                                                                "remainingDaysText": "剩余35天",
+                                                                "status": "正常"
                                                             },
                                                             {
                                                                 "id": 11,
-                                                                "name": "排风阀V04定检",
-                                                                "status": "expiring",
-                                                                "days": 4
+                                                                "deviceName": "排风阀V04定检",
+                                                                "remainingDaysText": "剩余4天",
+                                                                "status": "即将到期"
                                                             },
                                                             {
                                                                 "id": 12,
-                                                                "name": "加热器H01温控检查",
-                                                                "status": "overdue",
-                                                                "days": 18
+                                                                "deviceName": "加热器H01温控检查",
+                                                                "remainingDaysText": "延期18天",
+                                                                "status": "逾期"
                                                             },
                                                             {
                                                                 "id": 13,
-                                                                "name": "油泵OP01保养",
-                                                                "status": "normal",
-                                                                "days": 28
+                                                                "deviceName": "油泵OP01保养",
+                                                                "remainingDaysText": "剩余28天",
+                                                                "status": "正常"
                                                             },
                                                             {
                                                                 "id": 14,
-                                                                "name": "搅拌机BL02定期保养",
-                                                                "status": "expiring",
-                                                                "days": 2
+                                                                "deviceName": "搅拌机BL02定期保养",
+                                                                "remainingDaysText": "剩余2天",
+                                                                "status": "即将到期"
                                                             },
                                                             {
                                                                 "id": 15,
-                                                                "name": "压缩机C01排气检查",
-                                                                "status": "overdue",
-                                                                "days": 9
+                                                                "deviceName": "压缩机C01排气检查",
+                                                                "remainingDaysText": "延期9天",
+                                                                "status": "逾期"
                                                             }
                                                         ],
+                                                        "deviceNameField": "deviceName",
+                                                        "remainingDaysTextField": "remainingDaysText",
+                                                        "statusField": "status",
                                                         "ref": "devicecheck-9172e58f"
                                                     },
                                                     "hidden": false,
@@ -3106,140 +3112,102 @@
                                                         "baseWsUri": "wss://spring.space.czy3d.com/iot/open/api/ws",
                                                         "token": "21CE4D20DF8E404DAF52DF2D69DA02B2",
                                                         "title": "",
-                                                        "xAxisData": [
-                                                            "01-01",
-                                                            "01-02",
-                                                            "01-03",
-                                                            "01-04",
-                                                            "01-05",
-                                                            "01-06",
-                                                            "01-07",
-                                                            "01-08",
-                                                            "01-09",
-                                                            "01-10",
-                                                            "01-11",
-                                                            "01-12",
-                                                            "01-13",
-                                                            "01-14",
-                                                            "01-15",
-                                                            "01-16",
-                                                            "01-17",
-                                                            "01-18",
-                                                            "01-19",
-                                                            "01-20"
-                                                        ],
-                                                        "yAxisData": [
-                                                            {
-                                                                "name": "曲线A",
-                                                                "data": [
-                                                                    0.015,
-                                                                    0.03,
-                                                                    0.045,
-                                                                    0.06,
-                                                                    0.075,
-                                                                    0.09,
-                                                                    0.105,
-                                                                    0.12,
-                                                                    0.135,
-                                                                    0.15,
-                                                                    0.165,
-                                                                    0.18,
-                                                                    0.195,
-                                                                    0.21,
-                                                                    0.225,
-                                                                    0.24,
-                                                                    0.255,
-                                                                    0.27,
-                                                                    0.285,
-                                                                    0.3
-                                                                ]
-                                                            },
-                                                            {
-                                                                "name": "曲线B",
-                                                                "data": [
-                                                                    0.03,
-                                                                    0.015,
-                                                                    0.06,
-                                                                    0.045,
-                                                                    0.09,
-                                                                    0.075,
-                                                                    0.12,
-                                                                    0.105,
-                                                                    0.15,
-                                                                    0.135,
-                                                                    0.18,
-                                                                    0.165,
-                                                                    0.21,
-                                                                    0.195,
-                                                                    0.24,
-                                                                    0.225,
-                                                                    0.27,
-                                                                    0.255,
-                                                                    0.3,
-                                                                    0.285
-                                                                ]
-                                                            },
-                                                            {
-                                                                "name": "曲线C",
-                                                                "data": [
-                                                                    0.075,
-                                                                    0.06,
-                                                                    0.09,
-                                                                    0.105,
-                                                                    0.045,
-                                                                    0.12,
-                                                                    0.135,
-                                                                    0.09,
-                                                                    0.165,
-                                                                    0.18,
-                                                                    0.12,
-                                                                    0.21,
-                                                                    0.15,
-                                                                    0.24,
-                                                                    0.18,
-                                                                    0.27,
-                                                                    0.21,
-                                                                    0.3,
-                                                                    0.24,
-                                                                    0.285
-                                                                ]
-                                                            },
-                                                            {
-                                                                "name": "高值曲线",
-                                                                "data": [
-                                                                    1,
-                                                                    1.5,
-                                                                    2,
-                                                                    2.8,
-                                                                    3.2,
-                                                                    3.9,
-                                                                    4.5,
-                                                                    5.1,
-                                                                    5.8,
-                                                                    6.2,
-                                                                    6.9,
-                                                                    7.3,
-                                                                    7.8,
-                                                                    8.2,
-                                                                    8.6,
-                                                                    9,
-                                                                    9.3,
-                                                                    9.5,
-                                                                    9.8,
-                                                                    10
-                                                                ]
-                                                            }
-                                                        ],
                                                         "logBase": 10,
                                                         "showLegend": true,
                                                         "legendPosition": "top",
-                                                        "showTimeRangeTabs": true,
-                                                        "timeRangeOptions": [
-                                                            "实时",
-                                                            "半小时",
-                                                            "1小时"
-                                                        ],
-                                                        "ref": "variableysteplinechart-887bdeeb"
+                                                        "ref": "variableysteplinechart-887bdeeb",
+                                                        "data": {
+                                                            "topic": "init_data",
+                                                            "xAxis": [
+                                                                "04:44",
+                                                                "05:44",
+                                                                "06:44",
+                                                                "07:44",
+                                                                "08:44",
+                                                                "09:44",
+                                                                "10:44",
+                                                                "11:44",
+                                                                "12:44",
+                                                                "13:44",
+                                                                "14:44",
+                                                                "15:44",
+                                                                "16:44"
+                                                            ],
+                                                            "series": [
+                                                                {
+                                                                    "name": "设备1",
+                                                                    "init_data": [
+                                                                        0.015,
+                                                                        0.02,
+                                                                        0.03,
+                                                                        0.035,
+                                                                        0.045,
+                                                                        0.05,
+                                                                        0.06,
+                                                                        0.065,
+                                                                        0.075,
+                                                                        0.08,
+                                                                        0.09,
+                                                                        0.095,
+                                                                        0.105
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "name": "设备2",
+                                                                    "init_data": [
+                                                                        0.03,
+                                                                        0.025,
+                                                                        0.015,
+                                                                        0.04,
+                                                                        0.06,
+                                                                        0.05,
+                                                                        0.045,
+                                                                        0.07,
+                                                                        0.09,
+                                                                        0.08,
+                                                                        0.075,
+                                                                        0.1,
+                                                                        0.12
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "name": "设备3",
+                                                                    "init_data": [
+                                                                        0.02,
+                                                                        0.035,
+                                                                        0.04,
+                                                                        0.025,
+                                                                        0.05,
+                                                                        0.055,
+                                                                        0.07,
+                                                                        0.06,
+                                                                        0.08,
+                                                                        0.085,
+                                                                        0.095,
+                                                                        0.09,
+                                                                        0.11
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "name": "设备4",
+                                                                    "init_data": [
+                                                                        1000,
+                                                                        120,
+                                                                        105,
+                                                                        187,
+                                                                        992,
+                                                                        2030,
+                                                                        2800,
+                                                                        1500,
+                                                                        900,
+                                                                        600,
+                                                                        400,
+                                                                        300,
+                                                                        200
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
                                                     },
                                                     "hidden": false,
                                                     "title": "",

@@ -72,7 +72,7 @@ const OperationLogMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '操作日志数据',
-              tip: '{ id, action, name, time }[]',
+              tip: '{ title, operName, operTime }[]，与接口字段一致',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -80,26 +80,26 @@ const OperationLogMeta: ComponentMetadata = {
             },
           },
           {
-            name: 'actionField',
+            name: 'titleField',
             title: {
               label: '操作内容字段名',
-              tip: '操作内容对应的数据字段名，默认 action',
+              tip: '操作内容对应的数据字段名，默认 title',
             },
             setter: 'StringSetter',
           },
           {
-            name: 'nameField',
+            name: 'operNameField',
             title: {
               label: '操作人字段名',
-              tip: '操作人对应的数据字段名，默认 name',
+              tip: '操作人对应的数据字段名，默认 operName',
             },
             setter: 'StringSetter',
           },
           {
-            name: 'timeField',
+            name: 'operTimeField',
             title: {
               label: '操作时间字段名',
-              tip: '操作时间对应的数据字段名，默认 time',
+              tip: '操作时间对应的数据字段名，默认 operTime',
             },
             setter: 'StringSetter',
           },
@@ -163,9 +163,9 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
-        actionField: 'action',
-        nameField: 'name',
-        timeField: 'time',
+        titleField: 'title',
+        operNameField: 'operName',
+        operTimeField: 'operTime',
         width: 400,
         height: 200,
       },

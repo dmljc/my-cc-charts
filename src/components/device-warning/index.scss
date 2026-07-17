@@ -69,6 +69,19 @@
     white-space: nowrap;
   }
 
+  &-time {
+    flex: none;
+    margin-left: 12px;
+    overflow: hidden;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.75);
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   &-level {
     flex: none;
     margin-left: 12px;
@@ -78,18 +91,6 @@
     line-height: 1;
     text-align: right;
     white-space: nowrap;
-  }
-
-  &-row-urgent &-level {
-    color: #ff2f2f;
-  }
-
-  &-row-normal &-level {
-    color: #ffbe2f;
-  }
-
-  &-row-regular &-level {
-    color: #3399ff;
   }
 
   &-empty {

@@ -119,7 +119,7 @@ export const operations = {
                       setValue: (target, value) => {
                         const actionNameMap = {
                           submit: '提交',
-                          reset: '重置',
+                        //   reset: '重置',
                           custom: '自定义',
                           ok: '确认',
                           cancel: '取消',
@@ -135,10 +135,10 @@ export const operations = {
                               title: '提交',
                               value: 'submit',
                             },
-                            {
-                              title: '重置',
-                              value: 'reset',
-                            },
+                            // {
+                            //   title: '重置',
+                            //   value: 'reset',
+                            // },
                             {
                               title: '自定义',
                               value: 'custom',

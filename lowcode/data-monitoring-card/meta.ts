@@ -53,7 +53,7 @@ const DataMonitoringCardMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '卡片数据',
-              tip: '包含 header、info、chart 三段数据',
+              tip: '包含 baseInfo、runtimeParameters、tritiumConcentration 三段数据',
             },
             setter: 'JsonSetter',
           },

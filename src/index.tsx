@@ -7,10 +7,15 @@ export { default as FilletColumnChart } from './components/fillet-column-chart';
 export type { HeaderDateProps } from './components/header-date';
 export { default as HeaderDate } from './components/header-date';
 
-export type { VariableYStepLineChartProps, YAxisSeriesConfig } from './components/variable-y-step-line-chart';
+export type {
+  VariableYStepLineChartProps,
+  VariableYStepChartPayload,
+  VariableYStepSeriesItem,
+  YAxisSeriesConfig,
+} from './components/variable-y-step-line-chart';
 export { default as VariableYStepLineChart } from './components/variable-y-step-line-chart';
 
-export type { EffluentItem, EffluentProps, EffluentTrend } from './components/effluent';
+export type { EffluentArrow, EffluentItem, EffluentProps, EffluentTrend } from './components/effluent';
 export { default as Effluent } from './components/effluent';
 
 export type {
@@ -24,10 +29,20 @@ export { default as AlarmStatusOverview } from './components/alarm-status-overvi
 export type { DetailPopupItem, DetailPopupProps } from './components/detail-popup';
 export { default as DetailPopup } from './components/detail-popup';
 
-export type { DeviceCheckItem, DeviceCheckProps, DeviceCheckStatus } from './components/device-check';
+export type {
+  DeviceCheckItem,
+  DeviceCheckProps,
+  DeviceCheckStatus,
+  DeviceCheckStatusTone,
+} from './components/device-check';
 export { default as DeviceCheck } from './components/device-check';
 
-export type { DeviceWarningItem, DeviceWarningLevel, DeviceWarningProps } from './components/device-warning';
+export type {
+  DeviceWarningItem,
+  DeviceWarningLevel,
+  DeviceWarningLevelColor,
+  DeviceWarningProps,
+} from './components/device-warning';
 export { default as DeviceWarning } from './components/device-warning';
 
 export type { OperationLogItem, OperationLogProps } from './components/operation-log';

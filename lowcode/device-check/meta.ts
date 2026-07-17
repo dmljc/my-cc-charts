@@ -72,7 +72,7 @@ const DeviceCheckMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '设备定检数据',
-              tip: '每一项字段名需与下方字段映射一致；status 取值 normal/expiring/overdue；状态文案与天数文案由 status、days 自动生成',
+              tip: '与接口字段一致：deviceName、remainingDaysText、status；status 为文案如正常/即将到期/逾期',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -80,28 +80,46 @@ const DeviceCheckMeta: ComponentMetadata = {
             },
           },
           {
-            name: 'nameField',
+            name: 'deviceNameField',
             title: {
-              label: '名称字段名',
-              tip: '数据中设备名称对应的字段名，默认为 name',
+              label: '设备名称字段名',
+              tip: '数据中设备名称对应的字段名，默认为 deviceName',
             },
-            setter: 'StringSetter',
+            defaultValue: 'deviceName',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'deviceName',
+              },
+            },
+          },
+          {
+            name: 'remainingDaysTextField',
+            title: {
+              label: '天数文案字段名',
+              tip: '数据中天数文案对应的字段名，默认为 remainingDaysText，如：剩余50天、延期3天',
+            },
+            defaultValue: 'remainingDaysText',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'remainingDaysText',
+              },
+            },
           },
           {
             name: 'statusField',
             title: {
               label: '状态字段名',
-              tip: '数据中定检状态对应的字段名，默认为 status，取值 normal/expiring/overdue',
+              tip: '数据中状态文案对应的字段名，默认为 status，如：正常、即将到期、逾期',
             },
-            setter: 'StringSetter',
-          },
-          {
-            name: 'daysField',
-            title: {
-              label: '天数字段名',
-              tip: '数据中天数对应的字段名，默认为 days；正常/即将到期表示剩余天数，延期表示已延期天数',
+            defaultValue: 'status',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'status',
+              },
             },
-            setter: 'StringSetter',
           },
         ],
       },
@@ -116,12 +134,24 @@ const DeviceCheckMeta: ComponentMetadata = {
           {
             name: 'width',
             title: '宽度',
-            setter: 'NumberSetter',
+            defaultValue: 400,
+            setter: {
+              componentName: 'NumberSetter',
+              props: {
+                defaultValue: 400,
+              },
+            },
           },
           {
             name: 'height',
             title: '高度',
-            setter: 'NumberSetter',
+            defaultValue: 200,
+            setter: {
+              componentName: 'NumberSetter',
+              props: {
+                defaultValue: 200,
+              },
+            },
           },
           {
             name: 'className',
@@ -161,9 +191,9 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
-        nameField: 'name',
+        deviceNameField: 'deviceName',
+        remainingDaysTextField: 'remainingDaysText',
         statusField: 'status',
-        daysField: 'days',
         width: 400,
         height: 200,
       },

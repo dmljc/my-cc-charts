@@ -72,7 +72,7 @@ const DeviceWarningMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '设备警告数据',
-              tip: '每一项字段名需与下方字段映射一致；level 取值 urgent/normal/regular，文案按等级自动映射紧急/一般/常规；数组为空时展示无警告文案',
+              tip: '每一项与接口字段一致：ruleName、levelName、levelColor、alarmTime；levelColor 支持十六进制色值；数组为空时展示无警告文案',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -80,20 +80,60 @@ const DeviceWarningMeta: ComponentMetadata = {
             },
           },
           {
-            name: 'nameField',
+            name: 'ruleNameField',
             title: {
-              label: '名称字段名',
-              tip: '数据中警告名称对应的字段名，默认为 name',
+              label: '规则名称字段名',
+              tip: '数据中规则名称对应的字段名，默认为 ruleName',
             },
-            setter: 'StringSetter',
+            defaultValue: 'ruleName',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'ruleName',
+              },
+            },
           },
           {
-            name: 'levelField',
+            name: 'levelNameField',
             title: {
-              label: '等级字段名',
-              tip: '数据中警告等级对应的字段名，默认为 level，取值 urgent/normal/regular',
+              label: '等级名称字段名',
+              tip: '数据中等级文案对应的字段名，默认为 levelName',
             },
-            setter: 'StringSetter',
+            defaultValue: 'levelName',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'levelName',
+              },
+            },
+          },
+          {
+            name: 'levelColorField',
+            title: {
+              label: '等级颜色字段名',
+              tip: '数据中等级颜色对应的字段名，默认为 levelColor，支持 #FF0000 等色值',
+            },
+            defaultValue: 'levelColor',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'levelColor',
+              },
+            },
+          },
+          {
+            name: 'alarmTimeField',
+            title: {
+              label: '告警时间字段名',
+              tip: '数据中告警时间对应的字段名，默认为 alarmTime',
+            },
+            defaultValue: 'alarmTime',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'alarmTime',
+              },
+            },
           },
           {
             name: 'emptyText',
@@ -102,7 +142,12 @@ const DeviceWarningMeta: ComponentMetadata = {
               tip: '警告列表为空时展示的文案，默认"正常"',
             },
             defaultValue: '正常',
-            setter: 'StringSetter',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: '正常',
+              },
+            },
           },
         ],
       },
@@ -117,12 +162,24 @@ const DeviceWarningMeta: ComponentMetadata = {
           {
             name: 'width',
             title: '宽度',
-            setter: 'NumberSetter',
+            defaultValue: 400,
+            setter: {
+              componentName: 'NumberSetter',
+              props: {
+                defaultValue: 400,
+              },
+            },
           },
           {
             name: 'height',
             title: '高度',
-            setter: 'NumberSetter',
+            defaultValue: 200,
+            setter: {
+              componentName: 'NumberSetter',
+              props: {
+                defaultValue: 200,
+              },
+            },
           },
           {
             name: 'className',
@@ -162,8 +219,10 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
-        nameField: 'name',
-        levelField: 'level',
+        ruleNameField: 'ruleName',
+        levelNameField: 'levelName',
+        levelColorField: 'levelColor',
+        alarmTimeField: 'alarmTime',
         emptyText: '正常',
         width: 400,
         height: 200,

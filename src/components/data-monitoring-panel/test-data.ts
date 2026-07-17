@@ -13,17 +13,17 @@ export const createDataMonitoringPanelTestData = (count = 12): DataMonitoringCar
 
     return {
       id: `monitoring-${roomNo}`,
-      header: {
+      baseInfo: {
         roomValue: String(roomNo),
         deviceValue: `设备名称设备名称名称${String(253333 + index).padStart(7, '0')}`,
       },
-      info: [flow, speed, pressure].map((value, metricIndex) => ({
+      runtimeParameters: [flow, speed, pressure].map((value, metricIndex) => ({
         id: `${roomNo}-${metricLabels[metricIndex]}`,
         value: Number(value.toFixed(metricIndex === 2 ? 2 : 1)),
         unit: metricUnits[metricIndex],
         label: metricLabels[metricIndex],
       })),
-      chart: createDataMonitoringLineChartTestData(10, {
+      tritiumConcentration: createDataMonitoringLineChartTestData(10, {
         startSeconds: index * 60,
         stepSeconds: 1,
       }).map((item, pointIndex) => ({

@@ -98,9 +98,9 @@ export interface DataMonitoringLineChartPoint {
 
 export interface DataMonitoringCardData {
   id?: string | number;
-  header?: DataMonitoringHeaderData;
-  info?: DataMonitoringInfoItem[];
-  chart?: DataMonitoringLineChartPoint[];
+  baseInfo?: DataMonitoringHeaderData;
+  runtimeParameters?: DataMonitoringInfoItem[];
+  tritiumConcentration?: DataMonitoringLineChartPoint[];
   [key: string]: unknown;
 }
 
@@ -114,31 +114,35 @@ export interface DetailPopupItem {
 
 export interface DeviceCheckItem {
   id?: string | number;
-  name?: string;
-  status?: 'normal' | 'expiring' | 'overdue' | string;
-  days?: number;
+  deviceName?: string;
+  remainingDaysText?: string;
+  status?: string;
   [key: string]: unknown;
 }
 
 export interface DeviceWarningItem {
   id?: string | number;
-  name: string;
-  level?: 'urgent' | 'normal' | 'regular' | string;
+  ruleName?: string;
+  levelName?: string;
+  levelColor?: 'urgent' | 'normal' | 'regular' | string;
+  alarmTime?: string;
   [key: string]: unknown;
 }
 
 export interface EffluentItem {
   id?: string | number;
-  label: string;
+  name?: string;
   value?: number | string;
-  trend?: 'up' | 'down' | 'flat' | string;
+  threshold?: number | string;
+  arrow?: 'up' | 'down' | 'flat' | string;
+  [key: string]: unknown;
 }
 
 export interface OperationLogItem {
   id?: string | number;
-  action?: string;
-  name?: string;
-  time?: string;
+  title?: string;
+  operName?: string;
+  operTime?: string;
   [key: string]: unknown;
 }
 
@@ -391,9 +395,9 @@ export interface MonitoringCardBuildConfig {
   thingId: string;
   /** 卡片 id，默认 thingId */
   id?: string | number;
-  header: SnapshotHeaderMapping;
+  baseInfo: SnapshotHeaderMapping;
   infoMappings: SnapshotMetricMapping[];
-  /** 该设备对应的历史响应（可选，无则 chart 为空） */
+  /** 该设备对应的历史响应（可选，无则 tritiumConcentration 为空） */
   history?: IiotTimeSeriesResponse;
   historyOptions?: HistoryToPointsOptions;
 }
@@ -405,16 +409,16 @@ export function adaptSnapshotAndHistoryToCard(
 ): DataMonitoringCardData {
   return {
     id: config.id ?? config.thingId,
-    header: adaptSnapshotToMonitoringHeader(snapshot, config.header),
-    info: adaptSnapshotToMonitoringInfo(snapshot, config.infoMappings),
-    chart: config.history
+    baseInfo: adaptSnapshotToMonitoringHeader(snapshot, config.baseInfo),
+    runtimeParameters: adaptSnapshotToMonitoringInfo(snapshot, config.infoMappings),
+    tritiumConcentration: config.history
       ? adaptHistoryToLinePoints(config.history, config.historyOptions)
       : [],
   };
 }
 
 /**
- * 批量快照 → 多张监测卡片（chart 需另行按 thing 填入 historyMap）
+ * 批量快照 → 多张监测卡片（tritiumConcentration 需另行按 thing 填入 historyMap）
  */
 export function adaptBatchSnapshotToCards(
   batch: IiotBatchSnapshotResponse,
@@ -433,14 +437,14 @@ export function adaptBatchSnapshotToCards(
         properties: thing.properties,
         components: thing.components,
       };
-      const headerFallback: SnapshotHeaderMapping = {
-        ...config.header,
+      const baseInfoFallback: SnapshotHeaderMapping = {
+        ...config.baseInfo,
         deviceValueFallback:
-          config.header.deviceValueFallback ?? thing.thing_name ?? config.thingId,
+          config.baseInfo.deviceValueFallback ?? thing.thing_name ?? config.thingId,
       };
       return adaptSnapshotAndHistoryToCard(snapshot, {
         ...config,
-        header: headerFallback,
+        baseInfo: baseInfoFallback,
         history: config.history ?? historyMap?.[config.thingId],
       });
     })
@@ -463,10 +467,24 @@ export interface TableFieldMapping {
   label?: string;
   value?: string;
   trend?: string;
+  threshold?: string;
+  arrow?: string;
   runningText?: string;
   emergency?: string;
   severe?: string;
   general?: string;
+  /** 设备定检 */
+  deviceName?: string;
+  remainingDaysText?: string;
+  /** 设备警告 */
+  ruleName?: string;
+  levelName?: string;
+  levelColor?: string;
+  alarmTime?: string;
+  /** 操作日志 */
+  title?: string;
+  operName?: string;
+  operTime?: string;
 }
 
 function mapRow(
@@ -487,9 +505,9 @@ function mapRow(
 export function adaptTableToOperationLog(
   response: IiotTableRecordsResponse,
   mapping: TableFieldMapping = {
-    action: 'action',
-    name: 'name',
-    time: 'time',
+    title: 'title',
+    operName: 'operName',
+    operTime: 'operTime',
     id: 'id',
   },
 ): OperationLogItem[] {
@@ -497,9 +515,9 @@ export function adaptTableToOperationLog(
     const m = mapRow(row, mapping);
     return {
       id: (m.id as string | number) ?? row.id,
-      action: m.action as string | undefined,
-      name: m.name as string | undefined,
-      time: m.time as string | undefined,
+      title: m.title as string | undefined,
+      operName: m.operName as string | undefined,
+      operTime: m.operTime as string | undefined,
     };
   });
 }
@@ -508,8 +526,10 @@ export function adaptTableToOperationLog(
 export function adaptTableToDeviceWarning(
   response: IiotTableRecordsResponse,
   mapping: TableFieldMapping = {
-    name: 'name',
-    level: 'level',
+    ruleName: 'ruleName',
+    levelName: 'levelName',
+    levelColor: 'levelColor',
+    alarmTime: 'alarmTime',
     id: 'id',
   },
 ): DeviceWarningItem[] {
@@ -517,8 +537,10 @@ export function adaptTableToDeviceWarning(
     const m = mapRow(row, mapping);
     return {
       id: (m.id as string | number) ?? row.id,
-      name: String(m.name ?? ''),
-      level: m.level as DeviceWarningItem['level'],
+      ruleName: m.ruleName as string | undefined,
+      levelName: m.levelName as string | undefined,
+      levelColor: m.levelColor as DeviceWarningItem['levelColor'],
+      alarmTime: m.alarmTime as string | undefined,
     };
   });
 }
@@ -527,9 +549,9 @@ export function adaptTableToDeviceWarning(
 export function adaptTableToDeviceCheck(
   response: IiotTableRecordsResponse,
   mapping: TableFieldMapping = {
-    name: 'name',
+    deviceName: 'deviceName',
+    remainingDaysText: 'remainingDaysText',
     status: 'status',
-    days: 'days',
     id: 'id',
   },
 ): DeviceCheckItem[] {
@@ -537,9 +559,9 @@ export function adaptTableToDeviceCheck(
     const m = mapRow(row, mapping);
     return {
       id: (m.id as string | number) ?? row.id,
-      name: m.name as string | undefined,
-      status: m.status as DeviceCheckItem['status'],
-      days: asNumber(m.days),
+      deviceName: m.deviceName as string | undefined,
+      remainingDaysText: m.remainingDaysText as string | undefined,
+      status: m.status as string | undefined,
     };
   });
 }
@@ -577,15 +599,17 @@ export function adaptTableToAlarmStatusOverview(
 
 export interface EffluentMappingItem {
   propertyId: string;
-  label: string;
+  name: string;
   id?: string | number;
-  /** 可选：上一周期值，用于计算 trend */
+  /** 阈值，对应接口 threshold */
+  threshold?: number;
+  /** 可选：上一周期值，用于计算 arrow */
   previousValue?: number;
 }
 
 /**
  * 快照 → 流出物
- * trend：若提供 previousValue 则自动计算，否则为 flat
+ * arrow：若提供 previousValue 则自动计算，否则为 flat
  */
 export function adaptSnapshotToEffluent(
   snapshot: IiotSnapshotResponse,
@@ -596,17 +620,22 @@ export function adaptSnapshotToEffluent(
     const raw = props[m.propertyId];
     const value = asDisplay(pickPropertyValue(raw));
     const current = asNumber(value);
-    let trend: EffluentItem['trend'] = 'flat';
+    let arrow: EffluentItem['arrow'] = 'flat';
     if (current != null && m.previousValue != null) {
-      if (current > m.previousValue) trend = 'up';
-      else if (current < m.previousValue) trend = 'down';
-      else trend = 'flat';
+      if (current > m.previousValue) arrow = 'up';
+      else if (current < m.previousValue) arrow = 'down';
+      else arrow = 'flat';
+    } else if (current != null && m.threshold != null) {
+      if (current > m.threshold) arrow = 'up';
+      else if (current < m.threshold) arrow = 'down';
+      else arrow = 'flat';
     }
     return {
       id: m.id ?? index + 1,
-      label: m.label,
+      name: m.name,
       value: value ?? 0,
-      trend,
+      threshold: m.threshold,
+      arrow,
     };
   });
 }
@@ -645,7 +674,7 @@ const flat = adaptHistoryToVariableYFlat(historyRes, {
 const cards = adaptBatchSnapshotToCards(batchSnapshotRes, [
   {
     thingId: 'device-101',
-    header: { roomPropertyId: 'room_no', devicePropertyId: 'device_name' },
+    baseInfo: { roomPropertyId: 'room_no', devicePropertyId: 'device_name' },
     infoMappings: [
       { propertyId: 'flow', label: '流量', unit: 'm³/h' },
       { propertyId: 'speed', label: '流速', unit: 'm³/h' },
@@ -656,8 +685,8 @@ const cards = adaptBatchSnapshotToCards(batchSnapshotRes, [
 
 // 4) 表记录业务列表（字段名按实际表调整）
 const logs = adaptTableToOperationLog(tableRes, {
-  action: 'op_content',
-  name: 'operator',
-  time: 'op_time',
+  title: 'title',
+  operName: 'operName',
+  operTime: 'operTime',
 });
 */

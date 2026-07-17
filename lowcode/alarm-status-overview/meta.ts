@@ -3,15 +3,26 @@ import { ChartSnippet, ChartMetaIot } from '../common/iot';
 
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
-const defaultData = {
-  id: 1,
-  name: 'X12',
-  status: 'normal',
-  runningText: '正常运行',
-  emergency: 3,
-  severe: 2,
-  general: 10,
-};
+const defaultData = [
+  {
+    id: 1,
+    name: 'X03',
+    status: 'normal',
+  },
+  {
+    id: 2,
+    name: 'X06',
+    status: 'normal',
+  },
+  {
+    id: 3,
+    name: 'X12',
+    status: 'alarm',
+    emergency: 3,
+    severe: 2,
+    general: 10,
+  },
+];
 
 const AlarmStatusOverviewMeta: ComponentMetadata = {
   componentName: 'AlarmStatusOverview',
@@ -79,7 +90,7 @@ const AlarmStatusOverviewMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '告警状态概览数据',
-              tip: '包含 id、name、status、runningText、emergency、severe、general 字段，status 取值 normal 或 alarm',
+              tip: '数组，每项包含 id、name、status、emergency、severe、general 字段，status 取值 normal 或 alarm；正常状态文案固定为「正常运行」',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -99,14 +110,6 @@ const AlarmStatusOverviewMeta: ComponentMetadata = {
             title: {
               label: '状态字段名',
               tip: '数据中状态对应的字段名，默认为 status，取值 normal 或 alarm',
-            },
-            setter: 'StringSetter',
-          },
-          {
-            name: 'runningTextField',
-            title: {
-              label: '运行文案字段名',
-              tip: '接口数据中正常运行文案对应的字段名，默认为 runningText',
             },
             setter: 'StringSetter',
           },
@@ -151,7 +154,28 @@ const AlarmStatusOverviewMeta: ComponentMetadata = {
           },
           {
             name: 'height',
-            title: '高度',
+            title: {
+              label: '列表高度',
+              tip: '列表容器高度，内容超出后出现滚动条；不设置则自适应内容高度',
+            },
+            setter: 'NumberSetter',
+          },
+          {
+            name: 'itemHeight',
+            title: {
+              label: '卡片高度',
+              tip: '单张卡片的高度，默认 98',
+            },
+            defaultValue: 98,
+            setter: 'NumberSetter',
+          },
+          {
+            name: 'gap',
+            title: {
+              label: '卡片间距',
+              tip: '卡片之间的纵向间距，默认 12',
+            },
+            defaultValue: 12,
             setter: 'NumberSetter',
           },
           {
@@ -172,8 +196,8 @@ const AlarmStatusOverviewMeta: ComponentMetadata = {
           {
             name: 'onItemClick',
             title: {
-              label: '点击箭头',
-              tip: '(item) => void',
+              label: '点击卡片',
+              tip: '(item, index) => void',
             },
             setter: 'FunctionSetter',
           },
@@ -194,12 +218,13 @@ const snippets: Snippet[] = [
         data: defaultData,
         nameField: 'name',
         statusField: 'status',
-        runningTextField: 'runningText',
         emergencyField: 'emergency',
         severeField: 'severe',
         generalField: 'general',
         width: 400,
-        height: 98,
+        height: 320,
+        itemHeight: 98,
+        gap: 12,
       },
     },
   },

@@ -8,12 +8,18 @@ import { destroy, init } from '../../common/iot';
 import { DEFAULT_DEVICE_WARNING_TEST_DATA } from './test-data';
 import './index.scss';
 
-export type DeviceWarningLevel = 'urgent' | 'normal' | 'regular' | string;
+export type DeviceWarningLevelColor = 'urgent' | 'normal' | 'regular' | string;
 
 export interface DeviceWarningItem {
   id?: string | number;
-  name: string;
-  level?: DeviceWarningLevel;
+  /** 规则名称 */
+  ruleName?: string;
+  /** 等级名称，如：紧急 / 一般 / 常规 */
+  levelName?: string;
+  /** 等级颜色，支持 urgent/normal/regular 或十六进制色值如 #FF0000 */
+  levelColor?: DeviceWarningLevelColor;
+  /** 告警时间 */
+  alarmTime?: string;
   [key: string]: unknown;
 }
 
@@ -23,10 +29,14 @@ export interface DeviceWarningProps {
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
-  /** 警告名称字段名，默认 name */
-  nameField?: string;
-  /** 警告等级字段名，默认 level，取值 urgent/normal/regular */
-  levelField?: string;
+  /** 规则名称字段名，默认 ruleName */
+  ruleNameField?: string;
+  /** 等级名称字段名，默认 levelName */
+  levelNameField?: string;
+  /** 等级颜色字段名，默认 levelColor */
+  levelColorField?: string;
+  /** 告警时间字段名，默认 alarmTime */
+  alarmTimeField?: string;
   /** 无警告数据时展示的文案，默认 '正常' */
   emptyText?: string;
   onItemClick?: (item: DeviceWarningItem, index: number) => void;
@@ -41,10 +51,10 @@ interface BizRef {
 
 const defaultData = DEFAULT_DEVICE_WARNING_TEST_DATA as DeviceWarningItem[];
 
-const levelTextMap: Record<string, string> = {
-  urgent: '紧急',
-  normal: '一般',
-  regular: '常规',
+const LEVEL_COLOR_MAP: Record<string, string> = {
+  urgent: '#ff2f2f',
+  normal: '#ffbe2f',
+  regular: '#3399ff',
 };
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
@@ -83,14 +93,24 @@ const resolveFieldValue = (item: DeviceWarningItem, field: string) => {
   return String(value);
 };
 
+const resolveLevelColor = (raw?: string) => {
+  if (!raw) {
+    return LEVEL_COLOR_MAP.regular;
+  }
+
+  return LEVEL_COLOR_MAP[raw] || raw;
+};
+
 const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props) {
   const {
     width = 400,
     height = 200,
     style = {},
     className = '',
-    nameField = 'name',
-    levelField = 'level',
+    ruleNameField = 'ruleName',
+    levelNameField = 'levelName',
+    levelColorField = 'levelColor',
+    alarmTimeField = 'alarmTime',
     emptyText = '正常',
     onItemClick,
     ...otherProps
@@ -125,8 +145,10 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
   }, []);
 
   const hasWarning = items.length > 0;
-  const safeNameField = nameField || 'name';
-  const safeLevelField = levelField || 'level';
+  const safeRuleNameField = ruleNameField || 'ruleName';
+  const safeLevelNameField = levelNameField || 'levelName';
+  const safeLevelColorField = levelColorField || 'levelColor';
+  const safeAlarmTimeField = alarmTimeField || 'alarmTime';
 
   return (
     <div
@@ -137,15 +159,16 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
       {hasWarning ? (
         <div className="bizpack-device-warning-list">
           {items.map((item, index) => {
-            const name = resolveFieldValue(item, safeNameField);
-            const level = resolveFieldValue(item, safeLevelField) || 'regular';
-            const levelText = levelTextMap[level] || level;
+            const ruleName = resolveFieldValue(item, safeRuleNameField);
+            const levelName = resolveFieldValue(item, safeLevelNameField);
+            const levelColor = resolveLevelColor(resolveFieldValue(item, safeLevelColorField));
+            const alarmTime = resolveFieldValue(item, safeAlarmTimeField);
 
             return (
               <button
-                key={item.id != null ? String(item.id) : index}
+                key={item.id != null ? String(item.id) : `${ruleName}-${alarmTime}-${index}`}
                 type="button"
-                className={`bizpack-device-warning-row bizpack-device-warning-row-${level}`}
+                className="bizpack-device-warning-row"
                 onClick={() => {
                   if (onItemClick) {
                     onItemClick(item, index);
@@ -155,10 +178,15 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
                 <span className="bizpack-device-warning-icon-wrap">
                   <span className="bizpack-device-warning-icon" />
                 </span>
-                <span className="bizpack-device-warning-name" title={name}>
-                  {name}
+                <span className="bizpack-device-warning-name" title={ruleName}>
+                  {ruleName}
                 </span>
-                <span className="bizpack-device-warning-level">{levelText}</span>
+                <span className="bizpack-device-warning-time" title={alarmTime}>
+                  {alarmTime}
+                </span>
+                <span className="bizpack-device-warning-level" style={{ color: levelColor }}>
+                  {levelName}
+                </span>
               </button>
             );
           })}

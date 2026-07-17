@@ -1,25 +1,25 @@
 export interface DeviceCheckTestItem {
   id: number;
-  name: string;
-  status: 'normal' | 'expiring' | 'overdue';
-  days: number;
+  deviceName: string;
+  remainingDaysText: string;
+  status: string;
   [key: string]: unknown;
 }
 
 export const DEFAULT_DEVICE_CHECK_TEST_DATA: DeviceCheckTestItem[] = [
-  { id: 1, name: '取样泵1定检', status: 'normal', days: 50 },
-  { id: 2, name: '真空泵2定检', status: 'expiring', days: 7 },
-  { id: 3, name: '电磁阀0101定检', status: 'overdue', days: 3 },
-  { id: 4, name: '温度传感器T03校准', status: 'normal', days: 45 },
-  { id: 5, name: '冷却水循环泵保养', status: 'expiring', days: 5 },
-  { id: 6, name: '液位计L02定检', status: 'overdue', days: 12 },
-  { id: 7, name: '压力表P05校准', status: 'normal', days: 60 },
-  { id: 8, name: '风机F01巡检', status: 'expiring', days: 9 },
-  { id: 9, name: '过滤器F02更换', status: 'overdue', days: 6 },
-  { id: 10, name: '电机M03绝缘检测', status: 'normal', days: 35 },
-  { id: 11, name: '排风阀V04定检', status: 'expiring', days: 4 },
-  { id: 12, name: '加热器H01温控检查', status: 'overdue', days: 18 },
-  { id: 13, name: '油泵OP01保养', status: 'normal', days: 28 },
-  { id: 14, name: '搅拌机BL02定期保养', status: 'expiring', days: 2 },
-  { id: 15, name: '压缩机C01排气检查', status: 'overdue', days: 9 },
+  { id: 1, deviceName: '取样泵', remainingDaysText: '剩余50天', status: '正常' },
+  { id: 2, deviceName: '真空泵2', remainingDaysText: '剩余7天', status: '即将到期' },
+  { id: 3, deviceName: '电磁阀0101', remainingDaysText: '延期3天', status: '逾期' },
+  { id: 4, deviceName: '温度传感器T03', remainingDaysText: '剩余45天', status: '正常' },
+  { id: 5, deviceName: '冷却水循环泵', remainingDaysText: '剩余5天', status: '即将到期' },
+  { id: 6, deviceName: '液位计L02', remainingDaysText: '延期12天', status: '逾期' },
+  { id: 7, deviceName: '压力表P05', remainingDaysText: '剩余60天', status: '正常' },
+  { id: 8, deviceName: '风机F01', remainingDaysText: '剩余9天', status: '即将到期' },
+  { id: 9, deviceName: '过滤器F02', remainingDaysText: '延期6天', status: '逾期' },
+  { id: 10, deviceName: '电机M03', remainingDaysText: '剩余35天', status: '正常' },
+  { id: 11, deviceName: '排风阀V04', remainingDaysText: '剩余4天', status: '即将到期' },
+  { id: 12, deviceName: '加热器H01', remainingDaysText: '延期18天', status: '逾期' },
+  { id: 13, deviceName: '油泵OP01', remainingDaysText: '剩余28天', status: '正常' },
+  { id: 14, deviceName: '搅拌机BL02', remainingDaysText: '剩余2天', status: '即将到期' },
+  { id: 15, deviceName: '压缩机C01', remainingDaysText: '延期9天', status: '逾期' },
 ];
