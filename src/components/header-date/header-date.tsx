@@ -109,4 +109,4 @@ const HeaderDate: React.FC<HeaderDateProps> = function HeaderDate(props) {
 };
 
 HeaderDate.displayName = 'HeaderDate';
-export default HeaderDate;
+export default React.memo(HeaderDate);

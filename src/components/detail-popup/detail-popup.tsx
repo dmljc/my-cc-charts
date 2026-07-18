@@ -5,6 +5,7 @@ import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
+import { normalizeListData } from '../../common/perf';
 import './index.scss';
 
 export interface DetailPopupItem {
@@ -75,7 +76,7 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
 
 const resolveListData = (value?: DetailPopupItem[] | null): DetailPopupItem[] => {
   if (Array.isArray(value)) {
-    return value;
+    return normalizeListData(value);
   }
 
   return defaultData;
@@ -123,7 +124,7 @@ const DetailPopup: React.FC<DetailPopupProps> = function DetailPopup(props) {
       chart: {
         changeData: (nextData: DetailPopupItem[]) => {
           if (Array.isArray(nextData)) {
-            setItems(nextData);
+            setItems(normalizeListData(nextData));
           }
         },
       },
@@ -134,6 +135,7 @@ const DetailPopup: React.FC<DetailPopupProps> = function DetailPopup(props) {
     return () => {
       destroy(props, bc);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!visible) {
@@ -199,4 +201,4 @@ const DetailPopup: React.FC<DetailPopupProps> = function DetailPopup(props) {
 };
 
 DetailPopup.displayName = 'DetailPopup';
-export default DetailPopup;
+export default React.memo(DetailPopup);

@@ -4,6 +4,7 @@ import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
+import { normalizeListData } from '../../common/perf';
 import { DEFAULT_DEVICE_CHECK_TEST_DATA } from './test-data';
 import './index.scss';
 
@@ -66,7 +67,7 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
 
 const resolveListData = (value?: DeviceCheckItem[] | null): DeviceCheckItem[] => {
   if (Array.isArray(value)) {
-    return value;
+    return normalizeListData(value);
   }
 
   return defaultData;
@@ -134,7 +135,7 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
       chart: {
         changeData: (nextData: DeviceCheckItem[]) => {
           if (Array.isArray(nextData)) {
-            setItems(nextData);
+            setItems(normalizeListData(nextData));
           }
         },
       },
@@ -145,6 +146,7 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
     return () => {
       destroy(props, bc);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const safeDeviceNameField = deviceNameField || 'deviceName';
@@ -208,4 +210,4 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
 };
 
 DeviceCheck.displayName = 'DeviceCheck';
-export default DeviceCheck;
+export default React.memo(DeviceCheck);

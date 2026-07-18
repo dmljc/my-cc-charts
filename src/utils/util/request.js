@@ -308,7 +308,10 @@ export class WSIO {
 
   refreshMessage = () => {
     const callbacks = Object.values(this.callbacks);
-    this.wsio.on('device-values', (event) => {
+    if (this._deviceValuesHandler) {
+      this.wsio.off('device-values', this._deviceValuesHandler);
+    }
+    this._deviceValuesHandler = (event) => {
       if(callbacks.length === 0) {
         return;
       }
@@ -316,7 +319,8 @@ export class WSIO {
       callbacks.forEach((callback) => {
         callback(data);
       })
-    })
+    };
+    this.wsio.on('device-values', this._deviceValuesHandler);
   }
 
   refreshOpen = () => {

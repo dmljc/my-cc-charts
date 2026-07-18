@@ -5,6 +5,7 @@ import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
+import { normalizeListData } from '../../common/perf';
 import './index.scss';
 
 export type AlarmStatusOverviewStatus = 'normal' | 'alarm';
@@ -98,7 +99,7 @@ const normalizeList = (
   nextData?: AlarmStatusOverviewData | AlarmStatusOverviewData[] | null,
 ): AlarmStatusOverviewData[] => {
   if (Array.isArray(nextData)) {
-    return nextData;
+    return normalizeListData(nextData);
   }
 
   if (nextData && typeof nextData === 'object') {
@@ -164,6 +165,7 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
     return () => {
       destroy(props, bc);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const safeNameField = nameField || 'name';
@@ -246,4 +248,4 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
 };
 
 AlarmStatusOverview.displayName = 'AlarmStatusOverview';
-export default AlarmStatusOverview;
+export default React.memo(AlarmStatusOverview);

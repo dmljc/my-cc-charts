@@ -5,6 +5,7 @@ import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
+import { normalizeListData } from '../../common/perf';
 import './index.scss';
 
 /** 箭头方向，与接口字段 arrow 一致 */
@@ -152,14 +153,16 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
     onItemClick,
     ...otherProps
   } = props;
-  const [items, setItems] = useState<EffluentItem[]>(Array.isArray(data) ? data : defaultData);
+  const [items, setItems] = useState<EffluentItem[]>(
+    () => (Array.isArray(data) ? normalizeListData(data) : defaultData),
+  );
   const rootDomProps = pickRootDomProps(otherProps);
   const bizRef = React.useRef<BizRef | null>(null);
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
 
   useEffect(() => {
     if (!props.dataType || props.dataType === 'data') {
-      setItems(Array.isArray(data) ? data : defaultData);
+      setItems(Array.isArray(data) ? normalizeListData(data) : defaultData);
     }
   }, [data, props.dataType]);
 
@@ -168,7 +171,7 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
       chart: {
         changeData: (nextData: EffluentItem[]) => {
           if (Array.isArray(nextData)) {
-            setItems(nextData);
+            setItems(normalizeListData(nextData));
           }
         },
       },
@@ -179,6 +182,7 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
     return () => {
       destroy(props, bc);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const safeNameField = nameField || 'name';
@@ -244,4 +248,4 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
 };
 
 Effluent.displayName = 'Effluent';
-export default Effluent;
+export default React.memo(Effluent);

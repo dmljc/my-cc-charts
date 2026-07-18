@@ -32,6 +32,6 @@ const ColorfulButton: React.FC<ColorfulButtonProps> = function ColorfulButton({
 };
 
 ColorfulButton.displayName = 'ColorfulButton';
-export default ColorfulButton;
+export default React.memo(ColorfulButton);
 
 

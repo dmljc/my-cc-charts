@@ -142,4 +142,4 @@ const DataMonitoringHeader: React.FC<DataMonitoringHeaderProps> = function DataM
 };
 
 DataMonitoringHeader.displayName = 'DataMonitoringHeader';
-export default DataMonitoringHeader;
+export default React.memo(DataMonitoringHeader);

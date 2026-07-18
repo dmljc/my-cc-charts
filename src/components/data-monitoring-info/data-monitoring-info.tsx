@@ -93,8 +93,14 @@ const DataMonitoringInfo: React.FC<DataMonitoringInfoProps> = function DataMonit
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
 
   useEffect(() => {
-    setItems(data);
-  }, [data]);
+    // 显式传空数组时保持为空，不回落到默认演示数据
+    if (props.data !== undefined) {
+      setItems(Array.isArray(props.data) ? props.data : []);
+      return;
+    }
+
+    setItems(defaultData);
+  }, [props.data]);
 
   useEffect(() => {
     bizRef.current = {
@@ -112,7 +118,13 @@ const DataMonitoringInfo: React.FC<DataMonitoringInfoProps> = function DataMonit
     return () => {
       destroy(props, bc);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 指标数据为空时不渲染，避免占位空白条
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
 
   return (
     <div
@@ -144,4 +156,4 @@ const DataMonitoringInfo: React.FC<DataMonitoringInfoProps> = function DataMonit
 };
 
 DataMonitoringInfo.displayName = 'DataMonitoringInfo';
-export default DataMonitoringInfo;
+export default React.memo(DataMonitoringInfo);

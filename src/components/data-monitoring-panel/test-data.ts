@@ -4,7 +4,7 @@ import { createDataMonitoringLineChartTestData } from '../data-monitoring-line-c
 const metricLabels = ['流量', '流速', '压力'];
 const metricUnits = ['m³/h', 'm³/h', 'pa'];
 
-export const createDataMonitoringPanelTestData = (count = 12): DataMonitoringCardData[] => (
+export const createDataMonitoringPanelTestData = (count = 3): DataMonitoringCardData[] => (
   Array.from({ length: count }, (_, index) => {
     const roomNo = 101 + index;
     const flow = 10 + (index % 5) * 1.2;
@@ -34,4 +34,4 @@ export const createDataMonitoringPanelTestData = (count = 12): DataMonitoringCar
   })
 );
 
-export const DEFAULT_DATA_MONITORING_PANEL_TEST_DATA = createDataMonitoringPanelTestData(12);
+export const DEFAULT_DATA_MONITORING_PANEL_TEST_DATA = createDataMonitoringPanelTestData(3);

@@ -62,7 +62,9 @@ export default (props: FilletColumnChartProps) => {
         return () => {
             destroy(props, bc);
         };
-    });
+        // 仅挂载时绑定数据源，避免每次 render 重复 init/destroy
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const scale = {
         expected: {

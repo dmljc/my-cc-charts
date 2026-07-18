@@ -4,6 +4,7 @@ import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useRef, useState } from 'react';
 import { destroy, init } from '../../common/iot';
+import { MAX_CHART_POINTS } from '../../common/perf';
 import DataMonitoringCard from '../data-monitoring-card';
 import type { DataMonitoringCardData } from '../data-monitoring-card';
 import { DEFAULT_DATA_MONITORING_PANEL_TEST_DATA } from './test-data';
@@ -49,6 +50,31 @@ interface BizRef {
 
 const DEFAULT_DATA = DEFAULT_DATA_MONITORING_PANEL_TEST_DATA;
 
+/** 面板滚动区默认最多展示 3 张卡片，与 DataMonitoringCard 列表模式一致 */
+const MAX_PANEL_CARDS = 3;
+
+const windowMonitoringCards = (list: DataMonitoringCardData[]): DataMonitoringCardData[] => {
+  const limitedCards = Array.isArray(list) ? list.slice(0, MAX_PANEL_CARDS) : [];
+
+  return limitedCards.map((card) => {
+    const points = card.tritiumConcentration ?? (card as { chart?: unknown }).chart;
+    const baseInfo = card.baseInfo ?? (card as { header?: unknown }).header;
+    const runtimeParameters = card.runtimeParameters ?? (card as { info?: unknown }).info;
+    const normalizedPoints = Array.isArray(points) ? points : undefined;
+
+    const nextCard = {
+      ...card,
+      baseInfo: baseInfo as typeof card.baseInfo,
+      runtimeParameters: runtimeParameters as typeof card.runtimeParameters,
+      tritiumConcentration: normalizedPoints && normalizedPoints.length > MAX_CHART_POINTS
+        ? normalizedPoints.slice(-MAX_CHART_POINTS)
+        : normalizedPoints as typeof card.tritiumConcentration,
+    };
+
+    return nextCard;
+  });
+};
+
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
 
@@ -88,8 +114,8 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
     ...otherProps
   } = props;
 
-  const [items, setItems] = useState<DataMonitoringCardData[]>(data);
-  const itemsRef = useRef<DataMonitoringCardData[]>(data);
+  const [items, setItems] = useState<DataMonitoringCardData[]>(() => windowMonitoringCards(data));
+  const itemsRef = useRef<DataMonitoringCardData[]>(items);
   const bizRef = useRef<BizRef | null>(null);
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
   const rootDomProps = pickRootDomProps(otherProps);
@@ -105,7 +131,7 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
   } as React.CSSProperties;
 
   useEffect(() => {
-    setItems(data);
+    setItems(windowMonitoringCards(data));
   }, [data]);
 
   useEffect(() => {
@@ -117,7 +143,7 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
       chart: {
         changeData: (nextData: DataMonitoringCardData[]) => {
           if (Array.isArray(nextData)) {
-            setItems(nextData);
+            setItems(windowMonitoringCards(nextData));
           }
         },
         getData: () => itemsRef.current,
@@ -129,9 +155,10 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
     return () => {
       destroy(props, bc);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const renderCards = (groupKey: string) => (
+  const renderCards = (groupKey: string, mountChart: boolean) => (
     <div className="bizpack-data-monitoring-panel-group">
       {items.map((item, index) => (
         <div
@@ -151,6 +178,7 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
             chartHeight={chartHeight}
             showXAxisLabels={showXAxisLabels}
             showLatestValue={showLatestValue}
+            mountChart={mountChart}
           />
         </div>
       ))}
@@ -174,8 +202,8 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
             shouldDuplicate ? 'bizpack-data-monitoring-panel-content-marquee' : ''
           } ${pauseOnHover ? 'bizpack-data-monitoring-panel-content-pause' : ''}`}
         >
-          {renderCards('primary')}
-          {shouldDuplicate ? renderCards('duplicate') : null}
+          {renderCards('primary', true)}
+          {shouldDuplicate ? renderCards('duplicate', false) : null}
         </div>
       </div>
     </div>
@@ -183,4 +211,4 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
 };
 
 DataMonitoringPanel.displayName = 'DataMonitoringPanel';
-export default DataMonitoringPanel;
+export default React.memo(DataMonitoringPanel);

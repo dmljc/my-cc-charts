@@ -4,6 +4,7 @@ import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useRef, useState } from 'react';
 import { destroy, init } from '../../common/iot';
+import { normalizeListData } from '../../common/perf';
 import { DEFAULT_OPERATION_LOG_TEST_DATA } from './test-data';
 import './index.scss';
 
@@ -105,8 +106,8 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
     ...otherProps
   } = props;
 
-  const [items, setItems] = useState<OperationLogItem[]>(data);
-  const itemsRef = useRef<OperationLogItem[]>(data);
+  const [items, setItems] = useState<OperationLogItem[]>(() => normalizeListData(data));
+  const itemsRef = useRef<OperationLogItem[]>(items);
   const rootDomProps = pickRootDomProps(otherProps);
   const bizRef = useRef<BizRef | null>(null);
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
@@ -116,7 +117,7 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
   const mountedRef = useRef(false);
 
   useEffect(() => {
-    setItems(data);
+    setItems(normalizeListData(data));
   }, [data]);
 
   useEffect(() => {
@@ -139,13 +140,14 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
             return;
           }
 
-          itemsRef.current = nextData;
+          const limited = normalizeListData(nextData);
+          itemsRef.current = limited;
 
           if (!mountedRef.current) {
             return;
           }
 
-          setItems(nextData);
+          setItems(limited);
         },
         getData: () => itemsRef.current,
       },
@@ -159,6 +161,7 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
       cancelAnimationFrame(initFrame);
       destroy(props, bc);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const safeTitleField = titleField || 'title';
@@ -228,4 +231,4 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
 };
 
 OperationLog.displayName = 'OperationLog';
-export default OperationLog;
+export default React.memo(OperationLog);

@@ -16,8 +16,40 @@ export interface DataMonitoringCardData {
   baseInfo?: DataMonitoringHeaderData;
   runtimeParameters?: DataMonitoringInfoItem[];
   tritiumConcentration?: DataMonitoringLineChartPoint[];
+  /** @deprecated 请使用 baseInfo，兼容低代码 mock / 旧接口 */
+  header?: DataMonitoringHeaderData;
+  /** @deprecated 请使用 runtimeParameters */
+  info?: DataMonitoringInfoItem[];
+  /** @deprecated 请使用 tritiumConcentration */
+  chart?: DataMonitoringLineChartPoint[];
   [key: string]: unknown;
 }
+
+/** 统一卡片字段：兼容 baseInfo/header、runtimeParameters/info、tritiumConcentration/chart */
+const normalizeCardData = (card?: DataMonitoringCardData): DataMonitoringCardData | undefined => {
+  if (!card) {
+    return card;
+  }
+
+  const baseInfo = card.baseInfo ?? card.header;
+  const runtimeParameters = card.runtimeParameters ?? card.info;
+  const tritiumConcentration = card.tritiumConcentration ?? card.chart;
+
+  if (
+    baseInfo === card.baseInfo
+    && runtimeParameters === card.runtimeParameters
+    && tritiumConcentration === card.tritiumConcentration
+  ) {
+    return card;
+  }
+
+  return {
+    ...card,
+    baseInfo,
+    runtimeParameters,
+    tritiumConcentration,
+  };
+};
 
 export type DataMonitoringScrollMode = 'auto' | 'manual' | 'autoWithManual';
 
@@ -40,12 +72,23 @@ export interface DataMonitoringCardProps {
   showXAxisLabels?: boolean;
   /** 折线图末端是否展示最新数值标注，默认 true */
   showLatestValue?: boolean;
+  /**
+   * 是否挂载折线图实例。跑马灯复制组应传 false，用等高占位保持滚动无缝，
+   * 同时避免 ECharts Canvas 翻倍占用内存。默认 true。
+   */
+  mountChart?: boolean;
+  /**
+   * 列表模式下最多展示的卡片数量（滚动列表），默认 3。
+   * 传入数据超过该数量时只保留前 N 条。
+   */
+  maxCards?: number;
   className?: string;
   style?: React.CSSProperties;
   [key: string]: unknown;
 }
 
 const DEFAULT_LIST_HEIGHT = 650;
+const DEFAULT_MAX_CARDS = 3;
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
@@ -72,30 +115,59 @@ const renderCardContent = (
   chartHeight: number,
   showXAxisLabels: boolean,
   showLatestValue: boolean,
-) => (
-  <React.Fragment>
-    <DataMonitoringHeader
-      width="100%"
-      height={headerHeight}
-      data={data?.baseInfo}
-      className="bizpack-data-monitoring-card-header"
-    />
-    <DataMonitoringInfo
-      width="100%"
-      height={infoHeight}
-      data={data?.runtimeParameters}
-      className="bizpack-data-monitoring-card-info"
-    />
-    <DataMonitoringLineChart
-      width="100%"
-      height={chartHeight}
-      data={data?.tritiumConcentration}
-      showXAxisLabels={showXAxisLabels}
-      showLatestValue={showLatestValue}
-      className="bizpack-data-monitoring-card-chart"
-    />
-  </React.Fragment>
-);
+  mountChart: boolean = true,
+) => {
+  const card = normalizeCardData(data);
+  // 兼容 tritiumConcentration / chart；无字段时传空数组，保证折线图仍渲染坐标系
+  const chartData = Array.isArray(card?.tritiumConcentration)
+    ? card.tritiumConcentration
+    : Array.isArray(card?.chart)
+      ? card.chart
+      : [];
+  const infoData = Array.isArray(card?.runtimeParameters)
+    ? card.runtimeParameters
+    : Array.isArray(card?.info)
+      ? card.info
+      : null;
+  // 指标信息为空（无字段 / 空数组）时不渲染该区域
+  const hasInfoData = !!infoData && infoData.length > 0;
+
+  return (
+    <React.Fragment>
+      <DataMonitoringHeader
+        width="100%"
+        height={headerHeight}
+        data={card?.baseInfo}
+        className="bizpack-data-monitoring-card-header"
+      />
+      {hasInfoData ? (
+        <DataMonitoringInfo
+          width="100%"
+          height={infoHeight}
+          data={infoData}
+          className="bizpack-data-monitoring-card-info"
+        />
+      ) : null}
+      {mountChart ? (
+        <DataMonitoringLineChart
+          width="100%"
+          height={chartHeight}
+          data={chartData}
+          showXAxisLabels={showXAxisLabels}
+          showLatestValue={showLatestValue}
+          className="bizpack-data-monitoring-card-chart"
+        />
+      ) : (
+        // 复制组占位也保持与折线图一致的外观，避免滚动时出现“图表消失”
+        <div
+          className="bizpack-data-monitoring-card-chart bizpack-data-monitoring-card-chart-placeholder bizpack-data-monitoring-line-chart"
+          style={{ width: '100%', height: chartHeight }}
+          aria-hidden="true"
+        />
+      )}
+    </React.Fragment>
+  );
+};
 
 const resolveNumber = (value: unknown, fallback: number) => {
   const normalized = Number(value);
@@ -151,12 +223,15 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     showScrollbar = true,
     showXAxisLabels = true,
     showLatestValue = true,
+    mountChart = true,
+    maxCards = DEFAULT_MAX_CARDS,
     className = '',
     style = {},
     ...otherProps
   } = props;
 
-  const items = Array.isArray(data) ? data : null;
+  const resolvedMaxCards = resolveNumber(maxCards, DEFAULT_MAX_CARDS);
+  const items = Array.isArray(data) ? data.slice(0, resolvedMaxCards) : null;
   const singleData = Array.isArray(data) ? undefined : data;
   const resolvedHeaderHeight = resolveNumber(headerHeight, 78);
   const resolvedInfoHeight = resolveNumber(infoHeight, 60);
@@ -169,11 +244,17 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const resolvedScrollMode = resolveScrollMode(scrollMode, autoScroll);
   const resolvedHeight = resolveNumber(height, DEFAULT_LIST_HEIGHT);
   const isListMode = !!items && items.length > 1;
-  const useCssMarquee = isListMode && resolvedScrollMode === 'auto';
-  const useJsAutoScroll = isListMode && resolvedScrollMode === 'autoWithManual';
+  // 自动滚动统一走 scrollTop，禁止 CSS transform 跑马灯（会令 ECharts canvas 大面积空白）
+  const useJsAutoScroll = isListMode && (
+    resolvedScrollMode === 'auto' || resolvedScrollMode === 'autoWithManual'
+  );
+  const allowManualTakeover = isListMode && resolvedScrollMode === 'autoWithManual';
   const useManualOnly = isListMode && resolvedScrollMode === 'manual';
-  const shouldDuplicate = useCssMarquee || useJsAutoScroll;
-  const showNativeScrollbar = (useManualOnly || useJsAutoScroll) && resolvedShowScrollbar;
+  const shouldDuplicate = useJsAutoScroll;
+  const showNativeScrollbar = (useManualOnly || allowManualTakeover) && resolvedShowScrollbar;
+  const hideScrollbar = useJsAutoScroll && (
+    resolvedScrollMode === 'auto' || !resolvedShowScrollbar
+  );
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>();
@@ -221,12 +302,12 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   }, [setScrollTopProgrammatically]);
 
   const markUserInteraction = useCallback(() => {
-    if (!useJsAutoScroll || isProgrammaticScrollRef.current) {
+    if (!allowManualTakeover || isProgrammaticScrollRef.current) {
       return;
     }
 
     userControlUntilRef.current = getNow() + resolvedResumeDelay;
-  }, [resolvedResumeDelay, useJsAutoScroll]);
+  }, [allowManualTakeover, resolvedResumeDelay]);
 
   const handleUserScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -237,7 +318,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
 
     normalizeLoopPosition(el);
 
-    if (!useJsAutoScroll || isProgrammaticScrollRef.current) {
+    if (!allowManualTakeover || isProgrammaticScrollRef.current) {
       return;
     }
 
@@ -251,7 +332,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     if (pointerActiveRef.current) {
       userControlUntilRef.current = getNow() + resolvedResumeDelay;
     }
-  }, [normalizeLoopPosition, resolvedResumeDelay, useJsAutoScroll]);
+  }, [allowManualTakeover, normalizeLoopPosition, resolvedResumeDelay]);
 
   useEffect(() => {
     if (!useJsAutoScroll) {
@@ -268,7 +349,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
       if (el) {
         const loopHeight = el.scrollHeight / 2;
         const maxScrollTop = el.scrollHeight - el.clientHeight;
-        const isUserControlling = now < userControlUntilRef.current;
+        const isUserControlling = allowManualTakeover && now < userControlUntilRef.current;
         const shouldPause = isUserControlling || (resolvedPauseOnHover && hoverPausedRef.current);
 
         if (isUserControlling) {
@@ -303,10 +384,10 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
       }
     };
   }, [
+    allowManualTakeover,
     items,
     normalizeLoopPosition,
     resolvedPauseOnHover,
-    resolvedResumeDelay,
     resolvedScrollDuration,
     setScrollTopProgrammatically,
     useJsAutoScroll,
@@ -345,7 +426,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     ...style,
   };
 
-  const renderItems = (groupKey: string) => items?.map((item, index) => (
+  const renderItems = (groupKey: string, groupMountChart: boolean) => items?.map((item, index) => (
     <div
       key={`${groupKey}-${item.id != null ? String(item.id) : index}`}
       className="bizpack-data-monitoring-card-item"
@@ -357,24 +438,20 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
         resolvedChartHeight,
         showXAxisLabels,
         showLatestValue,
+        groupMountChart,
       )}
     </div>
   ));
 
   const scrollClassName = [
     'bizpack-data-monitoring-card-scroll',
-    useCssMarquee ? 'bizpack-data-monitoring-card-scroll-auto' : '',
     showNativeScrollbar ? 'bizpack-data-monitoring-card-scroll-visible' : '',
-    useCssMarquee || ((useManualOnly || useJsAutoScroll) && !resolvedShowScrollbar)
-      ? 'bizpack-data-monitoring-card-scroll-hidden'
-      : '',
+    hideScrollbar ? 'bizpack-data-monitoring-card-scroll-hidden' : '',
   ].filter(Boolean).join(' ');
 
-  const listClassName = [
-    'bizpack-data-monitoring-card-list',
-    useCssMarquee ? 'bizpack-data-monitoring-card-list-marquee' : '',
-    useCssMarquee && resolvedPauseOnHover ? 'bizpack-data-monitoring-card-list-pause' : '',
-  ].filter(Boolean).join(' ');
+  const listClassName = 'bizpack-data-monitoring-card-list';
+  // 复制组也挂载真实折线图，避免无缝循环滚到下半段时出现空白占位
+  const duplicateMountChart = mountChart !== false;
 
   return (
     <div
@@ -385,7 +462,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
       {items
         ? (
           <div
-            ref={useJsAutoScroll ? scrollRef : undefined}
+            ref={useJsAutoScroll || useManualOnly ? scrollRef : undefined}
             className={scrollClassName}
             style={isListMode
               ? {
@@ -395,16 +472,16 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
               }
               : undefined}
             onScroll={useJsAutoScroll ? handleUserScroll : undefined}
-            onWheel={useJsAutoScroll ? markUserInteraction : undefined}
-            onTouchStart={useJsAutoScroll ? markUserInteraction : undefined}
-            onPointerDown={useJsAutoScroll
+            onWheel={allowManualTakeover ? markUserInteraction : undefined}
+            onTouchStart={allowManualTakeover ? markUserInteraction : undefined}
+            onPointerDown={allowManualTakeover
               ? () => {
                 pointerActiveRef.current = true;
               }
               : undefined}
-            onPointerUp={useJsAutoScroll ? () => { pointerActiveRef.current = false; } : undefined}
-            onPointerCancel={useJsAutoScroll ? () => { pointerActiveRef.current = false; } : undefined}
-            onPointerLeave={useJsAutoScroll ? () => { pointerActiveRef.current = false; } : undefined}
+            onPointerUp={allowManualTakeover ? () => { pointerActiveRef.current = false; } : undefined}
+            onPointerCancel={allowManualTakeover ? () => { pointerActiveRef.current = false; } : undefined}
+            onPointerLeave={allowManualTakeover ? () => { pointerActiveRef.current = false; } : undefined}
             onMouseEnter={useJsAutoScroll && resolvedPauseOnHover
               ? () => { hoverPausedRef.current = true; }
               : undefined}
@@ -413,8 +490,8 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
               : undefined}
           >
             <div className={listClassName}>
-              {renderItems('primary')}
-              {shouldDuplicate ? renderItems('duplicate') : null}
+              {renderItems('primary', mountChart !== false)}
+              {shouldDuplicate ? renderItems('duplicate', duplicateMountChart) : null}
             </div>
           </div>
         )
@@ -425,10 +502,11 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
           resolvedChartHeight,
           showXAxisLabels,
           showLatestValue,
+          mountChart !== false,
         )}
     </div>
   );
 };
 
 DataMonitoringCard.displayName = 'DataMonitoringCard';
-export default DataMonitoringCard;
+export default React.memo(DataMonitoringCard);

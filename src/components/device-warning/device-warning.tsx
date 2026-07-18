@@ -5,6 +5,7 @@ import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
+import { normalizeListData } from '../../common/perf';
 import { DEFAULT_DEVICE_WARNING_TEST_DATA } from './test-data';
 import './index.scss';
 
@@ -77,7 +78,7 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
 
 const resolveListData = (value?: DeviceWarningItem[] | null): DeviceWarningItem[] => {
   if (Array.isArray(value)) {
-    return value;
+    return normalizeListData(value);
   }
 
   return defaultData;
@@ -131,7 +132,7 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
       chart: {
         changeData: (nextData: DeviceWarningItem[]) => {
           if (Array.isArray(nextData)) {
-            setItems(nextData);
+            setItems(normalizeListData(nextData));
           }
         },
       },
@@ -142,6 +143,7 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
     return () => {
       destroy(props, bc);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const hasWarning = items.length > 0;
@@ -202,4 +204,4 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
 };
 
 DeviceWarning.displayName = 'DeviceWarning';
-export default DeviceWarning;
+export default React.memo(DeviceWarning);

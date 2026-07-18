@@ -5,6 +5,10 @@ import '../jsx-shim';
 import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import * as echarts from 'echarts';
 import { destroy, init } from '../../common/iot';
+import {
+  CHART_SYMBOL_POINT_THRESHOLD,
+  MAX_CHART_POINTS,
+} from '../../common/perf';
 import './index.scss';
 
 export interface YAxisSeriesConfig {
@@ -71,6 +75,8 @@ export interface VariableYStepLineChartProps {
   showLegend?: boolean;
   /** 图例位置 */
   legendPosition?: 'left' | 'right' | 'top' | 'bottom';
+  /** 时序点滑动窗口上限，默认 1000 */
+  maxPoints?: number;
   onPointClick?: (item: any, seriesIndex: number, dataIndex: number) => void;
   [key: string]: unknown;
 }
@@ -551,9 +557,31 @@ const normalizeStructuredSource = (
   };
 };
 
+const windowChartSource = (source: ChartSourceData, maxPoints: number): ChartSourceData => {
+  const total = source.xAxisData.length;
+
+  if (total <= maxPoints) {
+    return source;
+  }
+
+  const start = total - maxPoints;
+
+  return {
+    ...source,
+    xAxisData: source.xAxisData.slice(start),
+    yAxisData: source.yAxisData.map((seriesItem) => ({
+      ...seriesItem,
+      data: Array.isArray(seriesItem.data) ? seriesItem.data.slice(start) : [],
+    })),
+    timestamps: source.timestamps ? source.timestamps.slice(start) : source.timestamps,
+  };
+};
+
 const buildSeriesOption = (yAxisData: YAxisSeriesConfig[]) =>
   yAxisData.map((seriesItem, index) => {
     const seriesColor = seriesItem.color ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length];
+    const pointCount = Array.isArray(seriesItem.data) ? seriesItem.data.length : 0;
+    const showSymbol = pointCount <= CHART_SYMBOL_POINT_THRESHOLD;
 
     return {
       name: seriesItem.name,
@@ -573,9 +601,11 @@ const buildSeriesOption = (yAxisData: YAxisSeriesConfig[]) =>
         };
       }),
       connectNulls: false,
-      showSymbol: true,
+      showSymbol,
       symbol: 'circle',
       symbolSize: 6,
+      sampling: pointCount > 500 ? 'lttb' : undefined,
+      animation: pointCount <= 500,
       lineStyle: {
         color: seriesColor,
         width: 2,
@@ -587,6 +617,7 @@ const buildSeriesOption = (yAxisData: YAxisSeriesConfig[]) =>
       },
       emphasis: {
         scale: true,
+        focus: 'series',
         itemStyle: {
           color: '#ffffff',
           borderColor: seriesColor,
@@ -613,10 +644,12 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
     logBase = 10,
     showLegend = true,
     legendPosition = 'top',
+    maxPoints = MAX_CHART_POINTS,
     onPointClick,
     ...otherProps
   } = props;
 
+  const resolvedMaxPoints = Number(maxPoints) > 0 ? Number(maxPoints) : MAX_CHART_POINTS;
   const chartRef = useRef<HTMLDivElement>(null);
   const echartsRef = useRef<echarts.ECharts | null>(null);
   const bizRef = useRef<BizRef | null>(null);
@@ -637,34 +670,41 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
   }, [data, propXAxisData, propYAxisData, props.dataType]);
 
   const sourceData = useMemo(() => {
+    let resolved: ChartSourceData = DEFAULT_SOURCE;
     const fromIotPayload = normalizeApiPayload(iotData);
 
     if (fromIotPayload) {
-      return fromIotPayload;
+      resolved = fromIotPayload;
+    } else if (Array.isArray(iotData) && iotData.length > 0) {
+      resolved = transformFlatData(iotData, xField, seriesField, yField, timeField);
+    } else {
+      const fromDataPayload = normalizeApiPayload(data);
+
+      if (fromDataPayload) {
+        resolved = fromDataPayload;
+      } else {
+        const structured = normalizeStructuredSource(propXAxisData, propYAxisData);
+
+        if (structured) {
+          resolved = structured;
+        } else if (Array.isArray(data) && data.length > 0) {
+          resolved = transformFlatData(data, xField, seriesField, yField, timeField);
+        }
+      }
     }
 
-    if (Array.isArray(iotData) && iotData.length > 0) {
-      return transformFlatData(iotData, xField, seriesField, yField, timeField);
-    }
-
-    const fromDataPayload = normalizeApiPayload(data);
-
-    if (fromDataPayload) {
-      return fromDataPayload;
-    }
-
-    const structured = normalizeStructuredSource(propXAxisData, propYAxisData);
-
-    if (structured) {
-      return structured;
-    }
-
-    if (Array.isArray(data) && data.length > 0) {
-      return transformFlatData(data, xField, seriesField, yField, timeField);
-    }
-
-    return DEFAULT_SOURCE;
-  }, [iotData, data, propXAxisData, propYAxisData, xField, seriesField, yField, timeField]);
+    return windowChartSource(resolved, resolvedMaxPoints);
+  }, [
+    iotData,
+    data,
+    propXAxisData,
+    propYAxisData,
+    xField,
+    seriesField,
+    yField,
+    timeField,
+    resolvedMaxPoints,
+  ]);
 
   const buildOption = useMemo(() => {
     const legendData = sourceData.legend ?? sourceData.yAxisData.map((item) => item.name);
@@ -778,7 +818,7 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
 
     const instance = echarts.init(chartRef.current);
     echartsRef.current = instance;
-    instance.setOption(buildOption);
+    instance.setOption(buildOption, { notMerge: true, lazyUpdate: true });
 
     instance.on('click', (params: any) => {
       if (params.componentType === 'series' && params.seriesName !== '__y-grid__' && onPointClickRef.current) {
@@ -826,16 +866,17 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
 
   useEffect(() => {
     if (echartsRef.current) {
-      echartsRef.current.setOption(buildOption, true);
+      echartsRef.current.setOption(buildOption, { notMerge: true, lazyUpdate: true });
     }
   }, [buildOption]);
 
   useEffect(() => {
-    init(props, bizRef, bcRef.current as BroadcastChannel);
+    init(props, bizRef, bcRef as unknown as BroadcastChannel);
 
     return () => {
-      destroy(props, bcRef.current as BroadcastChannel);
+      destroy(props, bcRef as unknown as BroadcastChannel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -850,4 +891,4 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
 };
 
 VariableYStepLineChart.displayName = 'VariableYStepLineChart';
-export default VariableYStepLineChart;
+export default React.memo(VariableYStepLineChart);
