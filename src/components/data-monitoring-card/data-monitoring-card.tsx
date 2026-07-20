@@ -69,7 +69,6 @@ export interface DataMonitoringCardProps {
   resumeDelay?: number;
   pauseOnHover?: boolean;
   showScrollbar?: boolean;
-  showXAxisLabels?: boolean;
   /** 折线图末端是否展示最新数值标注，默认 true */
   showLatestValue?: boolean;
   /**
@@ -77,18 +76,14 @@ export interface DataMonitoringCardProps {
    * 同时避免 ECharts Canvas 翻倍占用内存。默认 true。
    */
   mountChart?: boolean;
-  /**
-   * 列表模式下最多展示的卡片数量（滚动列表），默认 3。
-   * 传入数据超过该数量时只保留前 N 条。
-   */
-  maxCards?: number;
   className?: string;
   style?: React.CSSProperties;
   [key: string]: unknown;
 }
 
 const DEFAULT_LIST_HEIGHT = 650;
-const DEFAULT_MAX_CARDS = 3;
+/** 复制组仍挂载真实折线图的卡片数量上限，超出后用占位以控制 ECharts 实例数 */
+const DUPLICATE_REAL_CHART_LIMIT = 5;
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
@@ -113,7 +108,6 @@ const renderCardContent = (
   headerHeight: number,
   infoHeight: number,
   chartHeight: number,
-  showXAxisLabels: boolean,
   showLatestValue: boolean,
   mountChart: boolean = true,
 ) => {
@@ -153,7 +147,8 @@ const renderCardContent = (
           width="100%"
           height={chartHeight}
           data={chartData}
-          showXAxisLabels={showXAxisLabels}
+          maxPoints={30 * 60}
+          showXAxisLabels={false}
           showLatestValue={showLatestValue}
           className="bizpack-data-monitoring-card-chart"
         />
@@ -221,17 +216,16 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     resumeDelay = 1000,
     pauseOnHover = true,
     showScrollbar = true,
-    showXAxisLabels = true,
     showLatestValue = true,
     mountChart = true,
-    maxCards = DEFAULT_MAX_CARDS,
     className = '',
     style = {},
     ...otherProps
   } = props;
 
-  const resolvedMaxCards = resolveNumber(maxCards, DEFAULT_MAX_CARDS);
-  const items = Array.isArray(data) ? data.slice(0, resolvedMaxCards) : null;
+  // openview 经 props 整表覆盖传入；直接渲染，不做内部 state / concat
+  // 列表模式展示后端返回的全部卡片，不做数量截断
+  const items = Array.isArray(data) ? data : null;
   const singleData = Array.isArray(data) ? undefined : data;
   const resolvedHeaderHeight = resolveNumber(headerHeight, 78);
   const resolvedInfoHeight = resolveNumber(infoHeight, 60);
@@ -265,21 +259,35 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const isProgrammaticScrollRef = useRef(false);
   const programmaticScrollTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const pointerActiveRef = useRef(false);
+  const metricsResizeRafRef = useRef(0);
+  const primaryItemCount = items?.length ?? 0;
+  /** 循环步长/最大滚动距离缓存，避免 rAF 每帧读 offsetTop/scrollHeight 触发强制布局 */
+  const loopMetricsRef = useRef({ loopHeight: 0, maxScrollTop: 0, valid: false });
 
   const PROGRAMMATIC_SCROLL_GUARD_MS = 150;
+  /** 浏览器对 scrollTop 的亚像素钳制容差（麒麟/Chromium 更易出现） */
+  const SCROLL_EDGE_EPSILON = 1;
 
   const beginProgrammaticScroll = useCallback(() => {
     isProgrammaticScrollRef.current = true;
     lastAutoScrollAtRef.current = getNow();
 
+    // 连续自动滚动时只维持一个清理定时器，避免每帧 clearTimeout + setTimeout
     if (programmaticScrollTimerRef.current) {
-      clearTimeout(programmaticScrollTimerRef.current);
+      return;
     }
 
-    programmaticScrollTimerRef.current = setTimeout(() => {
+    const releaseProgrammaticGuard = () => {
+      const remain = PROGRAMMATIC_SCROLL_GUARD_MS - (getNow() - lastAutoScrollAtRef.current);
+      if (remain > 0) {
+        programmaticScrollTimerRef.current = setTimeout(releaseProgrammaticGuard, remain);
+        return;
+      }
       isProgrammaticScrollRef.current = false;
       programmaticScrollTimerRef.current = undefined;
-    }, PROGRAMMATIC_SCROLL_GUARD_MS);
+    };
+
+    programmaticScrollTimerRef.current = setTimeout(releaseProgrammaticGuard, PROGRAMMATIC_SCROLL_GUARD_MS);
   }, []);
 
   const setScrollTopProgrammatically = useCallback((el: HTMLDivElement, nextScrollTop: number) => {
@@ -287,10 +295,45 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     el.scrollTop = nextScrollTop;
   }, [beginProgrammaticScroll]);
 
+  /**
+   * 测量无缝循环步长：优先用首张复制卡片相对列表顶部的偏移。
+   * 比 scrollHeight/2 更准确（含间距），并避免奇数高度/亚像素导致回绕点不可达。
+   * 仅在尺寸变化或 effect 启动时调用，勿放入 rAF 热路径。
+   */
+  const measureLoopMetrics = useCallback((el: HTMLDivElement) => {
+    const list = el.firstElementChild as HTMLElement | null;
+    let loopHeight = el.scrollHeight / 2;
+
+    if (list && primaryItemCount > 0) {
+      const children = list.children;
+      if (children.length >= primaryItemCount * 2) {
+        const firstPrimary = children[0] as HTMLElement;
+        const firstDuplicate = children[primaryItemCount] as HTMLElement;
+        const measured = firstDuplicate.offsetTop - firstPrimary.offsetTop;
+        if (measured > 0) {
+          loopHeight = measured;
+        }
+      }
+    }
+
+    const maxScrollTop = Math.max(el.scrollHeight - el.clientHeight, 0);
+    const metrics = { loopHeight, maxScrollTop, valid: true };
+    loopMetricsRef.current = metrics;
+    return metrics;
+  }, [primaryItemCount]);
+
   const normalizeLoopPosition = useCallback((el: HTMLDivElement) => {
-    const loopHeight = el.scrollHeight / 2;
+    const { loopHeight, maxScrollTop } = measureLoopMetrics(el);
 
     if (loopHeight <= 0) {
+      return;
+    }
+
+    // 单份内容矮于视口时，无缝回绕点不可达，贴底后重置到顶部，避免卡死
+    if (loopHeight > maxScrollTop + SCROLL_EDGE_EPSILON) {
+      if (el.scrollTop >= maxScrollTop - SCROLL_EDGE_EPSILON) {
+        setScrollTopProgrammatically(el, 0);
+      }
       return;
     }
 
@@ -299,7 +342,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     } else if (el.scrollTop < 0) {
       setScrollTopProgrammatically(el, el.scrollTop + loopHeight);
     }
-  }, [setScrollTopProgrammatically]);
+  }, [measureLoopMetrics, setScrollTopProgrammatically]);
 
   const markUserInteraction = useCallback(() => {
     if (!allowManualTakeover || isProgrammaticScrollRef.current) {
@@ -316,9 +359,14 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
       return;
     }
 
+    // 自动滚动写入 scrollTop 会同步触发 onScroll；跳过以免每帧 measure 强制布局
+    if (isProgrammaticScrollRef.current) {
+      return;
+    }
+
     normalizeLoopPosition(el);
 
-    if (!allowManualTakeover || isProgrammaticScrollRef.current) {
+    if (!allowManualTakeover) {
       return;
     }
 
@@ -342,36 +390,76 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     hoverPausedRef.current = false;
     userControlUntilRef.current = 0;
     lastFrameTimeRef.current = getNow();
+    loopMetricsRef.current.valid = false;
 
     const tick = (now: number) => {
       const el = scrollRef.current;
 
       if (el) {
-        const loopHeight = el.scrollHeight / 2;
-        const maxScrollTop = el.scrollHeight - el.clientHeight;
+        // 热路径只读缓存；尺寸变化由 ResizeObserver 重新 measure
+        let { loopHeight, maxScrollTop, valid } = loopMetricsRef.current;
+        if (!valid) {
+          ({ loopHeight, maxScrollTop } = measureLoopMetrics(el));
+        }
+
         const isUserControlling = allowManualTakeover && now < userControlUntilRef.current;
         const shouldPause = isUserControlling || (resolvedPauseOnHover && hoverPausedRef.current);
 
-        if (isUserControlling) {
-          normalizeLoopPosition(el);
+        if (isUserControlling && loopHeight > 0) {
+          // 仅在越界时校正，避免手动拖动期间每帧 measure
+          const nearBottom = maxScrollTop > 0 && el.scrollTop >= maxScrollTop - SCROLL_EDGE_EPSILON;
+          if (
+            el.scrollTop >= loopHeight
+            || el.scrollTop < 0
+            || (loopHeight > maxScrollTop + SCROLL_EDGE_EPSILON && nearBottom)
+          ) {
+            normalizeLoopPosition(el);
+            ({ loopHeight, maxScrollTop } = loopMetricsRef.current);
+          }
         }
 
         if (!shouldPause && loopHeight > 0 && maxScrollTop > 0) {
           const delta = Math.max(now - lastFrameTimeRef.current, 0);
           const speed = loopHeight / (resolvedScrollDuration * 1000);
-          let nextScrollTop = el.scrollTop + speed * delta;
+          const prevScrollTop = el.scrollTop;
+          let nextScrollTop = prevScrollTop + speed * delta;
 
-          if (nextScrollTop >= loopHeight) {
-            nextScrollTop -= loopHeight;
+          if (loopHeight > maxScrollTop + SCROLL_EDGE_EPSILON) {
+            // 单份高度 < 容器：scrollTop 永远到不了 loopHeight，贴底后回到顶部
+            if (nextScrollTop >= maxScrollTop - SCROLL_EDGE_EPSILON) {
+              nextScrollTop = 0;
+            }
+          } else if (nextScrollTop >= loopHeight) {
+            nextScrollTop %= loopHeight;
+          }
+
+          if (!Number.isFinite(nextScrollTop) || nextScrollTop < 0) {
+            nextScrollTop = 0;
           }
 
           setScrollTopProgrammatically(el, nextScrollTop);
+
+          // 兜底：写入后仍贴在底部且未能前进，说明被浏览器钳制，强制回绕
+          if (
+            nextScrollTop > prevScrollTop
+            && el.scrollTop <= prevScrollTop + SCROLL_EDGE_EPSILON
+            && prevScrollTop >= maxScrollTop - SCROLL_EDGE_EPSILON
+          ) {
+            const forced = loopHeight > maxScrollTop + SCROLL_EDGE_EPSILON
+              ? 0
+              : (prevScrollTop + speed * delta) % loopHeight;
+            setScrollTopProgrammatically(el, Number.isFinite(forced) ? forced : 0);
+          }
         }
       }
 
       lastFrameTimeRef.current = now;
       rafRef.current = requestAnimationFrame(tick);
     };
+
+    if (scrollRef.current) {
+      measureLoopMetrics(scrollRef.current);
+    }
 
     rafRef.current = requestAnimationFrame(tick);
 
@@ -381,12 +469,14 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
       }
       if (programmaticScrollTimerRef.current) {
         clearTimeout(programmaticScrollTimerRef.current);
+        programmaticScrollTimerRef.current = undefined;
       }
     };
   }, [
     allowManualTakeover,
-    items,
+    measureLoopMetrics,
     normalizeLoopPosition,
+    primaryItemCount,
     resolvedPauseOnHover,
     resolvedScrollDuration,
     setScrollTopProgrammatically,
@@ -399,8 +489,16 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     }
 
     const el = scrollRef.current;
+    // 28 卡挂载时图表尺寸连变，合并到单帧再 measure，避免麒麟机布局抖动
     const observer = new ResizeObserver(() => {
-      normalizeLoopPosition(el);
+      loopMetricsRef.current.valid = false;
+      if (metricsResizeRafRef.current) {
+        return;
+      }
+      metricsResizeRafRef.current = requestAnimationFrame(() => {
+        metricsResizeRafRef.current = 0;
+        normalizeLoopPosition(el);
+      });
     });
 
     observer.observe(el);
@@ -410,8 +508,12 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
 
     return () => {
       observer.disconnect();
+      if (metricsResizeRafRef.current) {
+        cancelAnimationFrame(metricsResizeRafRef.current);
+        metricsResizeRafRef.current = 0;
+      }
     };
-  }, [items, normalizeLoopPosition, useJsAutoScroll]);
+  }, [normalizeLoopPosition, primaryItemCount, useJsAutoScroll]);
 
   const rootDomProps = pickRootDomProps(otherProps);
   const rootStyle: React.CSSProperties = {
@@ -436,7 +538,6 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
         resolvedHeaderHeight,
         resolvedInfoHeight,
         resolvedChartHeight,
-        showXAxisLabels,
         showLatestValue,
         groupMountChart,
       )}
@@ -450,8 +551,10 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   ].filter(Boolean).join(' ');
 
   const listClassName = 'bizpack-data-monitoring-card-list';
-  // 复制组也挂载真实折线图，避免无缝循环滚到下半段时出现空白占位
-  const duplicateMountChart = mountChart !== false;
+  // 卡片较少时复制组挂真图保证无缝段观感；数量多时用占位，避免实例翻倍拖垮麒麟机
+  const duplicateMountChart = mountChart !== false
+    && primaryItemCount > 0
+    && primaryItemCount <= DUPLICATE_REAL_CHART_LIMIT;
 
   return (
     <div
@@ -500,7 +603,6 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
           resolvedHeaderHeight,
           resolvedInfoHeight,
           resolvedChartHeight,
-          showXAxisLabels,
           showLatestValue,
           mountChart !== false,
         )}
@@ -509,4 +611,5 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
 };
 
 DataMonitoringCard.displayName = 'DataMonitoringCard';
-export default React.memo(DataMonitoringCard);
+// 不用 memo：低代码可能复用 data 引用，memo 会导致列表/折线不刷新
+export default DataMonitoringCard;

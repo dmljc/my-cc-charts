@@ -5,7 +5,7 @@ import '../jsx-shim';
 import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import * as echarts from 'echarts';
 import { destroy, init } from '../../common/iot';
-import { MAX_CHART_POINTS, sliceWindow } from '../../common/perf';
+import { sliceWindow } from '../../common/perf';
 import { DEFAULT_DATA_MONITORING_LINE_CHART_TEST_DATA } from './test-data';
 import './index.scss';
 
@@ -38,9 +38,7 @@ export interface DataMonitoringLineChartProps {
   xAxisUnitLabel?: string;
   /** 是否在曲线末端展示最新数值标注，默认 true */
   showLatestValue?: boolean;
-  /** 是否开启鼠标/触控缩放，默认 true */
-  enableDataZoom?: boolean;
-  /** 时序点滑动窗口上限，默认 1000 */
+  /** 时序点滑动窗口上限，默认 1800（最近 30 分钟，按 1 秒 1 点） */
   maxPoints?: number;
   width?: number | string;
   height?: number | string;
@@ -59,6 +57,8 @@ interface BizRef {
 
 const DEFAULT_DATA = DEFAULT_DATA_MONITORING_LINE_CHART_TEST_DATA as DataMonitoringLineChartPoint[];
 const EMPTY_AXIS_PLACEHOLDER_COUNT = 5;
+/** 与 openview / qtc 一致：最近 30 分钟 ≈ 1800 点 */
+const DEFAULT_MAX_POINTS = 30 * 60;
 
 const DEFAULT_LINE_COLOR = '#5bc8ff';
 const DEFAULT_AREA_COLOR: [string, string] = ['rgba(30, 110, 220, 0.85)', 'rgba(20, 60, 140, 0.15)'];
@@ -82,9 +82,9 @@ const getAreaGradient = (startColor: string, endColor: string) => {
 
 const padTimePart = (value: number) => String(value).padStart(2, '0');
 
-/** 横轴时间统一展示为分:秒（mm:ss） */
-const formatDateToMinuteSecond = (date: Date) => (
-  `${padTimePart(date.getMinutes())}:${padTimePart(date.getSeconds())}`
+/** 横轴/提示时间统一展示为时:分:秒（HH:mm:ss） */
+const formatDateToHms = (date: Date) => (
+  `${padTimePart(date.getHours())}:${padTimePart(date.getMinutes())}:${padTimePart(date.getSeconds())}`
 );
 
 const formatTimeLabel = (value: string | number | undefined) => {
@@ -93,39 +93,40 @@ const formatTimeLabel = (value: string | number | undefined) => {
   }
 
   const rawValue = String(value);
-  // HH:mm:ss → mm:ss；HH:mm / mm:ss → 取后两段作为 mm:ss
+  // HH:mm:ss 原样规范；HH:mm 补秒为 00
   const timeMatch = rawValue.match(/(?:^|\s|T)(\d{1,2}):(\d{2})(?::(\d{2}))?/);
 
   if (timeMatch) {
-    if (timeMatch[3] != null) {
-      return `${timeMatch[2]}:${timeMatch[3]}`;
-    }
+    const hours = padTimePart(Number(timeMatch[1]));
+    const minutes = timeMatch[2];
+    const seconds = timeMatch[3] != null ? timeMatch[3] : '00';
 
-    return `${padTimePart(Number(timeMatch[1]))}:${timeMatch[2]}`;
+    return `${hours}:${minutes}:${seconds}`;
   }
 
   const numericValue = Number(value);
 
   if (Number.isFinite(numericValue)) {
     if (numericValue >= 0 && numericValue < 24 * 60 * 60) {
+      const hours = Math.floor(numericValue / 3600);
       const minutes = Math.floor((numericValue % 3600) / 60);
       const seconds = Math.floor(numericValue % 60);
 
-      return `${padTimePart(minutes)}:${padTimePart(seconds)}`;
+      return `${padTimePart(hours)}:${padTimePart(minutes)}:${padTimePart(seconds)}`;
     }
 
     const timestamp = numericValue > 1e12 ? numericValue : numericValue * 1000;
     const date = new Date(timestamp);
 
     if (!Number.isNaN(date.getTime())) {
-      return formatDateToMinuteSecond(date);
+      return formatDateToHms(date);
     }
   }
 
   const parsedDate = new Date(rawValue.replace(/-/g, '/'));
 
   if (!Number.isNaN(parsedDate.getTime())) {
-    return formatDateToMinuteSecond(parsedDate);
+    return formatDateToHms(parsedDate);
   }
 
   return rawValue;
@@ -229,8 +230,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     xAxisLabelCount = 5,
     xAxisUnitLabel = 't',
     showLatestValue = true,
-    enableDataZoom = true,
-    maxPoints = MAX_CHART_POINTS,
+    maxPoints = DEFAULT_MAX_POINTS,
     width = 400,
     height = 100,
     style = {},
@@ -239,7 +239,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     ...otherProps
   } = props;
 
-  const resolvedMaxPoints = Number(maxPoints) > 0 ? Number(maxPoints) : MAX_CHART_POINTS;
+  const resolvedMaxPoints = Number(maxPoints) > 0 ? Number(maxPoints) : DEFAULT_MAX_POINTS;
   // 未传 data 时用演示数据；显式空数组则走空图架（仍显示坐标系）
   const sourceData = data === undefined ? DEFAULT_DATA : data;
   const chartRef = useRef<HTMLDivElement>(null);
@@ -254,6 +254,26 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
   const itemsRef = useRef<DataMonitoringLineChartPoint[]>(items);
   const onPointClickRef = useRef(onPointClick);
   const buildOptionRef = useRef<any>(null);
+  const widthRef = useRef(width);
+  const heightRef = useRef(height);
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+  const scheduleRafRef = useRef(0);
+  const pendingUpdateRef = useRef({ option: false, resize: false, forceResize: false });
+  /** 首次全量 setOption 后改为合并更新，避免 ws 冲掉 tooltip */
+  const optionInitedRef = useRef(false);
+  /** 当前轴悬浮提示位置 */
+  const axisTipRef = useRef<{ dataIndex: number } | null>(null);
+  /** setOption 引发的 hideTip 忽略，仅用户移出时清空 */
+  const ignoreHideTipRef = useRef(false);
+  const ignoreHideTipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** 指针是否仍在图内；用像素坐标 showTip */
+  const pointerInsideRef = useRef(false);
+  const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const xAxisLenRef = useRef(0);
+  const xAxisDataRef = useRef<Array<string | number>>([]);
+
+  widthRef.current = width;
+  heightRef.current = height;
 
   useEffect(() => {
     setItems(normalizePoints(sourceData, resolvedMaxPoints));
@@ -283,8 +303,10 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     // 真实数据远小于默认 max(10000) 时自适应刻度，避免曲线贴底看起来像“没数据”
     let axisMin = min;
     let axisMax = max;
-    if (hasData && dataMax > 0 && dataMax < max * 0.1) {
-      if (dataMax <= 1) {
+    if (hasData && dataMax < max * 0.1) {
+      if (dataMax <= 0) {
+        axisMax = 1;
+      } else if (dataMax <= 1) {
         axisMax = 1;
       } else if (dataMax <= 5) {
         axisMax = 5;
@@ -305,19 +327,8 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     const yAxisTicks = [axisMin, (axisMin + axisMax) / 2, axisMax];
 
     return {
-      animation: hasData && !isLargeData,
-      dataZoom: enableDataZoom
-        ? [
-          {
-            type: 'inside',
-            xAxisIndex: 0,
-            filterMode: 'none',
-            zoomOnMouseWheel: true,
-            moveOnMouseMove: true,
-            moveOnMouseWheel: false,
-          },
-        ]
-        : undefined,
+      // 大屏多实例（监测卡列表）场景关闭动画，降低麒麟机滚动/断网稳态 CPU
+      animation: false,
       graphic: [
         ...(latestText !== null ? [
           {
@@ -407,6 +418,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       },
       series: [
         {
+          id: 'monitoring-line',
           type: 'line',
           data: seriesData,
           smooth: true,
@@ -417,6 +429,8 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
           largeThreshold: 800,
           progressive: isLargeData ? 800 : 0,
           progressiveThreshold: 1000,
+          animation: false,
+          animationDurationUpdate: 0,
           lineStyle: {
             color: lineColor,
             width: 3,
@@ -432,7 +446,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
         show: hasData,
         trigger: 'axis',
         confine: true,
-        transitionDuration: isLargeData ? 0 : 0.2,
+        transitionDuration: 0,
         axisPointer: {
           type: 'line',
           lineStyle: {
@@ -469,30 +483,198 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     xAxisLabelCount,
     xAxisUnitLabel,
     showLatestValue,
-    enableDataZoom,
   ]);
 
   useEffect(() => {
     buildOptionRef.current = buildOption;
+    const xAxisData = buildOption?.xAxis?.data;
+    if (Array.isArray(xAxisData)) {
+      xAxisDataRef.current = xAxisData;
+    }
   }, [buildOption]);
 
-  const flushChart = () => {
+  const beginIgnoreHideTip = () => {
+    ignoreHideTipRef.current = true;
+    if (ignoreHideTipTimerRef.current) {
+      clearTimeout(ignoreHideTipTimerRef.current);
+    }
+    ignoreHideTipTimerRef.current = setTimeout(() => {
+      ignoreHideTipRef.current = false;
+      ignoreHideTipTimerRef.current = null;
+    }, 200);
+  };
+
+  const restoreTooltip = () => {
+    const chart = echartsRef.current;
+    if (!chart) {
+      return;
+    }
+
+    const pointerInside = pointerInsideRef.current;
+    const lastPointer = lastPointerRef.current;
+    const pinnedTip = axisTipRef.current;
+    if (!pointerInside && !pinnedTip) {
+      return;
+    }
+
+    // 优先按鼠标像素坐标恢复（axis tooltip 最稳）
+    if (pointerInside && lastPointer) {
+      chart.dispatchAction({
+        type: 'showTip',
+        x: lastPointer.x,
+        y: lastPointer.y,
+      });
+      return;
+    }
+
+    if (!pinnedTip || pinnedTip.dataIndex < 0) {
+      return;
+    }
+
+    const prevLen = xAxisLenRef.current;
+    const nextLen = Array.isArray(xAxisDataRef.current) ? xAxisDataRef.current.length : 0;
+    if (nextLen <= 0) {
+      return;
+    }
+
+    let dataIndex = pinnedTip.dataIndex;
+    if (prevLen > 0 && pinnedTip.dataIndex >= prevLen - 1) {
+      dataIndex = nextLen - 1;
+    } else if (prevLen > 0) {
+      const offsetFromEnd = prevLen - 1 - pinnedTip.dataIndex;
+      dataIndex = Math.max(0, Math.min(nextLen - 1, nextLen - 1 - offsetFromEnd));
+    } else {
+      dataIndex = Math.min(pinnedTip.dataIndex, nextLen - 1);
+    }
+
+    axisTipRef.current = { dataIndex };
+    chart.dispatchAction({
+      type: 'showTip',
+      seriesIndex: 0,
+      dataIndex,
+    });
+  };
+
+  const applyOption = () => {
+    const instance = echartsRef.current;
+    const option = buildOptionRef.current;
+    if (!instance || !option) {
+      return;
+    }
+
+    const shouldKeepTip = pointerInsideRef.current || !!axisTipRef.current;
+    if (shouldKeepTip) {
+      beginIgnoreHideTip();
+    }
+
+    const nextXLen = Array.isArray(option?.xAxis?.data) ? option.xAxis.data.length : 0;
+
+    if (!optionInitedRef.current) {
+      // 首次全量写入
+      instance.setOption(option, { notMerge: true, lazyUpdate: false, silent: true });
+      optionInitedRef.current = true;
+    } else {
+      // ws / 数据滑动：按 series.id 合并，禁止 notMerge / replaceMerge（会拆掉 tooltip）
+      instance.setOption(
+        {
+          animation: false,
+          graphic: option.graphic,
+          xAxis: {
+            data: option.xAxis?.data,
+            axisLabel: option.xAxis?.axisLabel,
+          },
+          yAxis: option.yAxis,
+          series: [
+            {
+              id: 'monitoring-line',
+              data: option.series?.[0]?.data,
+              sampling: option.series?.[0]?.sampling,
+              large: option.series?.[0]?.large,
+              progressive: option.series?.[0]?.progressive,
+              progressiveThreshold: option.series?.[0]?.progressiveThreshold,
+              areaStyle: option.series?.[0]?.areaStyle,
+              lineStyle: option.series?.[0]?.lineStyle,
+            },
+          ],
+          tooltip: {
+            show: option.tooltip?.show,
+          },
+        },
+        { lazyUpdate: false, silent: true },
+      );
+    }
+
+    if (shouldKeepTip) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          restoreTooltip();
+          xAxisLenRef.current = nextXLen;
+        });
+      });
+    } else {
+      xAxisLenRef.current = nextXLen;
+    }
+  };
+
+  const resizeChart = (force = false) => {
     const instance = echartsRef.current;
     const el = chartRef.current;
     if (!instance || !el) {
       return;
     }
 
-    const option = buildOptionRef.current;
-    if (option) {
-      instance.setOption(option, { notMerge: true, lazyUpdate: false, silent: true });
+    const nextWidth = el.clientWidth || resolveCssSize(widthRef.current, 400);
+    const nextHeight = el.clientHeight || resolveCssSize(heightRef.current, 120);
+
+    if (nextWidth < 2 || nextHeight < 2) {
+      return;
     }
 
-    const nextWidth = el.clientWidth || resolveCssSize(width, 400);
-    const nextHeight = el.clientHeight || resolveCssSize(height, 120);
+    if (
+      !force
+      && nextWidth === lastSizeRef.current.width
+      && nextHeight === lastSizeRef.current.height
+    ) {
+      return;
+    }
+
+    lastSizeRef.current = { width: nextWidth, height: nextHeight };
     instance.resize({
       width: nextWidth,
       height: nextHeight,
+    });
+  };
+
+  /**
+   * 合并同一帧内的 option/resize，避免列表滚动时 Resize/Intersection 连击造成麒麟机卡顿。
+   * 滚动进视口只做 resize（修复 canvas 空白），不重复全量 setOption。
+   */
+  const scheduleChartUpdate = (flags: { option?: boolean; resize?: boolean; forceResize?: boolean }) => {
+    if (flags.option) {
+      pendingUpdateRef.current.option = true;
+    }
+    if (flags.resize) {
+      pendingUpdateRef.current.resize = true;
+    }
+    if (flags.forceResize) {
+      pendingUpdateRef.current.forceResize = true;
+    }
+
+    if (scheduleRafRef.current) {
+      return;
+    }
+
+    scheduleRafRef.current = requestAnimationFrame(() => {
+      scheduleRafRef.current = 0;
+      const pending = pendingUpdateRef.current;
+      pendingUpdateRef.current = { option: false, resize: false, forceResize: false };
+
+      if (pending.option) {
+        applyOption();
+      }
+      if (pending.resize || pending.forceResize) {
+        resizeChart(pending.forceResize);
+      }
     });
   };
 
@@ -512,8 +694,8 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       }
 
       const target = chartRef.current;
-      const fallbackWidth = resolveCssSize(width, 400);
-      const fallbackHeight = resolveCssSize(height, 120);
+      const fallbackWidth = resolveCssSize(widthRef.current, 400);
+      const fallbackHeight = resolveCssSize(heightRef.current, 120);
       const clientWidth = target.clientWidth;
       const clientHeight = target.clientHeight;
 
@@ -526,6 +708,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
 
       const initWidth = clientWidth > 1 ? clientWidth : fallbackWidth;
       const initHeight = clientHeight > 1 ? clientHeight : fallbackHeight;
+      lastSizeRef.current = { width: initWidth, height: initHeight };
 
       const instance = echarts.init(target, undefined, {
         width: initWidth,
@@ -533,6 +716,68 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
         renderer: 'canvas',
       });
       echartsRef.current = instance;
+      optionInitedRef.current = false;
+
+      const resolveAxisDataIndex = (axisInfo: any): number => {
+        if (!axisInfo) {
+          return -1;
+        }
+        if (typeof axisInfo.dataIndex === 'number' && axisInfo.dataIndex >= 0) {
+          return axisInfo.dataIndex;
+        }
+        if (typeof axisInfo.value === 'number' && axisInfo.value >= 0) {
+          return axisInfo.value;
+        }
+        if (axisInfo.value != null && axisInfo.value !== '') {
+          const idx = xAxisDataRef.current.findIndex((item) => String(item) === String(axisInfo.value));
+          if (idx >= 0) {
+            return idx;
+          }
+        }
+        return -1;
+      };
+
+      instance.on('updateAxisPointer', (event: any) => {
+        const axisInfo = event && Array.isArray(event.axesInfo) ? event.axesInfo[0] : null;
+        const dataIndex = resolveAxisDataIndex(axisInfo);
+        if (dataIndex >= 0) {
+          axisTipRef.current = { dataIndex };
+        }
+      });
+
+      instance.on('showTip', (event: any) => {
+        if (event && typeof event.dataIndex === 'number' && event.dataIndex >= 0) {
+          axisTipRef.current = { dataIndex: event.dataIndex };
+        }
+      });
+
+      instance.on('hideTip', () => {
+        if (ignoreHideTipRef.current) {
+          return;
+        }
+        if (pointerInsideRef.current) {
+          return;
+        }
+        axisTipRef.current = null;
+      });
+
+      const zr = instance.getZr();
+      zr.on('mousemove', (e: any) => {
+        pointerInsideRef.current = true;
+        if (e && typeof e.offsetX === 'number' && typeof e.offsetY === 'number') {
+          lastPointerRef.current = { x: e.offsetX, y: e.offsetY };
+        }
+      });
+      zr.on('globalout', () => {
+        pointerInsideRef.current = false;
+        lastPointerRef.current = null;
+        ignoreHideTipRef.current = false;
+        axisTipRef.current = null;
+        if (ignoreHideTipTimerRef.current) {
+          clearTimeout(ignoreHideTipTimerRef.current);
+          ignoreHideTipTimerRef.current = null;
+        }
+      });
 
       instance.on('click', (params: any) => {
         if (params.componentType === 'series' && onPointClickRef.current) {
@@ -540,26 +785,27 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
         }
       });
 
-      flushChart();
-      // 再刷一帧，覆盖低代码画布 / 跑马灯 transform 首帧未就绪
+      applyOption();
+      // 再刷一帧尺寸，覆盖低代码画布首帧未就绪
       rafId = requestAnimationFrame(() => {
         if (!disposed) {
-          flushChart();
+          resizeChart(true);
         }
       });
     };
 
     mountChart();
 
-    const handleResize = () => {
-      flushChart();
+    const handleWindowResize = () => {
+      scheduleChartUpdate({ resize: true });
     };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleWindowResize);
 
     let resizeObserver: ResizeObserver | undefined;
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(() => {
-        flushChart();
+        // 尺寸变化只需 resize；数据变更走 buildOption effect
+        scheduleChartUpdate({ resize: true });
       });
       resizeObserver.observe(el);
       if (rootRef.current) {
@@ -579,26 +825,30 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
         ) {
           break;
         }
+        // 只认可滚动容器；不把 overflow:hidden 当 scrollRoot，避免误命中外层裁剪盒
         const oy = window.getComputedStyle(scrollRoot).overflowY;
-        if ((oy === 'auto' || oy === 'scroll' || oy === 'hidden') && (scrollRoot as HTMLElement).clientHeight > 0) {
+        if ((oy === 'auto' || oy === 'scroll') && (scrollRoot as HTMLElement).scrollHeight > (scrollRoot as HTMLElement).clientHeight) {
           break;
         }
         scrollRoot = scrollRoot.parentElement;
       }
 
+      let wasIntersecting = false;
       intersectionObserver = new IntersectionObserver(
         (entries) => {
           const entry = entries[0];
-          if (entry && entry.isIntersecting) {
-            requestAnimationFrame(() => {
-              flushChart();
-            });
+          const isIntersecting = !!(entry && entry.isIntersecting);
+          // 仅在「进入视口」边沿强制 resize，避免 28 卡连续滚动时反复 resize
+          if (isIntersecting && !wasIntersecting) {
+            scheduleChartUpdate({ forceResize: true });
           }
+          wasIntersecting = isIntersecting;
         },
         {
           root: scrollRoot,
-          threshold: [0, 0.01, 0.1],
-          rootMargin: '16px 0px',
+          // 单阈值，减少列表连续滚动时的回调风暴（麒麟 + 多图实例更敏感）
+          threshold: 0.01,
+          rootMargin: '24px 0px',
         },
       );
       intersectionObserver.observe(observeTarget);
@@ -609,11 +859,24 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       if (rafId) {
         cancelAnimationFrame(rafId);
       }
-      window.removeEventListener('resize', handleResize);
+      if (scheduleRafRef.current) {
+        cancelAnimationFrame(scheduleRafRef.current);
+        scheduleRafRef.current = 0;
+      }
+      if (ignoreHideTipTimerRef.current) {
+        clearTimeout(ignoreHideTipTimerRef.current);
+        ignoreHideTipTimerRef.current = null;
+      }
+      window.removeEventListener('resize', handleWindowResize);
       resizeObserver?.disconnect();
       intersectionObserver?.disconnect();
       echartsRef.current?.dispose();
       echartsRef.current = null;
+      optionInitedRef.current = false;
+      axisTipRef.current = null;
+      pointerInsideRef.current = false;
+      lastPointerRef.current = null;
+      lastSizeRef.current = { width: 0, height: 0 };
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -623,7 +886,8 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       return;
     }
 
-    flushChart();
+    // 数据/配置变更：更新 option；尺寸未变时 resize 会被跳过
+    scheduleChartUpdate({ option: true, resize: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buildOption]);
 
@@ -666,4 +930,5 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
 };
 
 DataMonitoringLineChart.displayName = 'DataMonitoringLineChart';
-export default React.memo(DataMonitoringLineChart);
+// 不用 memo：监测卡列表频繁推送时序，memo 易因引用复用导致折线不刷新
+export default DataMonitoringLineChart;

@@ -12,7 +12,8 @@
   font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
 
   &-list {
-    box-sizing: border-box;
+    position: relative;
+    z-index: 1;
     display: flex;
     flex: 1 1 0;
     flex-direction: column;
@@ -20,41 +21,47 @@
     padding: 0;
     width: 100%;
     height: 0;
-    min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
-    @include bizpack-scrollbar;
+    // 与 device-check 一致：共用 bizpack-scroll-area 滚动条样式
+    @include bizpack-scroll-area;
   }
 
   &-group {
     display: flex;
     flex-direction: column;
+    flex: none;
     margin: 0;
     padding: 0;
+    border: 0;
   }
 
   &-row {
     display: grid;
     flex: none;
+    flex-shrink: 0;
     grid-template-columns: minmax(0, 1fr) 130px 70px;
     align-items: center;
     box-sizing: border-box;
     width: 100%;
     height: 40px;
-    min-height: 0;
+    max-height: 40px;
+    min-height: 40px;
     margin: 0;
     padding: 0 12px;
     font: inherit;
-    line-height: normal;
+    line-height: 24px;
     color: #ffffff;
     text-align: left;
     cursor: pointer;
     appearance: none;
+    -webkit-appearance: none;
     background: transparent;
     border: 0;
     border-radius: 3px;
     outline: none;
-    transition: background 0.15s ease;
+    box-shadow: none;
+    -webkit-tap-highlight-color: transparent;
 
     &:nth-child(odd) {
       background: rgba(27, 89, 151, 0.55);
@@ -63,13 +70,18 @@
     &:hover {
       background: rgba(20, 100, 180, 0.18) !important;
     }
+
+    &::-moz-focus-inner {
+      border: 0;
+      padding: 0;
+    }
   }
 
   &-cell {
     box-sizing: border-box;
     min-width: 0;
     overflow: hidden;
-    font-family: SourceHanSansCN, SourceHanSansCN;
+    font-family: SourceHanSansCN, SourceHanSansCN, PingFang SC, Microsoft YaHei, Arial, sans-serif;
     font-style: normal;
     font-weight: 400;
     font-size: 16px;

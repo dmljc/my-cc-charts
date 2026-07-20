@@ -52,6 +52,7 @@ export interface EffluentProps {
 interface BizRef {
   chart: {
     changeData: (nextData: EffluentItem[]) => void;
+    getData?: () => EffluentItem[];
   };
 }
 
@@ -138,6 +139,70 @@ const resolveArrow = (
   return 'flat';
 };
 
+/** 按 id 去重，去掉 concat 造成的重复节点（名称可重复故不用 name） */
+const dedupeById = (list: EffluentItem[]): EffluentItem[] => {
+  if (!Array.isArray(list) || list.length <= 1) {
+    return Array.isArray(list) ? list.slice() : [];
+  }
+  const seen = new Set<string>();
+  const result: EffluentItem[] = [];
+  list.forEach((item, index) => {
+    if (!item || typeof item !== 'object') {
+      return;
+    }
+    const key = item.id != null ? `id:${String(item.id)}` : `idx:${index}`;
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    result.push({ ...item });
+  });
+  return result;
+};
+
+/**
+ * 槽位更新：长度以已有为准，只合并 value / arrow，绝不追加
+ */
+const patchEffluentItems = (prev: EffluentItem[], incoming: EffluentItem[]): EffluentItem[] => {
+  if (!Array.isArray(incoming) || !incoming.length) {
+    return prev;
+  }
+  const incomingNorm = dedupeById(normalizeListData(incoming));
+  if (!Array.isArray(prev) || !prev.length) {
+    return incomingNorm;
+  }
+
+  const next = prev.map((item) => ({ ...item }));
+  const used: Record<number, boolean> = {};
+
+  incomingNorm.forEach((item, i) => {
+    if (!item || typeof item !== 'object') {
+      return;
+    }
+
+    let idx = -1;
+    if (item.id != null) {
+      idx = next.findIndex((row, rowIdx) => !used[rowIdx] && row.id == item.id);
+    }
+    if (idx < 0 && i < next.length && !used[i]) {
+      idx = i;
+    }
+    if (idx < 0) {
+      return;
+    }
+
+    used[idx] = true;
+    if (Object.prototype.hasOwnProperty.call(item, 'value')) {
+      next[idx].value = item.value;
+    }
+    if (Object.prototype.hasOwnProperty.call(item, 'arrow')) {
+      next[idx].arrow = item.arrow;
+    }
+  });
+
+  return next;
+};
+
 const Effluent: React.FC<EffluentProps> = function Effluent(props) {
   const {
     data = defaultData,
@@ -153,27 +218,78 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
     onItemClick,
     ...otherProps
   } = props;
-  const [items, setItems] = useState<EffluentItem[]>(
-    () => (Array.isArray(data) ? normalizeListData(data) : defaultData),
+  const [items, setItems] = useState<EffluentItem[]>(() => {
+    if (Array.isArray(data) && data !== defaultData) {
+      return dedupeById(normalizeListData(data));
+    }
+    return defaultData;
+  });
+  /** 首次非默认数据建槽后锁定长度；之后只改 value */
+  const structureReadyRef = React.useRef(
+    Array.isArray(data) && data.length > 0 && data !== defaultData,
   );
+  const itemsRef = React.useRef(items);
+  itemsRef.current = items;
   const rootDomProps = pickRootDomProps(otherProps);
   const bizRef = React.useRef<BizRef | null>(null);
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
 
   useEffect(() => {
-    if (!props.dataType || props.dataType === 'data') {
-      setItems(Array.isArray(data) ? normalizeListData(data) : defaultData);
+    if (props.dataType && props.dataType !== 'data') {
+      return;
     }
+    if (!Array.isArray(data)) {
+      return;
+    }
+    if (data === defaultData) {
+      setItems(defaultData);
+      return;
+    }
+
+    const list = dedupeById(normalizeListData(data));
+    if (!list.length) {
+      return;
+    }
+
+    if (!structureReadyRef.current) {
+      setItems(list);
+      structureReadyRef.current = true;
+      return;
+    }
+
+    setItems((prev) => {
+      // 去重后变短：用真实列表纠正历史堆积
+      if (list.length < prev.length) {
+        return list;
+      }
+      return patchEffluentItems(prev, list);
+    });
   }, [data, props.dataType]);
 
   useEffect(() => {
     bizRef.current = {
       chart: {
         changeData: (nextData: EffluentItem[]) => {
-          if (Array.isArray(nextData)) {
-            setItems(normalizeListData(nextData));
+          if (!Array.isArray(nextData)) {
+            return;
           }
+          const list = dedupeById(normalizeListData(nextData));
+          if (!list.length) {
+            return;
+          }
+          setItems((prev) => {
+            if (!structureReadyRef.current || !prev.length) {
+              structureReadyRef.current = true;
+              return list;
+            }
+            if (list.length < prev.length) {
+              return list;
+            }
+            // isAdd concat 的长数组也只按槽位改 value
+            return patchEffluentItems(prev, list);
+          });
         },
+        getData: () => itemsRef.current,
       },
     };
 
@@ -219,7 +335,7 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
         return (
           <button
             type="button"
-            key={item.id != null ? String(item.id) : `${name}-${index}`}
+            key={item.id != null ? String(item.id) : `effluent-slot-${index}`}
             className="bizpack-effluent-item"
             title={tipParts.join(' / ')}
             onClick={() => {

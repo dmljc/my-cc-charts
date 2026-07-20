@@ -2,7 +2,7 @@ import * as React from 'react';
 import '../jsx-shim';
 // createElement is required by tsconfig jsxFactory
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { createElement, useEffect, useRef, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
 import { normalizeListData } from '../../common/perf';
 import { DEFAULT_OPERATION_LOG_TEST_DATA } from './test-data';
@@ -38,7 +38,6 @@ export interface OperationLogProps {
 interface BizRef {
   chart: {
     changeData: (nextData: OperationLogItem[]) => void;
-    getData: () => OperationLogItem[];
   };
 }
 
@@ -60,6 +59,14 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
   });
 
   return domProps;
+};
+
+const resolveListData = (value?: OperationLogItem[] | null): OperationLogItem[] => {
+  if (Array.isArray(value)) {
+    return normalizeListData(value);
+  }
+
+  return defaultData;
 };
 
 const resolveFieldValue = (item: OperationLogItem, field: string) => {
@@ -106,59 +113,35 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
     ...otherProps
   } = props;
 
-  const [items, setItems] = useState<OperationLogItem[]>(() => normalizeListData(data));
-  const itemsRef = useRef<OperationLogItem[]>(items);
+  const [items, setItems] = useState<OperationLogItem[]>(() => resolveListData(data));
   const rootDomProps = pickRootDomProps(otherProps);
-  const bizRef = useRef<BizRef | null>(null);
+  const bizRef = React.useRef<BizRef | null>(null);
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
 
   const resolvedWidth = resolveCssSize(width, 400);
   const resolvedHeight = resolveCssSize(height, 200);
-  const mountedRef = useRef(false);
 
+  // 与 DeviceCheck 一致：仅静态 data 源跟 props；board/ws 由 changeData 整表覆盖
   useEffect(() => {
-    setItems(normalizeListData(data));
-  }, [data]);
-
-  useEffect(() => {
-    itemsRef.current = items;
-  }, [items]);
-
-  useEffect(() => {
-    mountedRef.current = true;
-
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
+    if (!props.dataType || props.dataType === 'data') {
+      setItems(resolveListData(data));
+    }
+  }, [data, props.dataType]);
 
   useEffect(() => {
     bizRef.current = {
       chart: {
         changeData: (nextData: OperationLogItem[]) => {
-          if (!Array.isArray(nextData)) {
-            return;
+          if (Array.isArray(nextData)) {
+            setItems(normalizeListData(nextData));
           }
-
-          const limited = normalizeListData(nextData);
-          itemsRef.current = limited;
-
-          if (!mountedRef.current) {
-            return;
-          }
-
-          setItems(limited);
         },
-        getData: () => itemsRef.current,
       },
     };
 
-    const initFrame = requestAnimationFrame(() => {
-      init(props, bizRef, bc);
-    });
+    init(props, bizRef, bc);
 
     return () => {
-      cancelAnimationFrame(initFrame);
       destroy(props, bc);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -167,42 +150,6 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
   const safeTitleField = titleField || 'title';
   const safeOperNameField = operNameField || 'operName';
   const safeOperTimeField = operTimeField || 'operTime';
-
-  const renderRows = (source: OperationLogItem[]) => (
-    <div className="bizpack-operation-log-group">
-      {source.map((item, index) => (
-        <button
-          key={item.id != null ? String(item.id) : index}
-          type="button"
-          className="bizpack-operation-log-row"
-          onClick={() => {
-            if (onRowClick) {
-              onRowClick(item, index);
-            }
-          }}
-        >
-          <span
-            className="bizpack-operation-log-cell bizpack-operation-log-cell-action"
-            title={resolveFieldValue(item, safeTitleField)}
-          >
-            {resolveFieldValue(item, safeTitleField)}
-          </span>
-          <span
-            className="bizpack-operation-log-cell bizpack-operation-log-cell-name"
-            title={`操作人:${resolveFieldValue(item, safeOperNameField)}`}
-          >
-            {`操作人:${resolveFieldValue(item, safeOperNameField)}`}
-          </span>
-          <span
-            className="bizpack-operation-log-cell bizpack-operation-log-cell-time"
-            title={resolveFieldValue(item, safeOperTimeField)}
-          >
-            {resolveFieldValue(item, safeOperTimeField)}
-          </span>
-        </button>
-      ))}
-    </div>
-  );
 
   const rootStyle = {
     width: resolvedWidth,
@@ -224,7 +171,39 @@ const OperationLog: React.FC<OperationLogProps> = function OperationLog(props) {
       {...rootDomProps}
     >
       <div className="bizpack-operation-log-list">
-        {renderRows(items)}
+        <div className="bizpack-operation-log-group">
+          {items.map((item, index) => (
+            <button
+              key={item.id != null ? String(item.id) : index}
+              type="button"
+              className="bizpack-operation-log-row"
+              onClick={() => {
+                if (onRowClick) {
+                  onRowClick(item, index);
+                }
+              }}
+            >
+              <span
+                className="bizpack-operation-log-cell bizpack-operation-log-cell-action"
+                title={resolveFieldValue(item, safeTitleField)}
+              >
+                {resolveFieldValue(item, safeTitleField)}
+              </span>
+              <span
+                className="bizpack-operation-log-cell bizpack-operation-log-cell-name"
+                title={`操作人:${resolveFieldValue(item, safeOperNameField)}`}
+              >
+                {`操作人:${resolveFieldValue(item, safeOperNameField)}`}
+              </span>
+              <span
+                className="bizpack-operation-log-cell bizpack-operation-log-cell-time"
+                title={resolveFieldValue(item, safeOperTimeField)}
+              >
+                {resolveFieldValue(item, safeOperTimeField)}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

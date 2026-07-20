@@ -164,14 +164,6 @@ const DataMonitoringLineChartMeta: ComponentMetadata = {
             setter: 'BoolSetter',
           },
           {
-            name: 'enableDataZoom',
-            title: {
-              label: '启用内部缩放',
-              tip: '是否允许鼠标滚轮/触控在横向缩放查看大量数据，默认 true',
-            },
-            setter: 'BoolSetter',
-          },
-          {
             name: 'width',
             title: '宽度',
             setter: 'NumberSetter',
@@ -227,7 +219,6 @@ const snippets: Snippet[] = [
         xAxisLabelCount: 5,
         xAxisUnitLabel: 't',
         showLatestValue: true,
-        enableDataZoom: true,
         width: 400,
         height: 100,
       },

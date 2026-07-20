@@ -142,17 +142,17 @@
     }
 
     &-stat-value-emergency {
-        width: 13px;
+        min-width: 13px;
         color: #ff2a2a;
     }
 
     &-stat-value-severe {
-        width: 12px;
+        min-width: 12px;
         color: #ffb027;
     }
 
     &-stat-value-general {
-        width: 21px;
+        min-width: 13px;
         color: #0eeaff;
     }
 

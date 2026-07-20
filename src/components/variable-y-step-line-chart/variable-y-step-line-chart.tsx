@@ -7,7 +7,6 @@ import * as echarts from 'echarts';
 import { destroy, init } from '../../common/iot';
 import {
   CHART_SYMBOL_POINT_THRESHOLD,
-  MAX_CHART_POINTS,
 } from '../../common/perf';
 import './index.scss';
 
@@ -75,7 +74,7 @@ export interface VariableYStepLineChartProps {
   showLegend?: boolean;
   /** 图例位置 */
   legendPosition?: 'left' | 'right' | 'top' | 'bottom';
-  /** 时序点滑动窗口上限，默认 1000 */
+  /** 时序点滑动窗口上限，默认 30 分钟（1 秒 1 点 ≈ 1800） */
   maxPoints?: number;
   onPointClick?: (item: any, seriesIndex: number, dataIndex: number) => void;
   [key: string]: unknown;
@@ -112,6 +111,57 @@ const formatAxisTickValue = (value: number): string => {
   }
 
   return parseFloat(value.toPrecision(3)).toString();
+};
+
+const padTimePart = (value: number) => String(value).padStart(2, '0');
+
+/** 横轴/提示时间统一展示为时:分:秒（HH:mm:ss） */
+const formatDateToHms = (date: Date) => (
+  `${padTimePart(date.getHours())}:${padTimePart(date.getMinutes())}:${padTimePart(date.getSeconds())}`
+);
+
+const formatTimeLabel = (value: string | number | undefined) => {
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  const rawValue = String(value);
+  const timeMatch = rawValue.match(/(?:^|\s|T)(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+
+  if (timeMatch) {
+    const hours = padTimePart(Number(timeMatch[1]));
+    const minutes = timeMatch[2];
+    const seconds = timeMatch[3] != null ? timeMatch[3] : '00';
+
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
+  const numericValue = Number(value);
+
+  if (Number.isFinite(numericValue)) {
+    if (numericValue >= 0 && numericValue < 24 * 60 * 60) {
+      const hours = Math.floor(numericValue / 3600);
+      const minutes = Math.floor((numericValue % 3600) / 60);
+      const seconds = Math.floor(numericValue % 60);
+
+      return `${padTimePart(hours)}:${padTimePart(minutes)}:${padTimePart(seconds)}`;
+    }
+
+    const timestamp = numericValue > 1e12 ? numericValue : numericValue * 1000;
+    const date = new Date(timestamp);
+
+    if (!Number.isNaN(date.getTime())) {
+      return formatDateToHms(date);
+    }
+  }
+
+  const parsedDate = new Date(rawValue.replace(/-/g, '/'));
+
+  if (!Number.isNaN(parsedDate.getTime())) {
+    return formatDateToHms(parsedDate);
+  }
+
+  return rawValue;
 };
 
 /** 真实值 → 等距显示坐标（0~4） */
@@ -167,6 +217,9 @@ export const axisToValue = (axisValue: number): number => {
 };
 
 const DEFAULT_COLORS = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4'];
+
+/** 与 openview 30 分钟窗口对齐（1 秒 1 点） */
+const DEFAULT_MAX_POINTS = 30 * 60;
 const TOOLTIP_CLASS_NAME = 'bizpack-variable-y-step-line-chart-tooltip';
 
 /** 按「升→降」循环 4 次生成演示数据；图例名与接口 series[].name 一致（设备1…） */
@@ -181,7 +234,7 @@ const createDefaultSourceData = (): ChartSourceData => {
     (_, index) => {
       const date = new Date(now - (pointCount - 1 - index) * intervalMs);
 
-      return `${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+      return formatDateToHms(date);
     },
   );
   const timestamps = Array.from(
@@ -223,7 +276,12 @@ const createDefaultSourceData = (): ChartSourceData => {
 const DEFAULT_SOURCE = createDefaultSourceData();
 
 const formatTooltipValue = (value: number | string | null | undefined): string => {
-  if (value === null || value === undefined || value === '-') {
+  // 接口返回 0 必须显示为 "0"；仅 null/undefined/空串显示为占位
+  if (value === null || value === undefined || value === '') {
+    return '-';
+  }
+
+  if (value === '-') {
     return '-';
   }
 
@@ -233,6 +291,7 @@ const formatTooltipValue = (value: number | string | null | undefined): string =
     return String(value);
   }
 
+  // 0 / -0 都显示为 0
   if (num === 0) {
     return '0';
   }
@@ -251,9 +310,40 @@ const formatTooltipValue = (value: number | string | null | undefined): string =
   return parseFloat(num.toPrecision(6)).toString();
 };
 
-const buildAxisTooltipConfig = () => ({
+/** 从数据点解析接口原始值；0 是合法值，不能用 != null / 真值判断 */
+const resolveTooltipRawValue = (item: any): number | string | null | undefined => {
+  const dataItem = item?.data;
+
+  if (dataItem && typeof dataItem === 'object' && !Array.isArray(dataItem)) {
+    if (Object.prototype.hasOwnProperty.call(dataItem, 'realValue')) {
+      return dataItem.realValue as number | string | null | undefined;
+    }
+  }
+
+  if (typeof dataItem === 'number' || typeof dataItem === 'string') {
+    return dataItem;
+  }
+
+  const rawValue = Array.isArray(item?.value) ? item.value[item.value.length - 1] : item?.value;
+
+  if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
+    // 无 realValue 时，轴坐标反推（兜底）；0 仍应得到 0
+    return axisToValue(rawValue);
+  }
+
+  return rawValue;
+};
+
+type TooltipContext = {
+  getSource: () => ChartSourceData;
+  getLegendSelected: () => Record<string, boolean>;
+};
+
+const buildAxisTooltipConfig = (ctx: TooltipContext) => ({
   trigger: 'axis',
   confine: true,
+  // 不过滤 0 / 空点，保证接口返回的 0 也会进 formatter
+  filterMode: 'none',
   className: TOOLTIP_CLASS_NAME,
   backgroundColor: 'rgba(8, 24, 46, 0.92)',
   borderColor: 'rgba(80, 160, 220, 0.4)',
@@ -270,29 +360,67 @@ const buildAxisTooltipConfig = () => ({
     },
   },
   formatter: (params: any) => {
-    const items = Array.isArray(params) ? params : [params];
+    const items = (Array.isArray(params) ? params : [params]).filter(
+      (item: any) => item && item.seriesName !== '__y-grid__',
+    );
 
     if (!items.length) {
       return '';
     }
 
-    const axisLabel = items[0].axisValue ?? items[0].name ?? '';
-    const rows = items
-      .map((item: any) => {
-        const dataItem = item.data;
-        const rawValue = Array.isArray(item.value) ? item.value[item.value.length - 1] : item.value;
-        // 优先用系列里保存的原始值，避免坐标映射往返误差
-        const realValue =
-          dataItem && typeof dataItem === 'object' && dataItem.realValue != null
-            ? dataItem.realValue
-            : typeof rawValue === 'number' && Number.isFinite(rawValue)
-              ? axisToValue(rawValue)
-              : rawValue;
+    const dataIndex = typeof items[0].dataIndex === 'number' ? items[0].dataIndex : -1;
+    const source = ctx.getSource();
+    const selected = ctx.getLegendSelected();
+    const axisLabel = formatTimeLabel(
+      (dataIndex >= 0 ? source.xAxisData[dataIndex] : undefined)
+        ?? items[0].axisValue
+        ?? items[0].name
+        ?? '',
+    );
+
+    // 优先按后端 series 原值渲染（含 0）；ECharts params 仅作颜色/缺省兜底
+    const paramByName = new Map<string, any>();
+    items.forEach((item: any) => {
+      if (item?.seriesName) {
+        paramByName.set(String(item.seriesName), item);
+      }
+    });
+
+    const seriesList = source.yAxisData.length > 0
+      ? source.yAxisData
+      : items.map((item: any) => ({
+        name: String(item.seriesName ?? ''),
+        data: [] as number[],
+      }));
+
+    const rows = seriesList
+      .filter((seriesItem) => {
+        if (!seriesItem?.name || seriesItem.name === '__y-grid__') {
+          return false;
+        }
+        // 尊重用户手动关闭的 legend；未记录时默认显示
+        if (Object.prototype.hasOwnProperty.call(selected, seriesItem.name)) {
+          return selected[seriesItem.name] !== false;
+        }
+        return true;
+      })
+      .map((seriesItem) => {
+        const param = paramByName.get(seriesItem.name);
+        let raw: number | string | null | undefined;
+
+        if (dataIndex >= 0 && Array.isArray(seriesItem.data) && dataIndex < seriesItem.data.length) {
+          // 直接取接口窗口内原值，0 也会原样进入格式化
+          raw = seriesItem.data[dataIndex] as number | null | undefined;
+        } else if (param) {
+          raw = resolveTooltipRawValue(param);
+        } else {
+          raw = null;
+        }
 
         return (
           `<div class="${TOOLTIP_CLASS_NAME}__row">`
-          + `<span class="${TOOLTIP_CLASS_NAME}__name">${item.seriesName ?? ''}</span>`
-          + `<span class="${TOOLTIP_CLASS_NAME}__value">${formatTooltipValue(realValue)}</span>`
+          + `<span class="${TOOLTIP_CLASS_NAME}__name">${seriesItem.name}</span>`
+          + `<span class="${TOOLTIP_CLASS_NAME}__value">${formatTooltipValue(raw)}</span>`
           + '</div>'
         );
       })
@@ -410,7 +538,7 @@ export const transformFlatData = (
   };
 };
 
-/** 按 topic / data / init_data 取出系列数值数组 */
+/** 按 topic / data / init_data 取出系列数值数组；两字段都有时取更长的（实时追加后的完整序列） */
 const pickSeriesValues = (
   item: VariableYStepSeriesItem | undefined,
   topic?: string,
@@ -419,26 +547,42 @@ const pickSeriesValues = (
     return [];
   }
 
-  const candidates: unknown[] = [];
+  const dataArr = Array.isArray(item.data) ? (item.data as Array<number | null>) : null;
+  const initArr = Array.isArray(item.init_data)
+    ? (item.init_data as Array<number | null>)
+    : null;
 
   if (topic && typeof topic === 'string' && topic.trim() !== '') {
-    candidates.push(item[topic]);
+    const byTopic = item[topic.trim()];
+    if (Array.isArray(byTopic)) {
+      const topicArr = byTopic as Array<number | null>;
+      // topic=init_data 但 data 已追加更长时，优先 data，避免停在初始窗口
+      if (dataArr && dataArr.length > topicArr.length) {
+        return dataArr;
+      }
+      if (initArr && initArr.length > topicArr.length) {
+        return initArr;
+      }
+      return topicArr;
+    }
   }
 
-  candidates.push(item.data, item.init_data);
+  if (dataArr && initArr) {
+    return dataArr.length >= initArr.length ? dataArr : initArr;
+  }
+  if (dataArr) {
+    return dataArr;
+  }
+  if (initArr) {
+    return initArr;
+  }
 
-  // 兜底：取系列对象里第一个数组字段（排除非数值结构）
-  Object.keys(item).forEach((key) => {
-    if (key === 'name' || key === 'color') {
-      return;
-    }
+  const matched = Object.keys(item)
+    .filter((key) => key !== 'name' && key !== 'color')
+    .map((key) => item[key])
+    .find((value) => Array.isArray(value));
 
-    candidates.push(item[key]);
-  });
-
-  const matched = candidates.find((value) => Array.isArray(value));
-
-  return Array.isArray(matched) ? matched as Array<number | null> : [];
+  return Array.isArray(matched) ? (matched as Array<number | null>) : [];
 };
 
 /** 将接口对象 { xAxis, series, topic?, legend? } 转为内部渲染结构 */
@@ -467,7 +611,7 @@ export const normalizeApiPayload = (payload: unknown): ChartSourceData | null =>
 
   const normalizeSeriesData = (raw: Array<number | null>): number[] => (
     raw.map((value) => {
-      if (value === null || value === undefined || value === '') {
+      if (value === null || value === undefined) {
         return null as unknown as number;
       }
 
@@ -477,7 +621,7 @@ export const normalizeApiPayload = (payload: unknown): ChartSourceData | null =>
     })
   );
 
-  // 图例取 series[].name（设备1/2/3…）；数值取 topic 指定字段（如 init_data）
+  // 图例以 series[].name 为准；legend 仅在名称能匹配到系列时用于排序
   const yAxisData: YAxisSeriesConfig[] = series.map((item, index) => {
     const legendName = Array.isArray(legend) ? legend[index] : undefined;
 
@@ -495,17 +639,27 @@ export const normalizeApiPayload = (payload: unknown): ChartSourceData | null =>
     const fromLegend = legend
       .map((name) => byName.get(String(name)))
       .filter(Boolean) as YAxisSeriesConfig[];
-    const used = new Set(fromLegend.map((item) => item.name));
-    const rest = yAxisData.filter((item) => !used.has(item.name));
-    orderedSeries = [...fromLegend, ...rest];
+    // 名称对得上才按 legend 排序；对不上说明是陈旧占位文案（如 曲线A），忽略
+    if (fromLegend.length > 0) {
+      const used = new Set(fromLegend.map((item) => item.name));
+      const rest = yAxisData.filter((item) => !used.has(item.name));
+      orderedSeries = [...fromLegend, ...rest];
+    }
+  }
+
+  // 若同时存在占位名（曲线A…）与真实业务名，丢掉占位系列，避免图例重复
+  const PLACEHOLDER_NAMES = new Set(['曲线A', '曲线B', '曲线C', '高值曲线']);
+  const hasPlaceholder = orderedSeries.some((item) => PLACEHOLDER_NAMES.has(item.name));
+  const hasBusiness = orderedSeries.some((item) => !PLACEHOLDER_NAMES.has(item.name));
+  if (hasPlaceholder && hasBusiness) {
+    orderedSeries = orderedSeries.filter((item) => !PLACEHOLDER_NAMES.has(item.name));
   }
 
   return {
     xAxisData: xAxis.map((label) => String(label ?? '')),
     yAxisData: orderedSeries,
-    legend: Array.isArray(legend) && legend.length > 0
-      ? legend.map((item) => String(item))
-      : orderedSeries.map((item) => item.name),
+    // 必须用实际系列名，避免接口 legend 与 series.name 不一致时图例出现多余项
+    legend: orderedSeries.map((item) => item.name),
   };
 };
 
@@ -582,8 +736,10 @@ const buildSeriesOption = (yAxisData: YAxisSeriesConfig[]) =>
     const seriesColor = seriesItem.color ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length];
     const pointCount = Array.isArray(seriesItem.data) ? seriesItem.data.length : 0;
     const showSymbol = pointCount <= CHART_SYMBOL_POINT_THRESHOLD;
+    const seriesId = seriesItem.name != null ? `s:${String(seriesItem.name)}` : `s:${index}`;
 
     return {
+      id: seriesId,
       name: seriesItem.name,
       type: 'line',
       smooth: true,
@@ -605,7 +761,8 @@ const buildSeriesOption = (yAxisData: YAxisSeriesConfig[]) =>
       symbol: 'circle',
       symbolSize: 6,
       sampling: pointCount > 500 ? 'lttb' : undefined,
-      animation: pointCount <= 500,
+      animation: false,
+      animationDurationUpdate: 0,
       lineStyle: {
         color: seriesColor,
         width: 2,
@@ -627,6 +784,32 @@ const buildSeriesOption = (yAxisData: YAxisSeriesConfig[]) =>
     };
   });
 
+const buildYGridSeries = () => ({
+  id: '__y-grid__',
+  type: 'line',
+  name: '__y-grid__',
+  data: [],
+  silent: true,
+  tooltip: { show: false },
+  legendHoverLink: false,
+  animation: false,
+  markLine: {
+    silent: true,
+    symbol: 'none',
+    label: { show: false },
+    lineStyle: {
+      color: 'rgba(176, 208, 220, 0.24)',
+      type: 'dashed',
+      width: 1,
+    },
+    data: Y_AXIS_GRID_DISPLAY_VALUES.map((value) => ({ yAxis: value })),
+  },
+});
+
+/** 系列名签名：变化才重绘 legend；仅数据推送时保持 legend/tooltip 不动 */
+const getSeriesStructureKey = (source: ChartSourceData) =>
+  (source.legend ?? source.yAxisData.map((item) => item.name)).join('\u0001');
+
 const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function VariableYStepLineChart(props) {
   const {
     title = '',
@@ -644,17 +827,32 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
     logBase = 10,
     showLegend = true,
     legendPosition = 'top',
-    maxPoints = MAX_CHART_POINTS,
+    maxPoints = DEFAULT_MAX_POINTS,
     onPointClick,
     ...otherProps
   } = props;
 
-  const resolvedMaxPoints = Number(maxPoints) > 0 ? Number(maxPoints) : MAX_CHART_POINTS;
+  const resolvedMaxPoints = Number(maxPoints) > 0 ? Number(maxPoints) : DEFAULT_MAX_POINTS;
   const chartRef = useRef<HTMLDivElement>(null);
   const echartsRef = useRef<echarts.ECharts | null>(null);
   const bizRef = useRef<BizRef | null>(null);
   const onPointClickRef = useRef(onPointClick);
   const bcRef = useRef<BroadcastChannel | null>(null);
+  /** 用户手动点选 legend 后的选中态，数据推送时原样保留 */
+  const legendSelectedRef = useRef<Record<string, boolean>>({});
+  /** 系列结构签名；仅名称/布局变化时全量重绘 */
+  const structureKeyRef = useRef<string>('');
+  /** 当前轴悬浮提示位置；数据推送后恢复，避免 tooltip 被 ws 冲掉 */
+  const axisTipRef = useRef<{ dataIndex: number } | null>(null);
+  /** setOption 引发的 hideTip 忽略，仅用户移出/手动关闭时清空 */
+  const ignoreHideTipRef = useRef(false);
+  const ignoreHideTipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** 指针是否仍在图内；用像素坐标 showTip，不依赖 dataIndex */
+  const pointerInsideRef = useRef(false);
+  const lastPointerRef = useRef<{ x: number; y: number } | null>(null);
+  /** 上一帧横轴长度，用于滑动窗口时换算悬停下标 */
+  const xAxisLenRef = useRef(0);
+  const sourceDataRef = useRef<ChartSourceData>(DEFAULT_SOURCE);
   const rootDomProps = pickRootDomProps(otherProps);
 
   const [iotData, setIotData] = useState<VariableYStepChartPayload | any[] | null>(null);
@@ -706,9 +904,22 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
     resolvedMaxPoints,
   ]);
 
+  sourceDataRef.current = sourceData;
+
+  const tooltipCtxRef = useRef<TooltipContext>({
+    getSource: () => sourceDataRef.current,
+    getLegendSelected: () => legendSelectedRef.current,
+  });
+  tooltipCtxRef.current = {
+    getSource: () => sourceDataRef.current,
+    getLegendSelected: () => legendSelectedRef.current,
+  };
+
   const buildOption = useMemo(() => {
     const legendData = sourceData.legend ?? sourceData.yAxisData.map((item) => item.name);
     const option: any = {
+      animation: false,
+      animationDurationUpdate: 0,
       title: title
         ? {
           text: title,
@@ -720,13 +931,17 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
           },
         }
         : undefined,
-      tooltip: buildAxisTooltipConfig(),
+      tooltip: buildAxisTooltipConfig({
+        getSource: () => tooltipCtxRef.current.getSource(),
+        getLegendSelected: () => tooltipCtxRef.current.getLegendSelected(),
+      }),
       legend: {
         show: showLegend,
         left: legendPosition === 'left' ? 'left' : legendPosition === 'right' ? 'right' : 'center',
         top: legendPosition === 'top' ? 'top' : undefined,
         bottom: legendPosition === 'bottom' ? 'bottom' : undefined,
         data: legendData,
+        selected: legendSelectedRef.current,
         textStyle: {
           color: 'rgba(218, 230, 235, 0.8)',
           fontSize: 12,
@@ -751,6 +966,7 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
         axisLabel: {
           color: 'rgba(218, 230, 235, 0.68)',
           fontSize: 12,
+          formatter: (value: string | number) => formatTimeLabel(value),
         },
       },
       yAxis: {
@@ -786,30 +1002,39 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
       },
       series: [
         ...buildSeriesOption(sourceData.yAxisData),
-        {
-          type: 'line',
-          name: '__y-grid__',
-          data: [],
-          silent: true,
-          tooltip: { show: false },
-          legendHoverLink: false,
-          markLine: {
-            silent: true,
-            symbol: 'none',
-            label: { show: false },
-            lineStyle: {
-              color: 'rgba(176, 208, 220, 0.24)',
-              type: 'dashed',
-              width: 1,
-            },
-            data: Y_AXIS_GRID_DISPLAY_VALUES.map((value) => ({ yAxis: value })),
-          },
-        },
+        buildYGridSeries(),
       ],
     };
 
     return option;
   }, [title, sourceData, showLegend, legendPosition]);
+
+  /** 仅数据面：不带 tooltip/legend，避免 ws 推送时悬浮框与图例被重置 */
+  const buildDataOption = useMemo(
+    () => ({
+      animation: false,
+      animationDurationUpdate: 0,
+      xAxis: {
+        data: sourceData.xAxisData,
+      },
+      series: [
+        ...buildSeriesOption(sourceData.yAxisData),
+        buildYGridSeries(),
+      ],
+    }),
+    [sourceData],
+  );
+
+  const structureKey = useMemo(
+    () =>
+      [
+        getSeriesStructureKey(sourceData),
+        title,
+        String(showLegend),
+        legendPosition,
+      ].join('\u0001'),
+    [sourceData, title, showLegend, legendPosition],
+  );
 
   useEffect(() => {
     if (!chartRef.current) {
@@ -818,7 +1043,78 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
 
     const instance = echarts.init(chartRef.current);
     echartsRef.current = instance;
-    instance.setOption(buildOption, { notMerge: true, lazyUpdate: true });
+    structureKeyRef.current = structureKey;
+    xAxisLenRef.current = sourceDataRef.current.xAxisData.length;
+    instance.setOption(buildOption, { notMerge: true, lazyUpdate: false });
+
+    instance.on('legendselectchanged', (params: any) => {
+      if (params && params.selected && typeof params.selected === 'object') {
+        legendSelectedRef.current = { ...params.selected };
+      }
+    });
+
+    const resolveAxisDataIndex = (axisInfo: any): number => {
+      if (!axisInfo) {
+        return -1;
+      }
+      if (typeof axisInfo.dataIndex === 'number' && axisInfo.dataIndex >= 0) {
+        return axisInfo.dataIndex;
+      }
+      if (typeof axisInfo.value === 'number' && axisInfo.value >= 0) {
+        return axisInfo.value;
+      }
+      if (axisInfo.value != null && axisInfo.value !== '') {
+        const idx = sourceDataRef.current.xAxisData.indexOf(String(axisInfo.value));
+        if (idx >= 0) {
+          return idx;
+        }
+      }
+      return -1;
+    };
+
+    instance.on('updateAxisPointer', (event: any) => {
+      const axisInfo = event && Array.isArray(event.axesInfo) ? event.axesInfo[0] : null;
+      const dataIndex = resolveAxisDataIndex(axisInfo);
+      if (dataIndex >= 0) {
+        axisTipRef.current = { dataIndex };
+      }
+    });
+
+    instance.on('showTip', (event: any) => {
+      if (event && typeof event.dataIndex === 'number' && event.dataIndex >= 0) {
+        axisTipRef.current = { dataIndex: event.dataIndex };
+      }
+    });
+
+    // setOption 会触发 hideTip；忽略程序化关闭，仅用户移出图表时真正关闭
+    instance.on('hideTip', () => {
+      if (ignoreHideTipRef.current) {
+        return;
+      }
+      // 指针仍在图内：视为 ws 冲刷，保留钉住状态
+      if (pointerInsideRef.current) {
+        return;
+      }
+      axisTipRef.current = null;
+    });
+
+    const zr = instance.getZr();
+    zr.on('mousemove', (e: any) => {
+      pointerInsideRef.current = true;
+      if (e && typeof e.offsetX === 'number' && typeof e.offsetY === 'number') {
+        lastPointerRef.current = { x: e.offsetX, y: e.offsetY };
+      }
+    });
+    zr.on('globalout', () => {
+      pointerInsideRef.current = false;
+      lastPointerRef.current = null;
+      ignoreHideTipRef.current = false;
+      axisTipRef.current = null;
+      if (ignoreHideTipTimerRef.current) {
+        clearTimeout(ignoreHideTipTimerRef.current);
+        ignoreHideTipTimerRef.current = null;
+      }
+    });
 
     instance.on('click', (params: any) => {
       if (params.componentType === 'series' && params.seriesName !== '__y-grid__' && onPointClickRef.current) {
@@ -853,9 +1149,15 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (ignoreHideTipTimerRef.current) {
+        clearTimeout(ignoreHideTipTimerRef.current);
+        ignoreHideTipTimerRef.current = null;
+      }
       instance.dispose();
       echartsRef.current = null;
+      structureKeyRef.current = '';
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -865,10 +1167,108 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
   }, [iotData, data]);
 
   useEffect(() => {
-    if (echartsRef.current) {
-      echartsRef.current.setOption(buildOption, { notMerge: true, lazyUpdate: true });
+    const instance = echartsRef.current;
+    if (!instance) {
+      return;
     }
-  }, [buildOption]);
+
+    const structureChanged = structureKeyRef.current !== structureKey;
+    const pinnedTip = axisTipRef.current;
+    const pointerInside = pointerInsideRef.current;
+    const lastPointer = lastPointerRef.current;
+    const shouldKeepTip = pointerInside || !!pinnedTip;
+    const prevLen = xAxisLenRef.current;
+    const nextLen = sourceData.xAxisData.length;
+
+    const resolvePinnedDataIndex = () => {
+      if (!pinnedTip || pinnedTip.dataIndex < 0 || nextLen <= 0) {
+        return -1;
+      }
+      if (prevLen > 0 && pinnedTip.dataIndex >= prevLen - 1) {
+        return nextLen - 1;
+      }
+      if (prevLen > 0) {
+        const offsetFromEnd = prevLen - 1 - pinnedTip.dataIndex;
+        return Math.max(0, Math.min(nextLen - 1, nextLen - 1 - offsetFromEnd));
+      }
+      return Math.min(pinnedTip.dataIndex, nextLen - 1);
+    };
+
+    const beginIgnoreHideTip = () => {
+      ignoreHideTipRef.current = true;
+      if (ignoreHideTipTimerRef.current) {
+        clearTimeout(ignoreHideTipTimerRef.current);
+      }
+      // ws 可能连续推送，窗口略长于单次渲染
+      ignoreHideTipTimerRef.current = setTimeout(() => {
+        ignoreHideTipRef.current = false;
+        ignoreHideTipTimerRef.current = null;
+      }, 200);
+    };
+
+    const restoreTooltip = () => {
+      const chart = echartsRef.current;
+      if (!chart || !shouldKeepTip) {
+        return;
+      }
+
+      // 优先按鼠标像素坐标恢复（axis tooltip 最稳，不依赖 seriesIndex）
+      if (pointerInside && lastPointer) {
+        chart.dispatchAction({
+          type: 'showTip',
+          x: lastPointer.x,
+          y: lastPointer.y,
+        });
+        return;
+      }
+
+      const dataIndex = resolvePinnedDataIndex();
+      if (dataIndex < 0) {
+        return;
+      }
+      axisTipRef.current = { dataIndex };
+      // 跳过网格线系列，落到第一条业务线
+      const seriesCount = Array.isArray(sourceData.yAxisData) ? sourceData.yAxisData.length : 0;
+      const seriesIndex = seriesCount > 0 ? 0 : 0;
+      chart.dispatchAction({
+        type: 'showTip',
+        seriesIndex,
+        dataIndex,
+      });
+    };
+
+    if (shouldKeepTip) {
+      beginIgnoreHideTip();
+    }
+
+    if (structureChanged) {
+      structureKeyRef.current = structureKey;
+      const nextOption = {
+        ...buildOption,
+        legend: {
+          ...buildOption.legend,
+          selected: legendSelectedRef.current,
+        },
+      };
+      // 结构变化才全量替换；同步渲染便于立刻 showTip
+      instance.setOption(nextOption, { notMerge: true, lazyUpdate: false });
+    } else {
+      // 仅数据滑动：按 series.id 合并，禁止 replaceMerge（会拆掉 tooltip 内部状态）
+      instance.setOption(buildDataOption, {
+        lazyUpdate: false,
+        silent: true,
+      });
+    }
+
+    xAxisLenRef.current = nextLen;
+
+    if (shouldKeepTip) {
+      // 双 rAF：等 setOption 完成布局后再钉回 tip
+      requestAnimationFrame(() => {
+        requestAnimationFrame(restoreTooltip);
+      });
+    }
+  }, [buildOption, buildDataOption, structureKey, sourceData.xAxisData.length, sourceData.yAxisData.length]);
 
   useEffect(() => {
     init(props, bizRef, bcRef as unknown as BroadcastChannel);

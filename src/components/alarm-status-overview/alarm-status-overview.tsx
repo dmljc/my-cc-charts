@@ -27,22 +27,14 @@ const RUNNING_TEXT = '正常运行';
 export interface AlarmStatusOverviewProps {
   title?: string;
   data?: AlarmStatusOverviewData | AlarmStatusOverviewData[];
-  /** 设备名称对应的数据字段名，默认 'name' */
   nameField?: string;
-  /** 状态对应的数据字段名，默认 'status'，normal 为正常运行，alarm 为异常告警 */
   statusField?: string;
-  /** 紧急数量对应的数据字段名，默认 'emergency' */
   emergencyField?: string;
-  /** 严重数量对应的数据字段名，默认 'severe' */
   severeField?: string;
-  /** 一般数量对应的数据字段名，默认 'general' */
   generalField?: string;
   width?: number | string;
-  /** 列表容器高度，超出后滚动，默认 'auto' */
   height?: number | string;
-  /** 单张卡片高度，默认 98 */
   itemHeight?: number | string;
-  /** 卡片间距，默认 12 */
   gap?: number | string;
   style?: React.CSSProperties;
   className?: string;
@@ -57,16 +49,8 @@ interface BizRef {
 }
 
 const defaultData: AlarmStatusOverviewData[] = [
-  {
-    id: 1,
-    name: 'X03',
-    status: 'normal',
-  },
-  {
-    id: 2,
-    name: 'X06',
-    status: 'normal',
-  },
+  { id: 1, name: 'X03', status: 'normal' },
+  { id: 2, name: 'X06', status: 'normal' },
   {
     id: 3,
     name: 'X12',
@@ -79,7 +63,6 @@ const defaultData: AlarmStatusOverviewData[] = [
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
-
   Object.keys(props).forEach((key) => {
     if (
       key === 'id' ||
@@ -91,41 +74,48 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
       domProps[key] = props[key];
     }
   });
-
   return domProps;
 };
 
-const normalizeList = (
-  nextData?: AlarmStatusOverviewData | AlarmStatusOverviewData[] | null,
-): AlarmStatusOverviewData[] => {
-  if (Array.isArray(nextData)) {
-    return normalizeListData(nextData);
-  }
-
-  if (nextData && typeof nextData === 'object') {
-    return [nextData];
-  }
-
-  return defaultData;
-};
-
-const normalizeStatus = (status?: unknown): AlarmStatusOverviewStatus => {
-  return status === 'alarm' ? 'alarm' : 'normal';
-};
+const normalizeStatus = (status?: unknown): AlarmStatusOverviewStatus =>
+  status === 'alarm' ? 'alarm' : 'normal';
 
 const resolveFieldValue = (item: AlarmStatusOverviewData, field: string) => {
   const value = (item as Record<string, unknown>)[field];
-
   if (value === null || value === undefined || value === '') {
     return undefined;
   }
-
   return String(value);
+};
+
+/** 0 必须原样显示，不能被 || / ?? 前的空串逻辑吃掉以外的问题；空值才回退 0 */
+const resolveCountDisplay = (item: AlarmStatusOverviewData, field: string) => {
+  const value = (item as Record<string, unknown>)[field];
+  if (value === null || value === undefined || value === '') {
+    return 0;
+  }
+  return value as string | number;
+};
+
+/**
+ * init_data / ws_data / changeData：整表覆盖，不 concat
+ * 数组原样限长；单对象包成一项；缺省用默认数据
+ */
+const resolveListData = (
+  value?: AlarmStatusOverviewData | AlarmStatusOverviewData[] | null,
+): AlarmStatusOverviewData[] => {
+  if (Array.isArray(value)) {
+    return normalizeListData(value);
+  }
+  if (value && typeof value === 'object') {
+    return [value];
+  }
+  return defaultData;
 };
 
 const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmStatusOverview(props) {
   const {
-    data,
+    data = defaultData,
     nameField = 'name',
     statusField = 'status',
     emergencyField = 'emergency',
@@ -140,22 +130,25 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
     onItemClick,
     ...otherProps
   } = props;
-  const [items, setItems] = useState<AlarmStatusOverviewData[]>(() => normalizeList(data));
+
+  const [items, setItems] = useState<AlarmStatusOverviewData[]>(() => resolveListData(data));
   const rootDomProps = pickRootDomProps(otherProps);
   const bizRef = React.useRef<BizRef | null>(null);
-  const bc: BroadcastChannel = null;
+  const bc: BroadcastChannel = null as unknown as BroadcastChannel;
 
+  // 与 DeviceCheck 一致：仅静态 data 跟 props；board/ws 走 changeData 整表覆盖
   useEffect(() => {
     if (!props.dataType || props.dataType === 'data') {
-      setItems(normalizeList(data));
+      setItems(resolveListData(data));
     }
   }, [data, props.dataType]);
 
   useEffect(() => {
     bizRef.current = {
       chart: {
+        // ws / board：直接覆盖，禁止与旧列表拼接
         changeData: (nextData: AlarmStatusOverviewData | AlarmStatusOverviewData[]) => {
-          setItems(normalizeList(nextData));
+          setItems(resolveListData(nextData));
         },
       },
     };
@@ -184,10 +177,13 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
         const displayName = resolveFieldValue(item, safeNameField) ?? '';
         const status = normalizeStatus((item as Record<string, unknown>)[safeStatusField]);
         const isAlarm = status === 'alarm';
+        const emergencyVal = resolveCountDisplay(item, safeEmergencyField);
+        const severeVal = resolveCountDisplay(item, safeSevereField);
+        const generalVal = resolveCountDisplay(item, safeGeneralField);
 
         return (
           <button
-            key={item.id != null ? String(item.id) : index}
+            key={item.id != null ? String(item.id) : `overview-slot-${index}`}
             type="button"
             className={`bizpack-alarm-status-overview-card ${
               isAlarm
@@ -217,19 +213,19 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
               <span className="bizpack-alarm-status-overview-stats">
                 <span className="bizpack-alarm-status-overview-stat">
                   <span className="bizpack-alarm-status-overview-stat-value bizpack-alarm-status-overview-stat-value-emergency">
-                    {(item as Record<string, unknown>)[safeEmergencyField] ?? 0}
+                    {emergencyVal}
                   </span>
                   <span className="bizpack-alarm-status-overview-stat-label">紧急</span>
                 </span>
                 <span className="bizpack-alarm-status-overview-stat">
                   <span className="bizpack-alarm-status-overview-stat-value bizpack-alarm-status-overview-stat-value-severe">
-                    {(item as Record<string, unknown>)[safeSevereField] ?? 0}
+                    {severeVal}
                   </span>
                   <span className="bizpack-alarm-status-overview-stat-label">严重</span>
                 </span>
                 <span className="bizpack-alarm-status-overview-stat">
                   <span className="bizpack-alarm-status-overview-stat-value bizpack-alarm-status-overview-stat-value-general">
-                    {(item as Record<string, unknown>)[safeGeneralField] ?? 0}
+                    {generalVal}
                   </span>
                   <span className="bizpack-alarm-status-overview-stat-label">一般</span>
                 </span>
@@ -248,4 +244,5 @@ const AlarmStatusOverview: React.FC<AlarmStatusOverviewProps> = function AlarmSt
 };
 
 AlarmStatusOverview.displayName = 'AlarmStatusOverview';
-export default React.memo(AlarmStatusOverview);
+// 不用 memo：低代码可能复用 data 引用，memo 会导致 general 等字段不刷新
+export default AlarmStatusOverview;

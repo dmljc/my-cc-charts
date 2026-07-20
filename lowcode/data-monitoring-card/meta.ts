@@ -104,12 +104,6 @@ const DataMonitoringCardMeta: ComponentMetadata = {
             setter: 'NumberSetter',
           },
           {
-            name: 'showXAxisLabels',
-            title: '显示横轴标签',
-            defaultValue: true,
-            setter: 'BoolSetter',
-          },
-          {
             name: 'showLatestValue',
             title: {
               label: '显示末端数值',
@@ -214,7 +208,6 @@ const snippets: Snippet[] = [
         resumeDelay: 1000,
         pauseOnHover: true,
         showScrollbar: true,
-        showXAxisLabels: true,
         showLatestValue: true,
       },
     },
