@@ -1,0 +1,2212 @@
+{
+    "componentName": "Page",
+    "id": "node_oclrvqd1vt1",
+    "props": {
+      "ref": "outerView",
+      "style": {
+        "height": "100%"
+      },
+      "skyType": "sunny",
+      "baseMap": "plane",
+      "lastView": "plane",
+      "bloom": {
+        "bloomEnable": false,
+        "highDynamicRange": 0,
+        "glowOnly": false,
+        "shadows": false,
+        "contrast": 0,
+        "brightness": 0,
+        "sigma": 0,
+        "delta": 0,
+        "gama": 0,
+        "stepSize": 0
+      },
+      "isFree": false,
+      "isScroll": false
+    },
+    "fileName": "/",
+    "dataSource": {
+      "list": [
+        {
+          "type": "fetch",
+          "isInit": true,
+          "options": {
+            "params": {},
+            "method": "GET",
+            "isCors": true,
+            "timeout": 5000,
+            "headers": {},
+            "uri": "mock/info.json"
+          },
+          "id": "info",
+          "shouldFetch": {
+            "type": "JSFunction",
+            "value": "function() { \n  console.log('should fetch.....');\n  return true; \n}"
+          }
+        }
+      ]
+    },
+    "css": "body {\n  font-size: 12px;\n}\n\n.button {\n  width: 100px;\n  color: #ff00ff\n}\n\n.next-table-fixed table {\n  table-layout: fixed;\n  background: transparent;\n}\n\ntd.next-table-cell {\n  background-color: transparent !important;\n  text-align: center;\n}\n\n::-webkit-scrollbar {\n  width: 5px;\n  height: 5px;\n}\n\n/* 滚动条轨道 */\n::-webkit-scrollbar-track {\n  /*  background: rgb(239, 239, 239); */\n  border-radius: 5px;\n}\n\n/*  小滑块 */\n::-webkit-scrollbar-thumb {\n  background: #40a0ff49;\n  border-radius: 10px;\n}\n\n::-webkit-scrollbar-thumb:hover {\n  background: #40a0ff;\n}\n\n.table-common {\n  width: 100%;\n}\n\n.table-common tbody .next-table-cell-wrapper {\n  width: 100px;\n  /* 限制容器宽度 */\n  white-space: nowrap;\n  /* 禁止文本换行 */\n  overflow: hidden;\n  /* 隐藏超出范围的内容 */\n  text-overflow: ellipsis;\n  /* 使用省略号 */\n}\n\n.table-common .next-table-row td:nth-child(2) .next-table-cell-wrapper {\n  width: 220px;\n}\n\n.table-common table {\n  background: none;\n}\n\n.table-common .next-table-header {\n  height: 32px;\n}\n\n.table-common .next-table-cell-wrapper {\n  font-size: 16px !important;\n  height: 32px !important;\n  padding: 0 !important;\n  line-height: 32px !important;\n  text-align: center;\n}\n\n.table-common th {\n  background: rgba(41, 121, 255, 0.3);\n  color: #00CFE4;\n}\n\n.table-common .next-table-row {\n  background: none;\n  height: 29px;\n  font-size: 14px;\n}\n\n\n.table-common.zebra tr:nth-child(even) td {\n  background: rgba(26, 52, 93, 0.6);\n}\n\n/* .table-common .next-table-row.hovered {\n  background: none !important;\n}\n\n.table-common .next-table-row.hovered td {\n  background: none !important;\n} */\n\n.table-common td {\n  color: rgba(255, 255, 255, 1);\n  background-color: rgba(26, 52, 93, 1);\n}\n\n.table-common.zebra tr:nth-child(odd) td {\n  background: none;\n  /* opacity: 0.5; */\n}\n\n.table-common .next-table-body tr:nth-child(odd).hovered td {\n  background: none;\n  color: rgba(255, 255, 255, 1);\n  /* opacity: 0.5; */\n}\n\n.table-common .next-table-body tr:nth-child(even).hovered td {\n\n  color: rgba(255, 255, 255, 1);\n  background: rgba(26, 52, 93, 0.6);\n  /* color: #00CFE4; */\n  /* opacity: 0.5; */\n}\n\n.bottom-btn-box {\n  position: absolute;\n  bottom: 20px;\n  right: 410px;\n  display: flex;\n  flex-direction: column;\n  width: 150px;\n}\n\n.bottom-btn {\n  width: 132px;\n  height: 46px !important;\n  text-align: center;\n  z-index: 100;\n  cursor: pointer;\n}\n\n.btn-background-click {\n  background: url('/simu/static/screenImg/mxxz-btn-click1.png') !important;\n  background-position: center !important;\n  background-repeat: no-repeat !important;\n  background-size: 100% 100% !important;\n}\n\n.btn-background-unclick {\n  background: url('/simu/static/screenImg/mxxz-btn-unclick1.png') !important;\n  background-position: center !important;\n  background-repeat: no-repeat !important;\n  background-size: 100% 100% !important;\n}",
+    "originCode": "class LowcodeComponent extends Component {\n  state = {\n    btnClass1: 'bottom-btn btn-background-click',\n    /**\n     * 当前场景索引（枚举）\n     * 0 = 首页 / 大屏概览页\n     * 1 = X12 厂房\n     */\n    sceneIndex: 0,\n    effluentList: [],\n    alertOverviewList: [],\n    monitoringList: [],\n    operationLogList: [],\n    alarmList: [],\n    inspectionList: [],\n    qtcList: {},\n  };\n\n  componentDidMount() {\n    this.handleWss();\n  }\n\n  /**\n   * WebSocket\n   * - init_data：全量写入\n   * - ws_data：字段结构一致\n   *   · alarmList / operationLogList / inspectionList / alertOverviewList：整表覆盖\n   *   · effluentList：按 id 更新 value（不追加、空推送不清空）\n   *   · monitoringList：卡片按 id 合并；tritiumConcentration 增量拼接，裁 30 分钟\n   *   · qtcList：折线增量拼接 / 整窗替换，裁 30 分钟\n   */\n  handleWss() {\n    this.ws = new WebSocket('ws://192.168.1.8:8088/api/ws/realtime');\n\n    this.ws.onopen = () => {\n      console.log('✅ WebSocket 连接已建立');\n    };\n\n    this.ws.onmessage = (e) => {\n      try {\n        const msg = JSON.parse(e.data);\n        if (!msg || !msg.data) {\n          return;\n        }\n        if (msg.topic === 'init_data') {\n          this.applyInitData(msg.data);\n          return;\n        }\n        if (msg.topic === 'ws_data') {\n          this.applyWsData(msg.data);\n        }\n      } catch (error) {\n        console.error('❌ 解析消息失败:', error);\n      }\n    };\n\n    this.ws.onerror = () => { };\n  }\n\n  goX12(e, params) {\n    if (params && params.key === 1) {\n      this.setState({\n        btnClass1: 'bottom-btn btn-background-click',\n        sceneIndex: 1,\n      });\n    }\n  }\n\n  goHome() {\n    this.setState({\n      btnClass1: 'bottom-btn btn-background-click',\n      sceneIndex: 0,\n    });\n  }\n\n  /** 折线窗口：最近 30 分钟（1 秒 1 点 ≈ 1800） */\n  getMaxChartPoints() {\n    return 30 * 60;\n  }\n\n  asArray(value) {\n    return Object.prototype.toString.call(value) === '[object Array]' ? value : [];\n  }\n\n  asObject(value) {\n    return Object.prototype.toString.call(value) === '[object Object]' ? value : {};\n  }\n\n  hasOwn(obj, key) {\n    return Object.prototype.hasOwnProperty.call(obj, key);\n  }\n\n  /** 整表覆盖：拷贝新引用，避免低代码复用旧数组不刷新 */\n  replaceList(value) {\n    return this.asArray(value).slice();\n  }\n\n  tail(list, max) {\n    const arr = this.asArray(list);\n    return arr.length > max ? arr.slice(-max) : arr;\n  }\n\n  /**\n   * 流出物（ws_data）：按 id / 下标对齐，只更新 value、arrow\n   * - 空推送保留原列表（避免误清空槽位）\n   * - 不追加新项（与 Effluent 组件槽位锁定一致）\n   */\n  mergeEffluentList(prevList, incomingList) {\n    const prev = this.asArray(prevList);\n    const incoming = this.asArray(incomingList);\n    if (!incoming.length) {\n      return prev;\n    }\n    if (!prev.length) {\n      return incoming.slice();\n    }\n\n    const next = prev.map((item) => (item && typeof item === 'object' ? { ...item } : item));\n    const used = {};\n\n    incoming.forEach((item, i) => {\n      if (!item || typeof item !== 'object') {\n        return;\n      }\n\n      let idx = -1;\n      if (item.id != null) {\n        idx = next.findIndex((row, rowIdx) => !used[rowIdx] && row && row.id == item.id);\n      }\n      if (idx < 0 && i < next.length && !used[i]) {\n        idx = i;\n      }\n      if (idx < 0) {\n        return;\n      }\n\n      used[idx] = true;\n      if (this.hasOwn(item, 'value')) {\n        next[idx].value = item.value;\n      }\n      if (this.hasOwn(item, 'arrow')) {\n        next[idx].arrow = item.arrow;\n      }\n    });\n\n    return next;\n  }\n\n  getCardPoints(card) {\n    if (!card || typeof card !== 'object') {\n      return [];\n    }\n    const points = card.tritiumConcentration != null ? card.tritiumConcentration : card.chart;\n    return this.asArray(points);\n  }\n\n  /** 监测卡折线裁到 30 分钟窗口 */\n  trimMonitoring(list) {\n    const maxPoints = this.getMaxChartPoints();\n    return this.asArray(list).map((card) => {\n      if (!card || typeof card !== 'object') {\n        return card;\n      }\n      const points = this.getCardPoints(card);\n      if (!points.length && card.tritiumConcentration == null && card.chart == null) {\n        return card;\n      }\n      return {\n        ...card,\n        tritiumConcentration: this.tail(points, maxPoints),\n      };\n    });\n  }\n\n  /**\n   * 合并监测列表（ws_data）\n   * - 卡片按 id（无 id 用下标）更新字段\n   * - tritiumConcentration：≤5 点视为增量 append，否则整窗替换；空数组不覆盖已有时序\n   */\n  mergeMonitoring(prevList, incomingList) {\n    const incoming = this.asArray(incomingList);\n    if (!incoming.length) {\n      return this.trimMonitoring(prevList);\n    }\n\n    const maxPoints = this.getMaxChartPoints();\n    const map = new Map();\n\n    this.asArray(prevList).forEach((card, i) => {\n      const key = card && card.id != null ? String(card.id) : `i_${i}`;\n      map.set(key, {\n        ...card,\n        tritiumConcentration: this.getCardPoints(card).slice(),\n      });\n    });\n\n    incoming.forEach((card, i) => {\n      const key = card && card.id != null ? String(card.id) : `i_${i}`;\n      const addPoints = this.getCardPoints(card);\n      const prev = map.get(key);\n\n      if (!prev) {\n        map.set(key, {\n          ...card,\n          tritiumConcentration: this.tail(addPoints, maxPoints),\n        });\n        return;\n      }\n\n      const prevPts = this.asArray(prev.tritiumConcentration);\n      let mergedPts = prevPts;\n      if (addPoints.length) {\n        const isIncremental = prevPts.length > 0 && addPoints.length <= 5;\n        mergedPts = isIncremental ? prevPts.concat(addPoints) : addPoints.slice();\n      }\n\n      map.set(key, {\n        ...prev,\n        ...card,\n        tritiumConcentration: this.tail(mergedPts, maxPoints),\n      });\n    });\n\n    return Array.from(map.values());\n  }\n\n  /** 取 qtc 系列数值：优先 topic，其次非空的 data / init_data */\n  pickQtcSeriesValues(seriesItem, topic) {\n    if (!seriesItem || typeof seriesItem !== 'object') {\n      return [];\n    }\n    const keys = topic ? [topic, 'data', 'init_data'] : ['data', 'init_data'];\n    let fallback = null;\n    for (let i = 0; i < keys.length; i += 1) {\n      const arr = seriesItem[keys[i]];\n      if (!Array.isArray(arr)) {\n        continue;\n      }\n      if (arr.length) {\n        return arr;\n      }\n      if (fallback == null) {\n        fallback = arr;\n      }\n    }\n    return fallback || [];\n  }\n\n  /** 裁剪 qtc：xAxis / data / init_data 对齐到最近窗口 */\n  trimQtc(qtc) {\n    const maxPoints = this.getMaxChartPoints();\n    const source = this.asObject(qtc);\n    const xAxis = this.asArray(source.xAxis);\n    const start = xAxis.length > maxPoints ? xAxis.length - maxPoints : 0;\n    const trimmedX = start > 0 ? xAxis.slice(start) : xAxis.slice();\n    const len = trimmedX.length;\n    const topic =\n      typeof source.topic === 'string' && source.topic.trim() !== ''\n        ? source.topic.trim()\n        : undefined;\n\n    return {\n      ...source,\n      xAxis: trimmedX,\n      legend: this.asArray(source.series)\n        .map((item) => (item && item.name != null ? String(item.name) : ''))\n        .filter(Boolean),\n      series: this.asArray(source.series).map((item) => {\n        if (!item || typeof item !== 'object') {\n          return item;\n        }\n        const next = { ...item };\n        const values = this.pickQtcSeriesValues(item, topic);\n        const aligned = values.length > start ? values.slice(start) : values.slice();\n        const synced = aligned.length > len ? aligned.slice(-len) : aligned;\n        if (Array.isArray(item.data) || topic === 'data' || !topic) {\n          next.data = synced;\n        }\n        if (Array.isArray(item.init_data) || topic === 'init_data') {\n          next.init_data = synced.slice();\n        }\n        if (!Array.isArray(next.data) && !Array.isArray(next.init_data)) {\n          next.data = synced;\n        }\n        return next;\n      }),\n    };\n  }\n\n  /**\n   * 合并 qtc（ws_data）\n   * - 短横轴增量：append 后裁窗\n   * - 整窗快照 / 系列名不重叠：直接替换\n   */\n  mergeQtc(prevQtc, incomingQtc) {\n    const prev = this.asObject(prevQtc);\n    const next = this.asObject(incomingQtc);\n    const nextX = this.asArray(next.xAxis);\n    if (!nextX.length) {\n      return this.trimQtc(prev);\n    }\n\n    const prevX = this.asArray(prev.xAxis);\n    const nextSeries = this.asArray(next.series);\n    const topic =\n      (typeof next.topic === 'string' && next.topic.trim()) ||\n      (typeof prev.topic === 'string' && prev.topic.trim()) ||\n      undefined;\n\n    const incomingValueLens = nextSeries.map((item) => this.pickQtcSeriesValues(item, topic).length);\n    const maxIncomingVals = incomingValueLens.length\n      ? Math.max.apply(null, incomingValueLens)\n      : 0;\n\n    const isIncremental =\n      prevX.length > 0 &&\n      nextX.length <= 5 &&\n      maxIncomingVals > 0 &&\n      maxIncomingVals <= nextX.length;\n\n    const prevNames = new Set(\n      this.asArray(prev.series)\n        .map((item) => (item && item.name != null ? String(item.name) : ''))\n        .filter(Boolean),\n    );\n    const hasNameOverlap = nextSeries.some(\n      (item) => item && item.name != null && prevNames.has(String(item.name)),\n    );\n\n    if (!isIncremental || !hasNameOverlap) {\n      return this.trimQtc({\n        ...prev,\n        ...next,\n        topic: topic || next.topic || prev.topic,\n        xAxis: nextX,\n        series: nextSeries.map((item) =>\n          item && typeof item === 'object' ? { ...item } : item,\n        ),\n      });\n    }\n\n    const mergedX = prevX.concat(nextX);\n    const seriesMap = new Map();\n\n    this.asArray(prev.series).forEach((item, i) => {\n      seriesMap.set(item && item.name != null ? String(item.name) : `s_${i}`, { ...item });\n    });\n\n    nextSeries.forEach((item, i) => {\n      const name = item && item.name != null ? String(item.name) : `s_${i}`;\n      const prevItem = seriesMap.get(name);\n      const addPts = this.pickQtcSeriesValues(item, topic);\n      if (!prevItem) {\n        const seeded = item && typeof item === 'object' ? { ...item } : { name };\n        const pts = addPts.slice();\n        seeded.data = pts;\n        seeded.init_data = pts.slice();\n        seriesMap.set(name, seeded);\n        return;\n      }\n      const mergedPts = this.pickQtcSeriesValues(prevItem, topic).concat(addPts);\n      const merged = { ...prevItem, ...item };\n      merged.data = mergedPts;\n      merged.init_data = mergedPts.slice();\n      seriesMap.set(name, merged);\n    });\n\n    return this.trimQtc({\n      ...prev,\n      ...next,\n      topic: topic || next.topic || prev.topic,\n      xAxis: mergedX,\n      series: Array.from(seriesMap.values()),\n    });\n  }\n\n  applyInitData(data) {\n    const payload = this.asObject(data);\n    this.setState({\n      effluentList: this.replaceList(payload.effluentList),\n      alertOverviewList: this.replaceList(payload.alertOverviewList),\n      monitoringList: this.trimMonitoring(payload.monitoringList),\n      operationLogList: this.replaceList(payload.operationLogList),\n      alarmList: this.replaceList(payload.alarmList),\n      inspectionList: this.replaceList(payload.inspectionList),\n      qtcList: this.trimQtc(payload.qtcList),\n    });\n  }\n\n  applyWsData(data) {\n    const payload = this.asObject(data);\n    if (!Object.keys(payload).length) {\n      return;\n    }\n\n    const s = this.state;\n    const next = {};\n\n    // 流出物：按槽位改 value，禁止 concat / 整表误清空\n    if (this.hasOwn(payload, 'effluentList')) {\n      next.effluentList = this.mergeEffluentList(s.effluentList, payload.effluentList);\n    }\n    // 整表覆盖（空数组表示当前无数据，如告警「正常」）\n    if (this.hasOwn(payload, 'alertOverviewList')) {\n      next.alertOverviewList = this.replaceList(payload.alertOverviewList);\n    }\n    if (this.hasOwn(payload, 'operationLogList')) {\n      next.operationLogList = this.replaceList(payload.operationLogList);\n    }\n    if (this.hasOwn(payload, 'alarmList')) {\n      next.alarmList = this.replaceList(payload.alarmList);\n    }\n    if (this.hasOwn(payload, 'inspectionList')) {\n      next.inspectionList = this.replaceList(payload.inspectionList);\n    }\n\n    // 监测卡：字段合并 + 折线拼接\n    if (this.hasOwn(payload, 'monitoringList')) {\n      next.monitoringList = this.mergeMonitoring(s.monitoringList, payload.monitoringList);\n    }\n\n    // qtc：增量拼接 / 整窗替换\n    if (this.hasOwn(payload, 'qtcList')) {\n      next.qtcList = this.mergeQtc(s.qtcList, payload.qtcList);\n    }\n\n    if (Object.keys(next).length) {\n      this.setState(next);\n    }\n  }\n\n  componentWillUnmount() {\n    if (this.ws) {\n      this.ws.onopen = null;\n      this.ws.onmessage = null;\n      this.ws.onerror = null;\n      this.ws.onclose = null;\n      this.ws.close();\n      this.ws = null;\n    }\n  }\n}\n",
+    "hidden": false,
+    "title": "",
+    "isLocked": false,
+    "condition": true,
+    "conditionGroup": "",
+    "state": {
+      "btnClass1": {
+        "type": "JSExpression",
+        "value": "'bottom-btn btn-background-click'"
+      },
+      "sceneIndex": {
+        "type": "JSExpression",
+        "value": "0"
+      },
+      "effluentList": {
+        "type": "JSExpression",
+        "value": "[]"
+      },
+      "alertOverviewList": {
+        "type": "JSExpression",
+        "value": "[]"
+      },
+      "monitoringList": {
+        "type": "JSExpression",
+        "value": "[]"
+      },
+      "operationLogList": {
+        "type": "JSExpression",
+        "value": "[]"
+      },
+      "alarmList": {
+        "type": "JSExpression",
+        "value": "[]"
+      },
+      "inspectionList": {
+        "type": "JSExpression",
+        "value": "[]"
+      },
+      "qtcList": {
+        "type": "JSExpression",
+        "value": "{}"
+      }
+    },
+    "methods": {
+      "handleWss": {
+        "type": "JSFunction",
+        "value": "function handleWss() {\n  this.ws = new WebSocket('ws://192.168.1.8:8088/api/ws/realtime');\n  this.ws.onopen = () => {\n    console.log('✅ WebSocket 连接已建立');\n  };\n  this.ws.onmessage = e => {\n    try {\n      const msg = JSON.parse(e.data);\n      if (!msg || !msg.data) {\n        return;\n      }\n      if (msg.topic === 'init_data') {\n        this.applyInitData(msg.data);\n        return;\n      }\n      if (msg.topic === 'ws_data') {\n        this.applyWsData(msg.data);\n      }\n    } catch (error) {\n      console.error('❌ 解析消息失败:', error);\n    }\n  };\n  this.ws.onerror = () => {};\n}",
+        "source": "function handleWss() {\n  this.ws = new WebSocket('ws://192.168.1.8:8088/api/ws/realtime');\n  this.ws.onopen = () => {\n    console.log('✅ WebSocket 连接已建立');\n  };\n  this.ws.onmessage = e => {\n    try {\n      const msg = JSON.parse(e.data);\n      if (!msg || !msg.data) {\n        return;\n      }\n      if (msg.topic === 'init_data') {\n        this.applyInitData(msg.data);\n        return;\n      }\n      if (msg.topic === 'ws_data') {\n        this.applyWsData(msg.data);\n      }\n    } catch (error) {\n      console.error('❌ 解析消息失败:', error);\n    }\n  };\n  this.ws.onerror = () => {};\n}"
+      },
+      "goX12": {
+        "type": "JSFunction",
+        "value": "function goX12(e, params) {\n  if (params && params.key === 1) {\n    this.setState({\n      btnClass1: 'bottom-btn btn-background-click',\n      sceneIndex: 1\n    });\n  }\n}",
+        "source": "function goX12(e, params) {\n  if (params && params.key === 1) {\n    this.setState({\n      btnClass1: 'bottom-btn btn-background-click',\n      sceneIndex: 1\n    });\n  }\n}"
+      },
+      "goHome": {
+        "type": "JSFunction",
+        "value": "function goHome() {\n  this.setState({\n    btnClass1: 'bottom-btn btn-background-click',\n    sceneIndex: 0\n  });\n}",
+        "source": "function goHome() {\n  this.setState({\n    btnClass1: 'bottom-btn btn-background-click',\n    sceneIndex: 0\n  });\n}"
+      },
+      "getMaxChartPoints": {
+        "type": "JSFunction",
+        "value": "function getMaxChartPoints() {\n  return 30 * 60;\n}",
+        "source": "function getMaxChartPoints() {\n  return 30 * 60;\n}"
+      },
+      "asArray": {
+        "type": "JSFunction",
+        "value": "function asArray(value) {\n  return Object.prototype.toString.call(value) === '[object Array]' ? value : [];\n}",
+        "source": "function asArray(value) {\n  return Object.prototype.toString.call(value) === '[object Array]' ? value : [];\n}"
+      },
+      "asObject": {
+        "type": "JSFunction",
+        "value": "function asObject(value) {\n  return Object.prototype.toString.call(value) === '[object Object]' ? value : {};\n}",
+        "source": "function asObject(value) {\n  return Object.prototype.toString.call(value) === '[object Object]' ? value : {};\n}"
+      },
+      "hasOwn": {
+        "type": "JSFunction",
+        "value": "function hasOwn(obj, key) {\n  return Object.prototype.hasOwnProperty.call(obj, key);\n}",
+        "source": "function hasOwn(obj, key) {\n  return Object.prototype.hasOwnProperty.call(obj, key);\n}"
+      },
+      "replaceList": {
+        "type": "JSFunction",
+        "value": "function replaceList(value) {\n  return this.asArray(value).slice();\n}",
+        "source": "function replaceList(value) {\n  return this.asArray(value).slice();\n}"
+      },
+      "tail": {
+        "type": "JSFunction",
+        "value": "function tail(list, max) {\n  const arr = this.asArray(list);\n  return arr.length > max ? arr.slice(-max) : arr;\n}",
+        "source": "function tail(list, max) {\n  const arr = this.asArray(list);\n  return arr.length > max ? arr.slice(-max) : arr;\n}"
+      },
+      "mergeEffluentList": {
+        "type": "JSFunction",
+        "value": "function mergeEffluentList(prevList, incomingList) {\n  const prev = this.asArray(prevList);\n  const incoming = this.asArray(incomingList);\n  if (!incoming.length) {\n    return prev;\n  }\n  if (!prev.length) {\n    return incoming.slice();\n  }\n  const next = prev.map(item => item && typeof item === 'object' ? {\n    ...item\n  } : item);\n  const used = {};\n  incoming.forEach((item, i) => {\n    if (!item || typeof item !== 'object') {\n      return;\n    }\n    let idx = -1;\n    if (item.id != null) {\n      idx = next.findIndex((row, rowIdx) => !used[rowIdx] && row && row.id == item.id);\n    }\n    if (idx < 0 && i < next.length && !used[i]) {\n      idx = i;\n    }\n    if (idx < 0) {\n      return;\n    }\n    used[idx] = true;\n    if (this.hasOwn(item, 'value')) {\n      next[idx].value = item.value;\n    }\n    if (this.hasOwn(item, 'arrow')) {\n      next[idx].arrow = item.arrow;\n    }\n  });\n  return next;\n}",
+        "source": "function mergeEffluentList(prevList, incomingList) {\n  const prev = this.asArray(prevList);\n  const incoming = this.asArray(incomingList);\n  if (!incoming.length) {\n    return prev;\n  }\n  if (!prev.length) {\n    return incoming.slice();\n  }\n  const next = prev.map(item => item && typeof item === 'object' ? {\n    ...item\n  } : item);\n  const used = {};\n  incoming.forEach((item, i) => {\n    if (!item || typeof item !== 'object') {\n      return;\n    }\n    let idx = -1;\n    if (item.id != null) {\n      idx = next.findIndex((row, rowIdx) => !used[rowIdx] && row && row.id == item.id);\n    }\n    if (idx < 0 && i < next.length && !used[i]) {\n      idx = i;\n    }\n    if (idx < 0) {\n      return;\n    }\n    used[idx] = true;\n    if (this.hasOwn(item, 'value')) {\n      next[idx].value = item.value;\n    }\n    if (this.hasOwn(item, 'arrow')) {\n      next[idx].arrow = item.arrow;\n    }\n  });\n  return next;\n}"
+      },
+      "getCardPoints": {
+        "type": "JSFunction",
+        "value": "function getCardPoints(card) {\n  if (!card || typeof card !== 'object') {\n    return [];\n  }\n  const points = card.tritiumConcentration != null ? card.tritiumConcentration : card.chart;\n  return this.asArray(points);\n}",
+        "source": "function getCardPoints(card) {\n  if (!card || typeof card !== 'object') {\n    return [];\n  }\n  const points = card.tritiumConcentration != null ? card.tritiumConcentration : card.chart;\n  return this.asArray(points);\n}"
+      },
+      "trimMonitoring": {
+        "type": "JSFunction",
+        "value": "function trimMonitoring(list) {\n  const maxPoints = this.getMaxChartPoints();\n  return this.asArray(list).map(card => {\n    if (!card || typeof card !== 'object') {\n      return card;\n    }\n    const points = this.getCardPoints(card);\n    if (!points.length && card.tritiumConcentration == null && card.chart == null) {\n      return card;\n    }\n    return {\n      ...card,\n      tritiumConcentration: this.tail(points, maxPoints)\n    };\n  });\n}",
+        "source": "function trimMonitoring(list) {\n  const maxPoints = this.getMaxChartPoints();\n  return this.asArray(list).map(card => {\n    if (!card || typeof card !== 'object') {\n      return card;\n    }\n    const points = this.getCardPoints(card);\n    if (!points.length && card.tritiumConcentration == null && card.chart == null) {\n      return card;\n    }\n    return {\n      ...card,\n      tritiumConcentration: this.tail(points, maxPoints)\n    };\n  });\n}"
+      },
+      "mergeMonitoring": {
+        "type": "JSFunction",
+        "value": "function mergeMonitoring(prevList, incomingList) {\n  const incoming = this.asArray(incomingList);\n  if (!incoming.length) {\n    return this.trimMonitoring(prevList);\n  }\n  const maxPoints = this.getMaxChartPoints();\n  const map = new Map();\n  this.asArray(prevList).forEach((card, i) => {\n    const key = card && card.id != null ? String(card.id) : `i_${i}`;\n    map.set(key, {\n      ...card,\n      tritiumConcentration: this.getCardPoints(card).slice()\n    });\n  });\n  incoming.forEach((card, i) => {\n    const key = card && card.id != null ? String(card.id) : `i_${i}`;\n    const addPoints = this.getCardPoints(card);\n    const prev = map.get(key);\n    if (!prev) {\n      map.set(key, {\n        ...card,\n        tritiumConcentration: this.tail(addPoints, maxPoints)\n      });\n      return;\n    }\n    const prevPts = this.asArray(prev.tritiumConcentration);\n    let mergedPts = prevPts;\n    if (addPoints.length) {\n      const isIncremental = prevPts.length > 0 && addPoints.length <= 5;\n      mergedPts = isIncremental ? prevPts.concat(addPoints) : addPoints.slice();\n    }\n    map.set(key, {\n      ...prev,\n      ...card,\n      tritiumConcentration: this.tail(mergedPts, maxPoints)\n    });\n  });\n  return Array.from(map.values());\n}",
+        "source": "function mergeMonitoring(prevList, incomingList) {\n  const incoming = this.asArray(incomingList);\n  if (!incoming.length) {\n    return this.trimMonitoring(prevList);\n  }\n  const maxPoints = this.getMaxChartPoints();\n  const map = new Map();\n  this.asArray(prevList).forEach((card, i) => {\n    const key = card && card.id != null ? String(card.id) : `i_${i}`;\n    map.set(key, {\n      ...card,\n      tritiumConcentration: this.getCardPoints(card).slice()\n    });\n  });\n  incoming.forEach((card, i) => {\n    const key = card && card.id != null ? String(card.id) : `i_${i}`;\n    const addPoints = this.getCardPoints(card);\n    const prev = map.get(key);\n    if (!prev) {\n      map.set(key, {\n        ...card,\n        tritiumConcentration: this.tail(addPoints, maxPoints)\n      });\n      return;\n    }\n    const prevPts = this.asArray(prev.tritiumConcentration);\n    let mergedPts = prevPts;\n    if (addPoints.length) {\n      const isIncremental = prevPts.length > 0 && addPoints.length <= 5;\n      mergedPts = isIncremental ? prevPts.concat(addPoints) : addPoints.slice();\n    }\n    map.set(key, {\n      ...prev,\n      ...card,\n      tritiumConcentration: this.tail(mergedPts, maxPoints)\n    });\n  });\n  return Array.from(map.values());\n}"
+      },
+      "pickQtcSeriesValues": {
+        "type": "JSFunction",
+        "value": "function pickQtcSeriesValues(seriesItem, topic) {\n  if (!seriesItem || typeof seriesItem !== 'object') {\n    return [];\n  }\n  const keys = topic ? [topic, 'data', 'init_data'] : ['data', 'init_data'];\n  let fallback = null;\n  for (let i = 0; i < keys.length; i += 1) {\n    const arr = seriesItem[keys[i]];\n    if (!Array.isArray(arr)) {\n      continue;\n    }\n    if (arr.length) {\n      return arr;\n    }\n    if (fallback == null) {\n      fallback = arr;\n    }\n  }\n  return fallback || [];\n}",
+        "source": "function pickQtcSeriesValues(seriesItem, topic) {\n  if (!seriesItem || typeof seriesItem !== 'object') {\n    return [];\n  }\n  const keys = topic ? [topic, 'data', 'init_data'] : ['data', 'init_data'];\n  let fallback = null;\n  for (let i = 0; i < keys.length; i += 1) {\n    const arr = seriesItem[keys[i]];\n    if (!Array.isArray(arr)) {\n      continue;\n    }\n    if (arr.length) {\n      return arr;\n    }\n    if (fallback == null) {\n      fallback = arr;\n    }\n  }\n  return fallback || [];\n}"
+      },
+      "trimQtc": {
+        "type": "JSFunction",
+        "value": "function trimQtc(qtc) {\n  const maxPoints = this.getMaxChartPoints();\n  const source = this.asObject(qtc);\n  const xAxis = this.asArray(source.xAxis);\n  const start = xAxis.length > maxPoints ? xAxis.length - maxPoints : 0;\n  const trimmedX = start > 0 ? xAxis.slice(start) : xAxis.slice();\n  const len = trimmedX.length;\n  const topic = typeof source.topic === 'string' && source.topic.trim() !== '' ? source.topic.trim() : undefined;\n  return {\n    ...source,\n    xAxis: trimmedX,\n    legend: this.asArray(source.series).map(item => item && item.name != null ? String(item.name) : '').filter(Boolean),\n    series: this.asArray(source.series).map(item => {\n      if (!item || typeof item !== 'object') {\n        return item;\n      }\n      const next = {\n        ...item\n      };\n      const values = this.pickQtcSeriesValues(item, topic);\n      const aligned = values.length > start ? values.slice(start) : values.slice();\n      const synced = aligned.length > len ? aligned.slice(-len) : aligned;\n      if (Array.isArray(item.data) || topic === 'data' || !topic) {\n        next.data = synced;\n      }\n      if (Array.isArray(item.init_data) || topic === 'init_data') {\n        next.init_data = synced.slice();\n      }\n      if (!Array.isArray(next.data) && !Array.isArray(next.init_data)) {\n        next.data = synced;\n      }\n      return next;\n    })\n  };\n}",
+        "source": "function trimQtc(qtc) {\n  const maxPoints = this.getMaxChartPoints();\n  const source = this.asObject(qtc);\n  const xAxis = this.asArray(source.xAxis);\n  const start = xAxis.length > maxPoints ? xAxis.length - maxPoints : 0;\n  const trimmedX = start > 0 ? xAxis.slice(start) : xAxis.slice();\n  const len = trimmedX.length;\n  const topic = typeof source.topic === 'string' && source.topic.trim() !== '' ? source.topic.trim() : undefined;\n  return {\n    ...source,\n    xAxis: trimmedX,\n    legend: this.asArray(source.series).map(item => item && item.name != null ? String(item.name) : '').filter(Boolean),\n    series: this.asArray(source.series).map(item => {\n      if (!item || typeof item !== 'object') {\n        return item;\n      }\n      const next = {\n        ...item\n      };\n      const values = this.pickQtcSeriesValues(item, topic);\n      const aligned = values.length > start ? values.slice(start) : values.slice();\n      const synced = aligned.length > len ? aligned.slice(-len) : aligned;\n      if (Array.isArray(item.data) || topic === 'data' || !topic) {\n        next.data = synced;\n      }\n      if (Array.isArray(item.init_data) || topic === 'init_data') {\n        next.init_data = synced.slice();\n      }\n      if (!Array.isArray(next.data) && !Array.isArray(next.init_data)) {\n        next.data = synced;\n      }\n      return next;\n    })\n  };\n}"
+      },
+      "mergeQtc": {
+        "type": "JSFunction",
+        "value": "function mergeQtc(prevQtc, incomingQtc) {\n  const prev = this.asObject(prevQtc);\n  const next = this.asObject(incomingQtc);\n  const nextX = this.asArray(next.xAxis);\n  if (!nextX.length) {\n    return this.trimQtc(prev);\n  }\n  const prevX = this.asArray(prev.xAxis);\n  const nextSeries = this.asArray(next.series);\n  const topic = typeof next.topic === 'string' && next.topic.trim() || typeof prev.topic === 'string' && prev.topic.trim() || undefined;\n  const incomingValueLens = nextSeries.map(item => this.pickQtcSeriesValues(item, topic).length);\n  const maxIncomingVals = incomingValueLens.length ? Math.max.apply(null, incomingValueLens) : 0;\n  const isIncremental = prevX.length > 0 && nextX.length <= 5 && maxIncomingVals > 0 && maxIncomingVals <= nextX.length;\n  const prevNames = new Set(this.asArray(prev.series).map(item => item && item.name != null ? String(item.name) : '').filter(Boolean));\n  const hasNameOverlap = nextSeries.some(item => item && item.name != null && prevNames.has(String(item.name)));\n  if (!isIncremental || !hasNameOverlap) {\n    return this.trimQtc({\n      ...prev,\n      ...next,\n      topic: topic || next.topic || prev.topic,\n      xAxis: nextX,\n      series: nextSeries.map(item => item && typeof item === 'object' ? {\n        ...item\n      } : item)\n    });\n  }\n  const mergedX = prevX.concat(nextX);\n  const seriesMap = new Map();\n  this.asArray(prev.series).forEach((item, i) => {\n    seriesMap.set(item && item.name != null ? String(item.name) : `s_${i}`, {\n      ...item\n    });\n  });\n  nextSeries.forEach((item, i) => {\n    const name = item && item.name != null ? String(item.name) : `s_${i}`;\n    const prevItem = seriesMap.get(name);\n    const addPts = this.pickQtcSeriesValues(item, topic);\n    if (!prevItem) {\n      const seeded = item && typeof item === 'object' ? {\n        ...item\n      } : {\n        name\n      };\n      const pts = addPts.slice();\n      seeded.data = pts;\n      seeded.init_data = pts.slice();\n      seriesMap.set(name, seeded);\n      return;\n    }\n    const mergedPts = this.pickQtcSeriesValues(prevItem, topic).concat(addPts);\n    const merged = {\n      ...prevItem,\n      ...item\n    };\n    merged.data = mergedPts;\n    merged.init_data = mergedPts.slice();\n    seriesMap.set(name, merged);\n  });\n  return this.trimQtc({\n    ...prev,\n    ...next,\n    topic: topic || next.topic || prev.topic,\n    xAxis: mergedX,\n    series: Array.from(seriesMap.values())\n  });\n}",
+        "source": "function mergeQtc(prevQtc, incomingQtc) {\n  const prev = this.asObject(prevQtc);\n  const next = this.asObject(incomingQtc);\n  const nextX = this.asArray(next.xAxis);\n  if (!nextX.length) {\n    return this.trimQtc(prev);\n  }\n  const prevX = this.asArray(prev.xAxis);\n  const nextSeries = this.asArray(next.series);\n  const topic = typeof next.topic === 'string' && next.topic.trim() || typeof prev.topic === 'string' && prev.topic.trim() || undefined;\n  const incomingValueLens = nextSeries.map(item => this.pickQtcSeriesValues(item, topic).length);\n  const maxIncomingVals = incomingValueLens.length ? Math.max.apply(null, incomingValueLens) : 0;\n  const isIncremental = prevX.length > 0 && nextX.length <= 5 && maxIncomingVals > 0 && maxIncomingVals <= nextX.length;\n  const prevNames = new Set(this.asArray(prev.series).map(item => item && item.name != null ? String(item.name) : '').filter(Boolean));\n  const hasNameOverlap = nextSeries.some(item => item && item.name != null && prevNames.has(String(item.name)));\n  if (!isIncremental || !hasNameOverlap) {\n    return this.trimQtc({\n      ...prev,\n      ...next,\n      topic: topic || next.topic || prev.topic,\n      xAxis: nextX,\n      series: nextSeries.map(item => item && typeof item === 'object' ? {\n        ...item\n      } : item)\n    });\n  }\n  const mergedX = prevX.concat(nextX);\n  const seriesMap = new Map();\n  this.asArray(prev.series).forEach((item, i) => {\n    seriesMap.set(item && item.name != null ? String(item.name) : `s_${i}`, {\n      ...item\n    });\n  });\n  nextSeries.forEach((item, i) => {\n    const name = item && item.name != null ? String(item.name) : `s_${i}`;\n    const prevItem = seriesMap.get(name);\n    const addPts = this.pickQtcSeriesValues(item, topic);\n    if (!prevItem) {\n      const seeded = item && typeof item === 'object' ? {\n        ...item\n      } : {\n        name\n      };\n      const pts = addPts.slice();\n      seeded.data = pts;\n      seeded.init_data = pts.slice();\n      seriesMap.set(name, seeded);\n      return;\n    }\n    const mergedPts = this.pickQtcSeriesValues(prevItem, topic).concat(addPts);\n    const merged = {\n      ...prevItem,\n      ...item\n    };\n    merged.data = mergedPts;\n    merged.init_data = mergedPts.slice();\n    seriesMap.set(name, merged);\n  });\n  return this.trimQtc({\n    ...prev,\n    ...next,\n    topic: topic || next.topic || prev.topic,\n    xAxis: mergedX,\n    series: Array.from(seriesMap.values())\n  });\n}"
+      },
+      "applyInitData": {
+        "type": "JSFunction",
+        "value": "function applyInitData(data) {\n  const payload = this.asObject(data);\n  this.setState({\n    effluentList: this.replaceList(payload.effluentList),\n    alertOverviewList: this.replaceList(payload.alertOverviewList),\n    monitoringList: this.trimMonitoring(payload.monitoringList),\n    operationLogList: this.replaceList(payload.operationLogList),\n    alarmList: this.replaceList(payload.alarmList),\n    inspectionList: this.replaceList(payload.inspectionList),\n    qtcList: this.trimQtc(payload.qtcList)\n  });\n}",
+        "source": "function applyInitData(data) {\n  const payload = this.asObject(data);\n  this.setState({\n    effluentList: this.replaceList(payload.effluentList),\n    alertOverviewList: this.replaceList(payload.alertOverviewList),\n    monitoringList: this.trimMonitoring(payload.monitoringList),\n    operationLogList: this.replaceList(payload.operationLogList),\n    alarmList: this.replaceList(payload.alarmList),\n    inspectionList: this.replaceList(payload.inspectionList),\n    qtcList: this.trimQtc(payload.qtcList)\n  });\n}"
+      },
+      "applyWsData": {
+        "type": "JSFunction",
+        "value": "function applyWsData(data) {\n  const payload = this.asObject(data);\n  if (!Object.keys(payload).length) {\n    return;\n  }\n  const s = this.state;\n  const next = {};\n\n  // 流出物：按槽位改 value，禁止 concat / 整表误清空\n  if (this.hasOwn(payload, 'effluentList')) {\n    next.effluentList = this.mergeEffluentList(s.effluentList, payload.effluentList);\n  }\n  // 整表覆盖（空数组表示当前无数据，如告警「正常」）\n  if (this.hasOwn(payload, 'alertOverviewList')) {\n    next.alertOverviewList = this.replaceList(payload.alertOverviewList);\n  }\n  if (this.hasOwn(payload, 'operationLogList')) {\n    next.operationLogList = this.replaceList(payload.operationLogList);\n  }\n  if (this.hasOwn(payload, 'alarmList')) {\n    next.alarmList = this.replaceList(payload.alarmList);\n  }\n  if (this.hasOwn(payload, 'inspectionList')) {\n    next.inspectionList = this.replaceList(payload.inspectionList);\n  }\n\n  // 监测卡：字段合并 + 折线拼接\n  if (this.hasOwn(payload, 'monitoringList')) {\n    next.monitoringList = this.mergeMonitoring(s.monitoringList, payload.monitoringList);\n  }\n\n  // qtc：增量拼接 / 整窗替换\n  if (this.hasOwn(payload, 'qtcList')) {\n    next.qtcList = this.mergeQtc(s.qtcList, payload.qtcList);\n  }\n  if (Object.keys(next).length) {\n    this.setState(next);\n  }\n}",
+        "source": "function applyWsData(data) {\n  const payload = this.asObject(data);\n  if (!Object.keys(payload).length) {\n    return;\n  }\n  const s = this.state;\n  const next = {};\n\n  // 流出物：按槽位改 value，禁止 concat / 整表误清空\n  if (this.hasOwn(payload, 'effluentList')) {\n    next.effluentList = this.mergeEffluentList(s.effluentList, payload.effluentList);\n  }\n  // 整表覆盖（空数组表示当前无数据，如告警「正常」）\n  if (this.hasOwn(payload, 'alertOverviewList')) {\n    next.alertOverviewList = this.replaceList(payload.alertOverviewList);\n  }\n  if (this.hasOwn(payload, 'operationLogList')) {\n    next.operationLogList = this.replaceList(payload.operationLogList);\n  }\n  if (this.hasOwn(payload, 'alarmList')) {\n    next.alarmList = this.replaceList(payload.alarmList);\n  }\n  if (this.hasOwn(payload, 'inspectionList')) {\n    next.inspectionList = this.replaceList(payload.inspectionList);\n  }\n\n  // 监测卡：字段合并 + 折线拼接\n  if (this.hasOwn(payload, 'monitoringList')) {\n    next.monitoringList = this.mergeMonitoring(s.monitoringList, payload.monitoringList);\n  }\n\n  // qtc：增量拼接 / 整窗替换\n  if (this.hasOwn(payload, 'qtcList')) {\n    next.qtcList = this.mergeQtc(s.qtcList, payload.qtcList);\n  }\n  if (Object.keys(next).length) {\n    this.setState(next);\n  }\n}"
+      }
+    },
+    "lifeCycles": {
+      "componentDidMount": {
+        "type": "JSFunction",
+        "value": "function componentDidMount() {\n  this.handleWss();\n}",
+        "source": "function componentDidMount() {\n  this.handleWss();\n}"
+      },
+      "componentWillUnmount": {
+        "type": "JSFunction",
+        "value": "function componentWillUnmount() {\n  if (this.ws) {\n    this.ws.onopen = null;\n    this.ws.onmessage = null;\n    this.ws.onerror = null;\n    this.ws.onclose = null;\n    this.ws.close();\n    this.ws = null;\n  }\n}",
+        "source": "function componentWillUnmount() {\n  if (this.ws) {\n    this.ws.onopen = null;\n    this.ws.onmessage = null;\n    this.ws.onerror = null;\n    this.ws.onclose = null;\n    this.ws.close();\n    this.ws = null;\n  }\n}"
+      }
+    },
+    "children": [
+      {
+        "componentName": "FontInsert",
+        "id": "node_ocm46df8ze1",
+        "props": {
+          "fontName": "庞门正道标题体",
+          "path": "/simu/static/font/庞门正道标题体.ttf",
+          "type": "ttf",
+          "ref": "fontinsert-6dbace17"
+        },
+        "hidden": false,
+        "title": "",
+        "isLocked": false,
+        "condition": true,
+        "conditionGroup": "",
+        "loopArgs": [
+          "",
+          ""
+        ]
+      },
+      {
+        "componentName": "TopDivWithBackGroundImg",
+        "id": "node_ocm5noi5off",
+        "props": {
+          "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/07/header_bg_2.webp",
+          "filePropName": "backgroundImgUrl",
+          "divWidth": "100vw",
+          "divHeight": "106px",
+          "title": "",
+          "hasSubTitle": false,
+          "fontSize": 48,
+          "backgroundthemeImg": "./static/img/top5.png",
+          "innerBackgroundColor": "linear-gradient(180deg,rgba(0, 0, 0, 0.95) 0%,rgba(0, 0, 0, 0) 100%)",
+          "isLittleContainer": false,
+          "fontColor": "#ffffff",
+          "top": -20,
+          "isfontGradient": false,
+          "fontColors": [
+            "#f4f4f4",
+            "#e3e1eb",
+            "#79aaed",
+            "#0271ed"
+          ],
+          "angle": 180,
+          "justifyContent": "center",
+          "style": {
+            "zIndex": "0"
+          },
+          "ref": "topdivwithbackgroundimg-b1704226",
+          "fontWeight": "normal",
+          "key": {
+            "type": "JSExpression"
+          },
+          "_unsafe_MixedSetter____condition____select": "BoolSetter",
+          "_unsafe_MixedSetter_key_select": "VariableSetter"
+        },
+        "hidden": false,
+        "title": "",
+        "isLocked": false,
+        "condition": true,
+        "conditionGroup": "",
+        "loopArgs": [
+          "",
+          ""
+        ]
+      },
+      {
+        "componentName": "Button",
+        "id": "node_ocmrbyps1e4",
+        "props": {
+          "prefix": "next-",
+          "type": "normal",
+          "size": "medium",
+          "htmlType": "button",
+          "component": "button",
+          "children": "",
+          "iconSize": "xxs",
+          "loading": false,
+          "text": true,
+          "warning": false,
+          "disabled": false,
+          "style": {
+            "width": "34px",
+            "height": "34px",
+            "padding": "5px",
+            "position": "absolute",
+            "top": "80px",
+            "left": "20px",
+            "backgroundSize": "cover",
+            "zIndex": "10",
+            "backgroundImage": "url(https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/07/back__x.webp)"
+          },
+          "__events": {
+            "eventDataList": [
+              {
+                "type": "componentEvent",
+                "name": "onClick",
+                "relatedEventName": "goHome",
+                "paramStr": "{\n \t \"testKey\":1\n}"
+              }
+            ],
+            "eventList": [
+              {
+                "name": "onClick",
+                "description": "点击按钮的回调\n@param {Object} e Event Object",
+                "disabled": true
+              },
+              {
+                "name": "onMouseUp",
+                "disabled": false
+              }
+            ]
+          },
+          "onClick": {
+            "type": "JSFunction",
+            "value": "function(){return this.goHome.apply(this,Array.prototype.slice.call(arguments).concat([{\n \t \"testKey\":1\n}])) }"
+          },
+          "ref": "button-e3f59042",
+          "_unsafe_MixedSetter____condition____select": "VariableSetter",
+          "ghost": false
+        },
+        "hidden": false,
+        "title": "返回按钮",
+        "isLocked": false,
+        "condition": {
+          "type": "JSExpression",
+          "value": "this.state.sceneIndex === 1"
+        },
+        "conditionGroup": "",
+        "loopArgs": [
+          "",
+          ""
+        ]
+      },
+      {
+        "componentName": "SocketCenter",
+        "id": "node_ocmrhpqwgl1",
+        "props": {
+          "url": "",
+          "ref": "socketcenter-c685a955"
+        },
+        "hidden": false,
+        "title": "",
+        "isLocked": false,
+        "condition": true,
+        "conditionGroup": "",
+        "loopArgs": [
+          "",
+          ""
+        ]
+      },
+      {
+        "componentName": "Box",
+        "id": "node_ocm5q2jxgq1",
+        "props": {
+          "direction": "column",
+          "style": {
+            "flexDirection": "column-reverse",
+            "alignItems": "center",
+            "justifyContent": "center",
+            "flexWrap": "nowrap",
+            "position": "absolute",
+            "bottom": "24px",
+            "left": "46%",
+            "width": ""
+          },
+          "justify": "center",
+          "align": "center",
+          "className": "bottom-btn-box",
+          "ref": "box-7e7f7a8b"
+        },
+        "hidden": false,
+        "title": "厂房按钮",
+        "isLocked": false,
+        "condition": true,
+        "conditionGroup": "",
+        "children": [
+          {
+            "componentName": "Button",
+            "id": "node_ocm5q2knbw2",
+            "props": {
+              "prefix": "next-",
+              "type": "primary",
+              "size": "medium",
+              "htmlType": "button",
+              "component": "button",
+              "children": "X12",
+              "iconSize": "xxs",
+              "loading": false,
+              "text": false,
+              "warning": false,
+              "disabled": false,
+              "className": {
+                "type": "JSExpression",
+                "value": "this.state.btnClass1"
+              },
+              "__events": {
+                "eventDataList": [
+                  {
+                    "type": "componentEvent",
+                    "name": "onClick",
+                    "relatedEventName": "goX12",
+                    "paramStr": "{\n \t \"key\": 1\n}"
+                  }
+                ],
+                "eventList": [
+                  {
+                    "name": "onClick",
+                    "description": "点击按钮的回调\n@param {Object} e Event Object",
+                    "disabled": true
+                  },
+                  {
+                    "name": "onMouseUp",
+                    "disabled": false
+                  }
+                ]
+              },
+              "onClick": {
+                "type": "JSFunction",
+                "value": "function(){return this.goX12.apply(this,Array.prototype.slice.call(arguments).concat([{\n \t \"key\": 1\n}])) }"
+              },
+              "ref": "button-12993955",
+              "style": {
+                "width": "107px",
+                "height": "50px",
+                "border": "null"
+              },
+              "_unsafe_MixedSetter____condition____select": "VariableSetter",
+              "ghost": false
+            },
+            "hidden": false,
+            "title": "",
+            "isLocked": false,
+            "condition": {
+              "type": "JSExpression",
+              "value": "this.state.sceneIndex === 0"
+            },
+            "conditionGroup": "",
+            "loopArgs": [
+              "",
+              ""
+            ]
+          }
+        ]
+      },
+      {
+        "componentName": "Box",
+        "id": "node_ocm3zadyec1",
+        "props": {
+          "direction": "column",
+          "style": {
+            "width": "100%",
+            "height": "100vh",
+            "backgroundSize": "cover",
+            "backgroundImage": "url(https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/07/去除图片厂房.png)"
+          },
+          "justify": "flex-start",
+          "align": "center",
+          "ref": "box-84a8bef1"
+        },
+        "hidden": false,
+        "title": "",
+        "isLocked": false,
+        "condition": true,
+        "conditionGroup": "",
+        "children": [
+          {
+            "componentName": "Box",
+            "id": "node_ocm3cqfjxp4",
+            "props": {
+              "direction": "row",
+              "style": {
+                "width": "100%",
+                "height": "100%"
+              },
+              "justify": "space-between",
+              "align": "flex-start",
+              "ref": "box-772b2bc3"
+            },
+            "hidden": false,
+            "title": "",
+            "isLocked": false,
+            "condition": true,
+            "conditionGroup": "",
+            "children": [
+              {
+                "componentName": "Box",
+                "id": "node_ocmra2x7jpu",
+                "props": {
+                  "direction": "column",
+                  "style": {
+                    "height": "100%",
+                    "paddingTop": "121px",
+                    "paddingLeft": "20px",
+                    "width": "671px",
+                    "background": "linear-gradient(\n    to right,                      /* 从左到右 */\n    rgba(0, 0, 0, 0.8) 0%,\n    rgba(0, 0, 0, 0.38) 52.54%,\n    rgba(138, 138, 138, 0) 100%\n  )"
+                  },
+                  "justify": "space-between",
+                  "align": "flex-start",
+                  "ref": "box-257d1943",
+                  "_unsafe_MixedSetter____condition____select": "VariableSetter"
+                },
+                "hidden": false,
+                "title": "全局概览-左侧",
+                "isLocked": false,
+                "condition": {
+                  "type": "JSExpression",
+                  "value": "this.state.sceneIndex === 0"
+                },
+                "conditionGroup": "",
+                "children": [
+                  {
+                    "componentName": "IndexBoxContainer",
+                    "id": "node_ocmra2x7jpv",
+                    "props": {
+                      "backgroundImgUrl": "./static/screenImg/index-box-bg.png",
+                      "filePropName": "backgroundImgUrl",
+                      "divWidth": "400px",
+                      "divHeight": "14vh",
+                      "title": "这是一段title文本",
+                      "position": "relative",
+                      "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
+                      "IndexBoxContainer": [
+                        "浙江正泰电缆有限公司",
+                        "陕西正泰电缆有限公司",
+                        "山东正泰电缆有限公司"
+                      ],
+                      "absolutePosi": "0,0,0,0",
+                      "style": {
+                        "marginBottom": "16px",
+                        "backgroundSize": "inherit",
+                        "display": "flex",
+                        "background": "rgba(4,32,59,0.28)",
+                        "backdropFilter": "blur(10px)"
+                      },
+                      "ref": "indexboxcontainer-2e5bacec"
+                    },
+                    "hidden": false,
+                    "title": "数据监测",
+                    "isLocked": false,
+                    "condition": true,
+                    "conditionGroup": "",
+                    "loopArgs": [
+                      "",
+                      ""
+                    ],
+                    "children": [
+                      {
+                        "componentName": "TopDivWithBackGroundImg",
+                        "id": "node_ocmra2x7jpw",
+                        "props": {
+                          "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/06/title_bg_1x.webp",
+                          "filePropName": "backgroundImgUrl",
+                          "divWidth": "",
+                          "divHeight": "40px",
+                          "title": "X12流出物",
+                          "fontSize": 20,
+                          "fontWeight": "normal",
+                          "backgroundLittleUrl": "",
+                          "innerBackgroundColor": "rgba(0, 0, 0, 0)",
+                          "isLittleContainer": true,
+                          "fontColor": "#fff",
+                          "justifyContent": "left",
+                          "marginLeft": 24,
+                          "hasSubTitle": false,
+                          "style": {
+                            "fontFamily": "\"庞门正道标题体\"",
+                            "letterSpacing": "2px"
+                          },
+                          "isfontGradient": false,
+                          "fontColors": {
+                            "type": "JSExpression",
+                            "value": "this.state.fontLineGradient"
+                          },
+                          "angle": 180,
+                          "_unsafe_MixedSetter_fontColors_select": "ExpressionSetter",
+                          "ref": "topdivwithbackgroundimg-58e497f9"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "loopArgs": [
+                          "",
+                          ""
+                        ]
+                      },
+                      {
+                        "componentName": "Box",
+                        "id": "node_ocmra2x7jpx",
+                        "props": {
+                          "direction": "column",
+                          "style": {
+                            "height": "calc(100% - 40px)",
+                            "padding": "16px 12px",
+                            "width": "100%"
+                          },
+                          "justify": "center",
+                          "align": "center",
+                          "ref": "box-c393c665"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "children": [
+                          {
+                            "componentName": "Effluent",
+                            "id": "node_ocmraemdrm1",
+                            "props": {
+                              "height": 62,
+                              "dataType": "data",
+                              "width": 376,
+                              "baseFetchUri": "/tenant-api/humerus/api/dashboard/data/execute/:id",
+                              "baseWsUri": "",
+                              "token": "",
+                              "data": {
+                                "type": "JSExpression",
+                                "value": "this.state.effluentList",
+                                "mock": [
+                                  {
+                                    "id": 1,
+                                    "label": "全排",
+                                    "value": 1.2,
+                                    "trend": "up"
+                                  },
+                                  {
+                                    "id": 2,
+                                    "label": "特排",
+                                    "value": 1.2,
+                                    "trend": "flat"
+                                  },
+                                  {
+                                    "id": 3,
+                                    "label": "局排",
+                                    "value": 1.2,
+                                    "trend": "down"
+                                  },
+                                  {
+                                    "id": 4,
+                                    "label": "特排",
+                                    "value": 1.2,
+                                    "trend": "flat"
+                                  }
+                                ]
+                              },
+                              "labelField": "label",
+                              "valueField": "value",
+                              "trendField": "trend",
+                              "ref": "effluent-cbddb1a0",
+                              "nameField": "name",
+                              "thresholdField": "threshold",
+                              "arrowField": "arrow"
+                            },
+                            "hidden": false,
+                            "title": "",
+                            "isLocked": false,
+                            "condition": true,
+                            "conditionGroup": "",
+                            "loopArgs": [
+                              "",
+                              ""
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "componentName": "Box",
+                "id": "node_ocmra2x7jpf",
+                "props": {
+                  "direction": "column",
+                  "style": {
+                    "height": "100%",
+                    "paddingTop": "121px",
+                    "paddingRight": "20px",
+                    "width": "671px",
+                    "background": "linear-gradient(\n    to left,                    \n    rgba(0, 0, 0, 0.8) 0%,\n    rgba(0, 0, 0, 0.38) 52.54%,\n    rgba(138, 138, 138, 0) 100%\n  )"
+                  },
+                  "justify": "space-between",
+                  "align": "flex-end",
+                  "ref": "box-c5cd8c55",
+                  "_unsafe_MixedSetter____condition____select": "VariableSetter"
+                },
+                "hidden": false,
+                "title": "全局概览-右侧",
+                "isLocked": false,
+                "condition": {
+                  "type": "JSExpression",
+                  "value": "this.state.sceneIndex === 0"
+                },
+                "conditionGroup": "",
+                "children": [
+                  {
+                    "componentName": "IndexBoxContainer",
+                    "id": "node_ocmra2x7jpg",
+                    "props": {
+                      "backgroundImgUrl": "",
+                      "filePropName": "backgroundImgUrl",
+                      "divWidth": "400px",
+                      "divHeight": "3vh",
+                      "title": "这是一段title文本",
+                      "position": "relative",
+                      "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
+                      "IndexBoxContainer": [
+                        "浙江正泰电缆有限公司",
+                        "陕西正泰电缆有限公司",
+                        "山东正泰电缆有限公司"
+                      ],
+                      "absolutePosi": "",
+                      "style": {
+                        "marginTop": "-50px",
+                        "marginBottom": "16px",
+                        "paddingBottom": "0px",
+                        "backgroundSize": "inherit",
+                        "display": "flex",
+                        "flexDirection": "row-reverse"
+                      },
+                      "ref": "indexboxcontainer-08e101f1"
+                    },
+                    "hidden": false,
+                    "title": "日期组件",
+                    "isLocked": false,
+                    "condition": true,
+                    "conditionGroup": "",
+                    "loopArgs": [
+                      "",
+                      ""
+                    ],
+                    "children": [
+                      {
+                        "componentName": "HeaderDate",
+                        "id": "node_ocmra2x7jph",
+                        "props": {
+                          "height": 32,
+                          "dataType": "data",
+                          "width": 200,
+                          "baseFetchUri": "/tenant-api/humerus/api/dashboard/data/execute/:id",
+                          "baseWsUri": "wss://spring.space.czy3d.com/iot/open/api/ws",
+                          "token": "21CE4D20DF8E404DAF52DF2D69DA02B2",
+                          "dateText": "2026年3月8日",
+                          "weekText": "星期日",
+                          "data": {
+                            "dateText": "2026年3月8日",
+                            "weekText": "星期日"
+                          },
+                          "dateField": "dateText",
+                          "weekField": "weekText",
+                          "autoUpdate": false,
+                          "ref": "headerdate-ef9e5d4a"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "loopArgs": [
+                          "",
+                          ""
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "componentName": "IndexBoxContainer",
+                    "id": "node_ocmra2x7jpi",
+                    "props": {
+                      "backgroundImgUrl": "./static/screenImg/index-box-bg.png",
+                      "filePropName": "backgroundImgUrl",
+                      "divWidth": "376px",
+                      "divHeight": "14h",
+                      "title": "这是一段title文本",
+                      "position": "absolute",
+                      "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
+                      "IndexBoxContainer": [
+                        "浙江正泰电缆有限公司",
+                        "陕西正泰电缆有限公司",
+                        "山东正泰电缆有限公司"
+                      ],
+                      "absolutePosi": "",
+                      "style": {
+                        "padding": "16px 12px",
+                        "flexDirection": "row",
+                        "background": "rgba(4,32,59,0.28)",
+                        "backdropFilter": "blur(10px)",
+                        "alignItems": "flex-start",
+                        "display": "flex"
+                      },
+                      "ref": "indexboxcontainer-08e101f1"
+                    },
+                    "hidden": false,
+                    "title": "",
+                    "isLocked": false,
+                    "condition": true,
+                    "conditionGroup": "",
+                    "loopArgs": [
+                      "",
+                      ""
+                    ],
+                    "children": [
+                      {
+                        "componentName": "AlarmStatusOverview",
+                        "id": "node_ocmrrxg1l73",
+                        "props": {
+                          "height": 100,
+                          "dataType": "data",
+                          "width": 400,
+                          "baseFetchUri": "/tenant-api/humerus/api/dashboard/data/execute/:id",
+                          "baseWsUri": "",
+                          "token": "",
+                          "data": {
+                            "type": "JSExpression",
+                            "value": "this.state.alertOverviewList",
+                            "mock": [
+                              {
+                                "id": 1,
+                                "name": "X03",
+                                "status": "normal"
+                              },
+                              {
+                                "id": 2,
+                                "name": "X06",
+                                "status": "normal"
+                              },
+                              {
+                                "id": 3,
+                                "name": "X12",
+                                "status": "alarm",
+                                "emergency": 3,
+                                "severe": 2,
+                                "general": 10
+                              }
+                            ]
+                          },
+                          "nameField": "name",
+                          "statusField": "status",
+                          "emergencyField": "emergency",
+                          "severeField": "severe",
+                          "generalField": "general",
+                          "itemHeight": 98,
+                          "gap": 12,
+                          "ref": "alarmstatusoverview-e5f0a38e"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "loopArgs": [
+                          "",
+                          ""
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "componentName": "Box",
+                "id": "node_ocmqhfpx251",
+                "props": {
+                  "direction": "column",
+                  "style": {
+                    "height": "100%",
+                    "paddingTop": "121px",
+                    "paddingLeft": "20px",
+                    "width": "671px",
+                    "background": "linear-gradient(\n    to right,                      /* 从左到右 */\n    rgba(0, 0, 0, 0.8) 0%,\n    rgba(0, 0, 0, 0.38) 52.54%,\n    rgba(138, 138, 138, 0) 100%\n  )"
+                  },
+                  "justify": "space-between",
+                  "align": "flex-start",
+                  "ref": "box-257d1943",
+                  "_unsafe_MixedSetter____condition____select": "VariableSetter"
+                },
+                "hidden": false,
+                "title": "X12左侧",
+                "isLocked": false,
+                "condition": {
+                  "type": "JSExpression",
+                  "value": "this.state.sceneIndex === 1"
+                },
+                "conditionGroup": "",
+                "children": [
+                  {
+                    "componentName": "IndexBoxContainer",
+                    "id": "node_ocmqhfpx252",
+                    "props": {
+                      "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/07/components_bg_2x.png",
+                      "filePropName": "backgroundImgUrl",
+                      "divWidth": "400px",
+                      "divHeight": "58vh",
+                      "title": "这是一段title文本",
+                      "position": "relative",
+                      "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
+                      "IndexBoxContainer": [
+                        "浙江正泰电缆有限公司",
+                        "陕西正泰电缆有限公司",
+                        "山东正泰电缆有限公司"
+                      ],
+                      "absolutePosi": "0,0,0,0",
+                      "style": {
+                        "marginBottom": "16px",
+                        "backgroundSize": "cover",
+                        "background": "rgba(4,32,59,0.28)",
+                        "backdropFilter": "blur(10px)"
+                      },
+                      "ref": "indexboxcontainer-2e5bacec"
+                    },
+                    "hidden": false,
+                    "title": "数据监测",
+                    "isLocked": false,
+                    "condition": true,
+                    "conditionGroup": "",
+                    "loopArgs": [
+                      "",
+                      ""
+                    ],
+                    "children": [
+                      {
+                        "componentName": "TopDivWithBackGroundImg",
+                        "id": "node_ocmqhfpx253",
+                        "props": {
+                          "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/06/title_bg_1x.webp",
+                          "filePropName": "backgroundImgUrl",
+                          "divWidth": "",
+                          "divHeight": "40px",
+                          "title": "数据监测",
+                          "fontSize": 20,
+                          "fontWeight": "normal",
+                          "backgroundLittleUrl": "",
+                          "innerBackgroundColor": "rgba(0, 0, 0, 0)",
+                          "isLittleContainer": true,
+                          "fontColor": "#fff",
+                          "justifyContent": "left",
+                          "marginLeft": 24,
+                          "hasSubTitle": false,
+                          "style": {
+                            "fontFamily": "\"庞门正道标题体\"",
+                            "letterSpacing": "2px"
+                          },
+                          "isfontGradient": false,
+                          "fontColors": {
+                            "type": "JSExpression",
+                            "value": "this.state.fontLineGradient"
+                          },
+                          "angle": 180,
+                          "_unsafe_MixedSetter_fontColors_select": "ExpressionSetter",
+                          "ref": "topdivwithbackgroundimg-58e497f9"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "loopArgs": [
+                          "",
+                          ""
+                        ]
+                      },
+                      {
+                        "componentName": "Box",
+                        "id": "node_ocmqhfpx254",
+                        "props": {
+                          "direction": "column",
+                          "style": {
+                            "height": "calc(100% - 40px)",
+                            "padding": "16px 12px",
+                            "width": "100%"
+                          },
+                          "justify": "center",
+                          "align": "center",
+                          "ref": "box-c393c665"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "children": [
+                          {
+                            "componentName": "DataMonitoringCard",
+                            "id": "node_ocmrt7q4tc1",
+                            "props": {
+                              "data": {
+                                "type": "JSExpression",
+                                "value": "this.state.monitoringList",
+                                "mock": [
+                                  {
+                                    "id": "monitoring-101",
+                                    "baseInfo": {
+                                      "roomValue": "101",
+                                      "deviceValue": "设备名称设备名称名称0253333"
+                                    },
+                                    "runtimeParameters": [
+                                      {
+                                        "id": "101-流量",
+                                        "value": 10,
+                                        "unit": "m³/h",
+                                        "label": "流量"
+                                      },
+                                      {
+                                        "id": "101-流速",
+                                        "value": 8,
+                                        "unit": "m³/h",
+                                        "label": "流速"
+                                      },
+                                      {
+                                        "id": "101-压力",
+                                        "value": 1.1,
+                                        "unit": "pa",
+                                        "label": "压力"
+                                      }
+                                    ],
+                                    "tritiumConcentration": [
+                                      {
+                                        "label": "00:00:00",
+                                        "value": 2.95
+                                      },
+                                      {
+                                        "label": "00:00:01",
+                                        "value": 3.16
+                                      },
+                                      {
+                                        "label": "00:00:02",
+                                        "value": 3.38
+                                      },
+                                      {
+                                        "label": "00:00:03",
+                                        "value": 3.59
+                                      },
+                                      {
+                                        "label": "00:00:04",
+                                        "value": 3.8
+                                      },
+                                      {
+                                        "label": "00:00:05",
+                                        "value": 4.02
+                                      },
+                                      {
+                                        "label": "00:00:06",
+                                        "value": 4.23
+                                      },
+                                      {
+                                        "label": "00:00:07",
+                                        "value": 4.44
+                                      },
+                                      {
+                                        "label": "00:00:08",
+                                        "value": 4.64
+                                      },
+                                      {
+                                        "label": "00:00:09",
+                                        "value": 4.85
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "id": "monitoring-102",
+                                    "baseInfo": {
+                                      "roomValue": "102",
+                                      "deviceValue": "设备名称设备名称名称0253334"
+                                    },
+                                    "runtimeParameters": [
+                                      {
+                                        "id": "102-流量",
+                                        "value": 11.2,
+                                        "unit": "m³/h",
+                                        "label": "流量"
+                                      },
+                                      {
+                                        "id": "102-流速",
+                                        "value": 8.9,
+                                        "unit": "m³/h",
+                                        "label": "流速"
+                                      },
+                                      {
+                                        "id": "102-压力",
+                                        "value": 1.25,
+                                        "unit": "pa",
+                                        "label": "压力"
+                                      }
+                                    ],
+                                    "tritiumConcentration": [
+                                      {
+                                        "label": "00:01:00",
+                                        "value": 3.03
+                                      },
+                                      {
+                                        "label": "00:01:01",
+                                        "value": 3.24
+                                      },
+                                      {
+                                        "label": "00:01:02",
+                                        "value": 3.46
+                                      },
+                                      {
+                                        "label": "00:01:03",
+                                        "value": 3.67
+                                      },
+                                      {
+                                        "label": "00:01:04",
+                                        "value": 3.88
+                                      },
+                                      {
+                                        "label": "00:01:05",
+                                        "value": 4.1
+                                      },
+                                      {
+                                        "label": "00:01:06",
+                                        "value": 4.31
+                                      },
+                                      {
+                                        "label": "00:01:07",
+                                        "value": 4.52
+                                      },
+                                      {
+                                        "label": "00:01:08",
+                                        "value": 4.72
+                                      },
+                                      {
+                                        "label": "00:01:09",
+                                        "value": 4.93
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "id": "monitoring-103",
+                                    "baseInfo": {
+                                      "roomValue": "103",
+                                      "deviceValue": "设备名称设备名称名称0253335"
+                                    },
+                                    "runtimeParameters": [
+                                      {
+                                        "id": "103-流量",
+                                        "value": 12.4,
+                                        "unit": "m³/h",
+                                        "label": "流量"
+                                      },
+                                      {
+                                        "id": "103-流速",
+                                        "value": 9.8,
+                                        "unit": "m³/h",
+                                        "label": "流速"
+                                      },
+                                      {
+                                        "id": "103-压力",
+                                        "value": 1.4,
+                                        "unit": "pa",
+                                        "label": "压力"
+                                      }
+                                    ],
+                                    "tritiumConcentration": [
+                                      {
+                                        "label": "00:02:00",
+                                        "value": 3.11
+                                      },
+                                      {
+                                        "label": "00:02:01",
+                                        "value": 3.32
+                                      },
+                                      {
+                                        "label": "00:02:02",
+                                        "value": 3.54
+                                      },
+                                      {
+                                        "label": "00:02:03",
+                                        "value": 3.75
+                                      },
+                                      {
+                                        "label": "00:02:04",
+                                        "value": 3.96
+                                      },
+                                      {
+                                        "label": "00:02:05",
+                                        "value": 4.18
+                                      },
+                                      {
+                                        "label": "00:02:06",
+                                        "value": 4.39
+                                      },
+                                      {
+                                        "label": "00:02:07",
+                                        "value": 4.6
+                                      },
+                                      {
+                                        "label": "00:02:08",
+                                        "value": 4.8
+                                      },
+                                      {
+                                        "label": "00:02:09",
+                                        "value": 5
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              "width": 376,
+                              "height": 650,
+                              "headerHeight": 78,
+                              "infoHeight": 60,
+                              "chartHeight": 120,
+                              "cardGap": 16,
+                              "scrollMode": "autoWithManual",
+                              "scrollDuration": 30,
+                              "resumeDelay": 1000,
+                              "pauseOnHover": true,
+                              "showScrollbar": true,
+                              "showLatestValue": true
+                            },
+                            "hidden": false,
+                            "title": "",
+                            "isLocked": false,
+                            "condition": true,
+                            "conditionGroup": ""
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "componentName": "IndexBoxContainer",
+                    "id": "node_ocmqhfpx257",
+                    "props": {
+                      "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/07/components_bg_2x.png",
+                      "filePropName": "backgroundImgUrl",
+                      "divWidth": "400px",
+                      "divHeight": "30vh",
+                      "title": "这是一段title文本",
+                      "position": "relative",
+                      "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
+                      "IndexBoxContainer": [
+                        "浙江正泰电缆有限公司",
+                        "陕西正泰电缆有限公司",
+                        "山东正泰电缆有限公司"
+                      ],
+                      "absolutePosi": "0,0,0,0",
+                      "style": {
+                        "background": "rgba(4,32,59,0.28)",
+                        "backdropFilter": "blur(10px)",
+                        "marginBottom": "20px"
+                      },
+                      "ref": "indexboxcontainer-08e101f1"
+                    },
+                    "hidden": false,
+                    "title": "操作日志",
+                    "isLocked": false,
+                    "condition": true,
+                    "conditionGroup": "",
+                    "loopArgs": [
+                      "",
+                      ""
+                    ],
+                    "children": [
+                      {
+                        "componentName": "TopDivWithBackGroundImg",
+                        "id": "node_ocmqhfpx258",
+                        "props": {
+                          "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/06/title_bg_1x.webp",
+                          "filePropName": "backgroundImgUrl",
+                          "divWidth": "",
+                          "divHeight": "40px",
+                          "title": "操作日志",
+                          "fontSize": 20,
+                          "fontWeight": "normal",
+                          "backgroundLittleUrl": "",
+                          "innerBackgroundColor": "rgba(0, 0, 0, 0)",
+                          "isLittleContainer": true,
+                          "fontColor": "#fff",
+                          "justifyContent": "left",
+                          "marginLeft": 24,
+                          "hasSubTitle": false,
+                          "style": {
+                            "fontFamily": "\"庞门正道标题体\"",
+                            "letterSpacing": "2px"
+                          },
+                          "angle": 180,
+                          "isfontGradient": false,
+                          "fontColors": {
+                            "type": "JSExpression",
+                            "value": "this.state.fontLineGradient"
+                          },
+                          "_unsafe_MixedSetter_fontColors_select": "ExpressionSetter",
+                          "ref": "topdivwithbackgroundimg-2c6cf300"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "loopArgs": [
+                          "",
+                          ""
+                        ]
+                      },
+                      {
+                        "componentName": "Box",
+                        "id": "node_ocmqhfpx259",
+                        "props": {
+                          "direction": "column",
+                          "style": {
+                            "height": "calc(100% - 40px)",
+                            "width": "100%",
+                            "padding": "16px 12px"
+                          },
+                          "justify": "center",
+                          "align": "center",
+                          "ref": "box-b35284b6"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "children": [
+                          {
+                            "componentName": "OperationLog",
+                            "id": "node_ocmrox0zvz1",
+                            "props": {
+                              "height": 200,
+                              "dataType": "data",
+                              "width": 376,
+                              "baseFetchUri": "/tenant-api/humerus/api/dashboard/data/execute/:id",
+                              "baseWsUri": "",
+                              "token": "",
+                              "data": {
+                                "type": "JSExpression",
+                                "value": "this.state.operationLogList",
+                                "mock": [
+                                  {
+                                    "id": 1,
+                                    "action": "电磁阀0101开启",
+                                    "name": "张伟",
+                                    "time": "08:23:15"
+                                  },
+                                  {
+                                    "id": 2,
+                                    "action": "电磁阀0102关闭电磁阀0102关闭",
+                                    "name": "李晓明",
+                                    "time": "09:47:32"
+                                  },
+                                  {
+                                    "id": 3,
+                                    "action": "电机M01启动",
+                                    "name": "欧阳雪晴",
+                                    "time": "10:05:08"
+                                  },
+                                  {
+                                    "id": 4,
+                                    "action": "温度传感器超限报警",
+                                    "name": "王勇",
+                                    "time": "11:12:44"
+                                  },
+                                  {
+                                    "id": 5,
+                                    "action": "电磁阀0201开启",
+                                    "name": "王思远",
+                                    "time": "12:30:21"
+                                  },
+                                  {
+                                    "id": 6,
+                                    "action": "压力泵停止",
+                                    "name": "慕容紫英",
+                                    "time": "13:15:57"
+                                  },
+                                  {
+                                    "id": 7,
+                                    "action": "电磁阀0103关闭",
+                                    "name": "刘洋",
+                                    "time": "14:42:03"
+                                  },
+                                  {
+                                    "id": 8,
+                                    "action": "风机启动",
+                                    "name": "陈志强",
+                                    "time": "15:28:19"
+                                  },
+                                  {
+                                    "id": 9,
+                                    "action": "液位低报警",
+                                    "name": "上官婉儿",
+                                    "time": "16:09:36"
+                                  },
+                                  {
+                                    "id": 10,
+                                    "action": "电磁阀0202开启",
+                                    "name": "陈静",
+                                    "time": "17:55:42"
+                                  },
+                                  {
+                                    "id": 11,
+                                    "action": "电机M02停止",
+                                    "name": "赵文博",
+                                    "time": "18:33:27"
+                                  },
+                                  {
+                                    "id": 12,
+                                    "action": "加热器断电",
+                                    "name": "司马相如",
+                                    "time": "19:20:11"
+                                  },
+                                  {
+                                    "id": 13,
+                                    "action": "电磁阀0104开启",
+                                    "name": "赵敏",
+                                    "time": "20:07:55"
+                                  },
+                                  {
+                                    "id": 14,
+                                    "action": "冷却水阀关闭",
+                                    "name": "周慧敏",
+                                    "time": "21:44:08"
+                                  },
+                                  {
+                                    "id": 15,
+                                    "action": "流量异常报警",
+                                    "name": "诸葛孔明",
+                                    "time": "22:16:30"
+                                  },
+                                  {
+                                    "id": 16,
+                                    "action": "电磁阀0301开启",
+                                    "name": "周杰",
+                                    "time": "06:38:14"
+                                  },
+                                  {
+                                    "id": 17,
+                                    "action": "压缩机启动",
+                                    "name": "吴天宇",
+                                    "time": "07:50:22"
+                                  },
+                                  {
+                                    "id": 18,
+                                    "action": "电磁阀0105关闭",
+                                    "name": "独孤求败",
+                                    "time": "08:59:43"
+                                  },
+                                  {
+                                    "id": 19,
+                                    "action": "排风阀开启",
+                                    "name": "吴芳",
+                                    "time": "09:13:56"
+                                  },
+                                  {
+                                    "id": 20,
+                                    "action": "电压不稳报警",
+                                    "name": "郑秀文",
+                                    "time": "10:26:17"
+                                  },
+                                  {
+                                    "id": 21,
+                                    "action": "电磁阀0203开启",
+                                    "name": "东方不败",
+                                    "time": "11:48:39"
+                                  },
+                                  {
+                                    "id": 22,
+                                    "action": "水泵停止",
+                                    "name": "郑凯",
+                                    "time": "12:55:02"
+                                  },
+                                  {
+                                    "id": 23,
+                                    "action": "温度恢复正常",
+                                    "name": "林心如",
+                                    "time": "13:37:28"
+                                  },
+                                  {
+                                    "id": 24,
+                                    "action": "电磁阀0106关闭",
+                                    "name": "西门吹雪",
+                                    "time": "14:09:50"
+                                  },
+                                  {
+                                    "id": 25,
+                                    "action": "搅拌机启动",
+                                    "name": "林颖",
+                                    "time": "15:22:11"
+                                  },
+                                  {
+                                    "id": 26,
+                                    "action": "电磁阀0302开启",
+                                    "name": "张丽华",
+                                    "time": "16:41:33"
+                                  },
+                                  {
+                                    "id": 27,
+                                    "action": "油泵启动",
+                                    "name": "南宫问天",
+                                    "time": "17:04:46"
+                                  },
+                                  {
+                                    "id": 28,
+                                    "action": "过滤器堵塞报警",
+                                    "name": "刘佳琪",
+                                    "time": "18:18:59"
+                                  },
+                                  {
+                                    "id": 29,
+                                    "action": "电磁阀0204关闭",
+                                    "name": "北堂墨染",
+                                    "time": "19:35:12"
+                                  },
+                                  {
+                                    "id": 30,
+                                    "action": "系统待机",
+                                    "name": "李娜",
+                                    "time": "20:50:25"
+                                  }
+                                ]
+                              },
+                              "actionField": "title",
+                              "nameField": "name",
+                              "timeField": "time"
+                            },
+                            "hidden": false,
+                            "title": "",
+                            "isLocked": false,
+                            "condition": true,
+                            "conditionGroup": ""
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "componentName": "Box",
+                "id": "node_ocmqhfpx25f",
+                "props": {
+                  "direction": "column",
+                  "style": {
+                    "height": "100%",
+                    "paddingTop": "121px",
+                    "paddingRight": "20px",
+                    "width": "671px",
+                    "background": "linear-gradient(\n    to left,                    \n    rgba(0, 0, 0, 0.8) 0%,\n    rgba(0, 0, 0, 0.38) 52.54%,\n    rgba(138, 138, 138, 0) 100%\n  )",
+                    "display": "flex",
+                    "flexDirection": "column",
+                    "justifyContent": "space-around",
+                    "alignItems": "flex-end"
+                  },
+                  "justify": "space-between",
+                  "align": "center",
+                  "ref": "box-c5cd8c55",
+                  "_unsafe_MixedSetter____condition____select": "VariableSetter"
+                },
+                "hidden": false,
+                "title": "X12右边",
+                "isLocked": false,
+                "condition": {
+                  "type": "JSExpression",
+                  "value": "this.state.sceneIndex === 1"
+                },
+                "conditionGroup": "",
+                "children": [
+                  {
+                    "componentName": "IndexBoxContainer",
+                    "id": "node_ocmqkovwje5",
+                    "props": {
+                      "backgroundImgUrl": "",
+                      "filePropName": "backgroundImgUrl",
+                      "divWidth": "400px",
+                      "divHeight": "3vh",
+                      "title": "这是一段title文本",
+                      "position": "relative",
+                      "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
+                      "IndexBoxContainer": [
+                        "浙江正泰电缆有限公司",
+                        "陕西正泰电缆有限公司",
+                        "山东正泰电缆有限公司"
+                      ],
+                      "absolutePosi": "",
+                      "style": {
+                        "marginTop": "-50px",
+                        "backgroundSize": "inherit",
+                        "display": "flex",
+                        "flexDirection": "row-reverse"
+                      },
+                      "ref": "indexboxcontainer-08e101f1"
+                    },
+                    "hidden": false,
+                    "title": "日期组件",
+                    "isLocked": false,
+                    "condition": true,
+                    "conditionGroup": "",
+                    "loopArgs": [
+                      "",
+                      ""
+                    ],
+                    "children": [
+                      {
+                        "componentName": "HeaderDate",
+                        "id": "node_ocmqkovwje6",
+                        "props": {
+                          "height": 32,
+                          "dataType": "data",
+                          "width": 200,
+                          "baseFetchUri": "/tenant-api/humerus/api/dashboard/data/execute/:id",
+                          "baseWsUri": "wss://spring.space.czy3d.com/iot/open/api/ws",
+                          "token": "21CE4D20DF8E404DAF52DF2D69DA02B2",
+                          "dateText": "2026年3月8日",
+                          "weekText": "星期日",
+                          "data": {
+                            "dateText": "2026年3月8日",
+                            "weekText": "星期日"
+                          },
+                          "dateField": "dateText",
+                          "weekField": "weekText",
+                          "autoUpdate": false,
+                          "ref": "headerdate-ef9e5d4a"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "loopArgs": [
+                          "",
+                          ""
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "componentName": "IndexBoxContainer",
+                    "id": "node_ocmqhfpx25g",
+                    "props": {
+                      "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/07/components_bg_2x.png",
+                      "filePropName": "backgroundImgUrl",
+                      "divWidth": "400px",
+                      "divHeight": "27vh",
+                      "title": "这是一段title文本",
+                      "position": "relative",
+                      "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
+                      "IndexBoxContainer": [
+                        "浙江正泰电缆有限公司",
+                        "陕西正泰电缆有限公司",
+                        "山东正泰电缆有限公司"
+                      ],
+                      "absolutePosi": "0,0,0,0",
+                      "style": {
+                        "background": "rgba(4,32,59,0.28)",
+                        "backdropFilter": "blur(10px)",
+                        "marginBottom": "16px"
+                      },
+                      "ref": "indexboxcontainer-08e101f1"
+                    },
+                    "hidden": false,
+                    "title": "",
+                    "isLocked": false,
+                    "condition": true,
+                    "conditionGroup": "",
+                    "loopArgs": [
+                      "",
+                      ""
+                    ],
+                    "children": [
+                      {
+                        "componentName": "TopDivWithBackGroundImg",
+                        "id": "node_ocmqhfpx25h",
+                        "props": {
+                          "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/06/title_bg_1x.webp",
+                          "filePropName": "backgroundImgUrl",
+                          "divWidth": "",
+                          "divHeight": "40px",
+                          "title": "设备警告",
+                          "fontSize": 20,
+                          "fontWeight": "normal",
+                          "backgroundLittleUrl": "",
+                          "innerBackgroundColor": "rgba(0, 0, 0, 0)",
+                          "isLittleContainer": true,
+                          "fontColor": "#fff",
+                          "justifyContent": "left",
+                          "marginLeft": 24,
+                          "hasSubTitle": false,
+                          "style": {
+                            "fontFamily": "\"庞门正道标题体\"",
+                            "letterSpacing": "2px"
+                          },
+                          "angle": 180,
+                          "isfontGradient": false,
+                          "fontColors": {
+                            "type": "JSExpression",
+                            "value": "this.state.fontLineGradient"
+                          },
+                          "_unsafe_MixedSetter_fontColors_select": "ExpressionSetter",
+                          "ref": "topdivwithbackgroundimg-98b4ed31"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "loopArgs": [
+                          "",
+                          ""
+                        ]
+                      },
+                      {
+                        "componentName": "Box",
+                        "id": "node_ocmqhfpx25i",
+                        "props": {
+                          "direction": "column",
+                          "style": {
+                            "height": "calc(100% - 40px)",
+                            "padding": "16px 12px",
+                            "width": "100%"
+                          },
+                          "justify": "center",
+                          "align": "center",
+                          "ref": "box-b35284b6"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "children": [
+                          {
+                            "componentName": "DeviceWarning",
+                            "id": "node_ocmrdg65ld1",
+                            "props": {
+                              "height": 290,
+                              "dataType": "data",
+                              "width": 376,
+                              "baseFetchUri": "/tenant-api/humerus/api/dashboard/data/execute/:id",
+                              "baseWsUri": {
+                                "type": "JSExpression",
+                                "value": "",
+                                "mock": ""
+                              },
+                              "token": "",
+                              "data": {
+                                "type": "JSExpression",
+                                "value": "this.state.alarmList",
+                                "mock": [
+                                  {
+                                    "id": 1,
+                                    "name": "取样泵1流量计保养",
+                                    "level": "urgent",
+                                    "levelText": "紧急"
+                                  },
+                                  {
+                                    "id": 2,
+                                    "name": "真空泵2压力异常",
+                                    "level": "urgent",
+                                    "levelText": "紧急"
+                                  },
+                                  {
+                                    "id": 3,
+                                    "name": "电磁阀0101响应超时",
+                                    "level": "normal",
+                                    "levelText": "一般"
+                                  },
+                                  {
+                                    "id": 4,
+                                    "name": "温度传感器T03超限",
+                                    "level": "urgent",
+                                    "levelText": "紧急"
+                                  },
+                                  {
+                                    "id": 5,
+                                    "name": "冷却水循环泵检修",
+                                    "level": "regular",
+                                    "levelText": "常规"
+                                  },
+                                  {
+                                    "id": 6,
+                                    "name": "液位计L02校准到期",
+                                    "level": "regular",
+                                    "levelText": "常规"
+                                  },
+                                  {
+                                    "id": 7,
+                                    "name": "压力表P05读数波动",
+                                    "level": "normal",
+                                    "levelText": "一般"
+                                  },
+                                  {
+                                    "id": 8,
+                                    "name": "风机F01轴承异响",
+                                    "level": "urgent",
+                                    "levelText": "紧急"
+                                  },
+                                  {
+                                    "id": 9,
+                                    "name": "过滤器F02堵塞预警",
+                                    "level": "normal",
+                                    "levelText": "一般"
+                                  },
+                                  {
+                                    "id": 10,
+                                    "name": "电机M03绝缘检测",
+                                    "level": "regular",
+                                    "levelText": "常规"
+                                  },
+                                  {
+                                    "id": 11,
+                                    "name": "排风阀V04开度异常",
+                                    "level": "normal",
+                                    "levelText": "一般"
+                                  },
+                                  {
+                                    "id": 12,
+                                    "name": "加热器H01温控失效",
+                                    "level": "urgent",
+                                    "levelText": "紧急"
+                                  },
+                                  {
+                                    "id": 13,
+                                    "name": "油泵OP01油位偏低",
+                                    "level": "normal",
+                                    "levelText": "一般"
+                                  },
+                                  {
+                                    "id": 14,
+                                    "name": "搅拌机BL02定期保养",
+                                    "level": "regular",
+                                    "levelText": "常规"
+                                  },
+                                  {
+                                    "id": 15,
+                                    "name": "压缩机C01排气温度过高",
+                                    "level": "urgent",
+                                    "levelText": "紧急"
+                                  }
+                                ]
+                              },
+                              "nameField": "name",
+                              "levelField": "level",
+                              "levelTextField": "levelText",
+                              "emptyText": "正常",
+                              "ref": "devicewarning-9f5c1588"
+                            },
+                            "hidden": false,
+                            "title": "",
+                            "isLocked": false,
+                            "condition": true,
+                            "conditionGroup": "",
+                            "loopArgs": [
+                              "",
+                              ""
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "componentName": "IndexBoxContainer",
+                    "id": "node_ocmqhfpx25k",
+                    "props": {
+                      "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/07/components_bg_2x.png",
+                      "filePropName": "backgroundImgUrl",
+                      "divWidth": "400px",
+                      "divHeight": "27vh",
+                      "title": "这是一段title文本",
+                      "position": "relative",
+                      "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
+                      "IndexBoxContainer": [
+                        "浙江正泰电缆有限公司",
+                        "陕西正泰电缆有限公司",
+                        "山东正泰电缆有限公司"
+                      ],
+                      "absolutePosi": "0,0,0,0",
+                      "style": {
+                        "background": "rgba(4,32,59,0.28)",
+                        "backdropFilter": "blur(10px)",
+                        "marginBottom": "16px"
+                      },
+                      "ref": "indexboxcontainer-08e101f1"
+                    },
+                    "hidden": false,
+                    "title": "",
+                    "isLocked": false,
+                    "condition": true,
+                    "conditionGroup": "",
+                    "loopArgs": [
+                      "",
+                      ""
+                    ],
+                    "children": [
+                      {
+                        "componentName": "TopDivWithBackGroundImg",
+                        "id": "node_ocmqhfpx25l",
+                        "props": {
+                          "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/06/title_bg_1x.webp",
+                          "filePropName": "backgroundImgUrl",
+                          "divWidth": "",
+                          "divHeight": "40px",
+                          "title": "设备定检",
+                          "fontSize": 20,
+                          "fontWeight": "normal",
+                          "backgroundLittleUrl": "",
+                          "innerBackgroundColor": "rgba(0, 0, 0, 0)",
+                          "isLittleContainer": true,
+                          "fontColor": "#fff",
+                          "justifyContent": "left",
+                          "marginLeft": 24,
+                          "hasSubTitle": false,
+                          "style": {
+                            "fontFamily": "\"庞门正道标题体\"",
+                            "letterSpacing": "2px"
+                          },
+                          "angle": 180,
+                          "isfontGradient": false,
+                          "fontColors": {
+                            "type": "JSExpression",
+                            "value": "this.state.fontLineGradient"
+                          },
+                          "_unsafe_MixedSetter_fontColors_select": "ExpressionSetter",
+                          "ref": "topdivwithbackgroundimg-792baa00"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "loopArgs": [
+                          "",
+                          ""
+                        ]
+                      },
+                      {
+                        "componentName": "Box",
+                        "id": "node_ocmqhfpx25m",
+                        "props": {
+                          "direction": "column",
+                          "style": {
+                            "height": "calc(100% - 40px)",
+                            "width": "100%",
+                            "padding": "16px 12px"
+                          },
+                          "justify": "center",
+                          "align": "center",
+                          "ref": "box-b35284b6"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "children": [
+                          {
+                            "componentName": "DeviceCheck",
+                            "id": "node_ocmra1yljp3",
+                            "props": {
+                              "height": 290,
+                              "dataType": "data",
+                              "width": 376,
+                              "baseFetchUri": "/tenant-api/humerus/api/dashboard/data/execute/:id",
+                              "baseWsUri": "",
+                              "token": "",
+                              "data": {
+                                "type": "JSExpression",
+                                "value": "this.state.inspectionList",
+                                "mock": [
+                                  {
+                                    "id": 1,
+                                    "name": "取样泵1定检",
+                                    "status": "normal",
+                                    "days": 50
+                                  },
+                                  {
+                                    "id": 2,
+                                    "name": "真空泵2定检",
+                                    "status": "expiring",
+                                    "days": 7
+                                  },
+                                  {
+                                    "id": 3,
+                                    "name": "电磁阀0101定检",
+                                    "status": "overdue",
+                                    "days": 3
+                                  },
+                                  {
+                                    "id": 4,
+                                    "name": "温度传感器T03校准",
+                                    "status": "normal",
+                                    "days": 45
+                                  },
+                                  {
+                                    "id": 5,
+                                    "name": "冷却水循环泵保养",
+                                    "status": "expiring",
+                                    "days": 5
+                                  },
+                                  {
+                                    "id": 6,
+                                    "name": "液位计L02定检",
+                                    "status": "overdue",
+                                    "days": 12
+                                  },
+                                  {
+                                    "id": 7,
+                                    "name": "压力表P05校准",
+                                    "status": "normal",
+                                    "days": 60
+                                  },
+                                  {
+                                    "id": 8,
+                                    "name": "风机F01巡检",
+                                    "status": "expiring",
+                                    "days": 9
+                                  },
+                                  {
+                                    "id": 9,
+                                    "name": "过滤器F02更换",
+                                    "status": "overdue",
+                                    "days": 6
+                                  },
+                                  {
+                                    "id": 10,
+                                    "name": "电机M03绝缘检测",
+                                    "status": "normal",
+                                    "days": 35
+                                  },
+                                  {
+                                    "id": 11,
+                                    "name": "排风阀V04定检",
+                                    "status": "expiring",
+                                    "days": 4
+                                  },
+                                  {
+                                    "id": 12,
+                                    "name": "加热器H01温控检查",
+                                    "status": "overdue",
+                                    "days": 18
+                                  },
+                                  {
+                                    "id": 13,
+                                    "name": "油泵OP01保养",
+                                    "status": "normal",
+                                    "days": 28
+                                  },
+                                  {
+                                    "id": 14,
+                                    "name": "搅拌机BL02定期保养",
+                                    "status": "expiring",
+                                    "days": 2
+                                  },
+                                  {
+                                    "id": 15,
+                                    "name": "压缩机C01排气检查",
+                                    "status": "overdue",
+                                    "days": 9
+                                  }
+                                ]
+                              },
+                              "ref": "devicecheck-9172e58f"
+                            },
+                            "hidden": false,
+                            "title": "",
+                            "isLocked": false,
+                            "condition": true,
+                            "conditionGroup": "",
+                            "loopArgs": [
+                              "",
+                              ""
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "componentName": "IndexBoxContainer",
+                    "id": "node_ocmqhfpx25o",
+                    "props": {
+                      "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/07/components_bg_2x.png",
+                      "filePropName": "backgroundImgUrl",
+                      "divWidth": "400px",
+                      "divHeight": "32vh",
+                      "title": "这是一段title文本",
+                      "position": "relative",
+                      "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
+                      "IndexBoxContainer": [
+                        "浙江正泰电缆有限公司",
+                        "陕西正泰电缆有限公司",
+                        "山东正泰电缆有限公司"
+                      ],
+                      "absolutePosi": "0,0,0,0",
+                      "style": {
+                        "background": "rgba(4,32,59,0.28)",
+                        "backdropFilter": "blur(10px)",
+                        "marginBottom": "20px"
+                      },
+                      "ref": "indexboxcontainer-9c2c664c"
+                    },
+                    "hidden": false,
+                    "title": "",
+                    "isLocked": false,
+                    "condition": true,
+                    "conditionGroup": "",
+                    "loopArgs": [
+                      "",
+                      ""
+                    ],
+                    "children": [
+                      {
+                        "componentName": "TopDivWithBackGroundImg",
+                        "id": "node_ocmqhfpx25p",
+                        "props": {
+                          "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/06/title_bg_1x.webp",
+                          "filePropName": "backgroundImgUrl",
+                          "divWidth": "",
+                          "divHeight": "40px",
+                          "title": "QTC",
+                          "fontSize": 20,
+                          "fontWeight": "normal",
+                          "backgroundLittleUrl": "",
+                          "innerBackgroundColor": "rgba(0, 0, 0, 0)",
+                          "isLittleContainer": true,
+                          "fontColor": "#fff",
+                          "justifyContent": "left",
+                          "marginLeft": 24,
+                          "hasSubTitle": false,
+                          "style": {
+                            "fontFamily": "\"庞门正道标题体\"",
+                            "letterSpacing": "2px"
+                          },
+                          "isfontGradient": false,
+                          "fontColors": {
+                            "type": "JSExpression",
+                            "value": "this.state.fontLineGradient"
+                          },
+                          "angle": 180,
+                          "_unsafe_MixedSetter_fontColors_select": "ExpressionSetter",
+                          "ref": "topdivwithbackgroundimg-116e4f88"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "loopArgs": [
+                          "",
+                          ""
+                        ]
+                      },
+                      {
+                        "componentName": "Box",
+                        "id": "node_ocmqhfpx25q",
+                        "props": {
+                          "direction": "column",
+                          "style": {
+                            "height": "calc(100% - 40px)",
+                            "width": "100%",
+                            "padding": "16px 12px"
+                          },
+                          "justify": "center",
+                          "align": "center",
+                          "ref": "box-9c2a2cdd"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "children": [
+                          {
+                            "componentName": "VariableYStepLineChart",
+                            "id": "node_ocmrp5nqs51",
+                            "props": {
+                              "height": 300,
+                              "dataType": "data",
+                              "width": 400,
+                              "baseFetchUri": "/tenant-api/humerus/api/dashboard/data/execute/:id",
+                              "baseWsUri": "",
+                              "token": "",
+                              "title": "",
+                              "logBase": 10,
+                              "showLegend": true,
+                              "legendPosition": "top",
+                              "xAxisData": {
+                                "type": "JSExpression",
+                                "value": "this.state.qtcXAxis"
+                              },
+                              "yAxisData": {
+                                "type": "JSExpression",
+                                "value": "this.state.qtcSeries"
+                              },
+                              "xField": "label",
+                              "seriesField": "type",
+                              "yField": "value",
+                              "timeField": "time",
+                              "data": {
+                                "type": "JSExpression",
+                                "value": "this.state.qtcList"
+                              }
+                            },
+                            "hidden": false,
+                            "title": "",
+                            "isLocked": false,
+                            "condition": true,
+                            "conditionGroup": ""
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
