@@ -1,6 +1,8 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
+import { ChartSnippet, ChartMetaIot } from '../common/iot';
 import { DEFAULT_DATA_MONITORING_PANEL_TEST_DATA } from '../../src/components/data-monitoring-panel/test-data';
 
+const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 const defaultData = DEFAULT_DATA_MONITORING_PANEL_TEST_DATA;
 
 const DataMonitoringCardMeta: ComponentMetadata = {
@@ -49,13 +51,17 @@ const DataMonitoringCardMeta: ComponentMetadata = {
           label: '数据',
         },
         items: [
+          ...dataSourceMeta,
           {
             name: 'data',
             title: {
               label: '卡片数据',
-              tip: '包含 baseInfo、runtimeParameters、tritiumConcentration 三段数据',
+              tip: '包含 baseInfo、runtimeParameters、tritiumConcentration 三段数据；支持单卡对象或卡片数组',
             },
             setter: 'JsonSetter',
+            condition: (target: any) => {
+              return target.getProps().getPropValue('dataType') === 'data';
+            },
           },
         ],
       },
@@ -196,6 +202,7 @@ const snippets: Snippet[] = [
     schema: {
       componentName: 'DataMonitoringCard',
       props: {
+        ...ChartSnippet,
         data: defaultData,
         width: 400,
         height: 650,

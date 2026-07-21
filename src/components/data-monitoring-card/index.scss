@@ -33,11 +33,18 @@
     max-height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  &-virtual-scroll {
+    position: relative;
+    overflow: hidden;
+    overscroll-behavior: contain;
   }
 
   &-scroll-visible {
     overflow-y: scroll;
-    @include bizpack-scrollbar;
+    @include bizpack-scroll-area;
   }
 
   &-scroll-hidden {
@@ -52,13 +59,66 @@
   &-list {
     display: flex;
     flex-direction: column;
+    will-change: transform;
+  }
+
+  &-virtual-track {
+    position: relative;
+    height: 100%;
+    transform: translate3d(0, 0, 0);
+    // 轨道会随 translate3d 上移；paint containment 会裁掉视口下方的绝对定位卡片。
+    contain: layout style;
+  }
+
+  // 与 device-check / bizpack-scrollbar 保持一致
+  &-virtual-scrollbar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 6px;
+    pointer-events: none;
+    background: transparent;
+  }
+
+  &-virtual-scrollbar-thumb {
+    display: block;
+    width: 100%;
+    min-height: 24px;
+    border-radius: 999px;
+    background: rgba(96, 118, 138, 0.72);
+    will-change: transform;
   }
 
   &-item {
     flex: none;
+    contain: layout style;
+    box-sizing: border-box;
 
     & + & {
       margin-top: var(--bizpack-data-monitoring-card-gap, 16px);
     }
   }
+
+  &-virtual-item {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    margin-top: 0 !important;
+    contain: layout style paint;
+  }
+
+  &-info-slot {
+    flex: none;
+    margin-top: 12px;
+  }
+
+  &-chart-placeholder {
+    box-sizing: border-box;
+    width: 100%;
+    flex: none;
+    margin-top: 12px;
+    background: rgba(18, 44, 68, 0.78);
+  }
+
 }

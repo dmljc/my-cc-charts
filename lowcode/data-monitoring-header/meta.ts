@@ -85,7 +85,7 @@ const DataMonitoringHeaderMeta: ComponentMetadata = {
             name: 'roomLabel',
             title: {
               label: '房间标签',
-              tip: '房间标签文案，默认 房间',
+              tip: '房间标签文案，默认 房间：',
             },
             setter: 'StringSetter',
           },
@@ -101,7 +101,7 @@ const DataMonitoringHeaderMeta: ComponentMetadata = {
             name: 'deviceLabel',
             title: {
               label: '设备标签',
-              tip: '设备标签文案，默认 设备',
+              tip: '设备标签文案，默认 设备：',
             },
             setter: 'StringSetter',
           },
@@ -153,8 +153,8 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
-        roomLabel: '房间',
-        deviceLabel: '设备',
+        roomLabel: '房间：',
+        deviceLabel: '设备：',
         roomValueField: 'roomValue',
         deviceValueField: 'deviceValue',
         width: 400,

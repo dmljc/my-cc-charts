@@ -12,9 +12,9 @@ export interface DataMonitoringHeaderData {
 
 export interface DataMonitoringHeaderProps {
   data?: DataMonitoringHeaderData;
-  /** 房间标签文案，默认 '房间' */
+  /** 房间标签文案，默认 '房间：' */
   roomLabel?: string;
-  /** 设备标签文案，默认 '设备' */
+  /** 设备标签文案，默认 '设备：' */
   deviceLabel?: string;
   /** 房间值对应的数据字段名，默认 roomValue */
   roomValueField?: string;
@@ -33,8 +33,8 @@ interface BizRef {
   };
 }
 
-const DEFAULT_ROOM_LABEL = '房间';
-const DEFAULT_DEVICE_LABEL = '设备';
+const DEFAULT_ROOM_LABEL = '房间：';
+const DEFAULT_DEVICE_LABEL = '设备：';
 
 const defaultData: DataMonitoringHeaderData = {
   roomValue: '101',

@@ -24,13 +24,13 @@
 
     &-room {
         flex: 0 0 132px;
-        gap: 14px;
+        gap: 0;
     }
 
     &-device {
         flex: 1;
         min-width: 0;
-        gap: 14px;
+        gap: 0;
     }
 
     &-label {

@@ -333,7 +333,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
         ...(latestText !== null ? [
           {
             type: 'text',
-            right: 4,
+            right: 10,
             top: 20,
             z: 100,
             style: {
@@ -350,7 +350,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
         ...(showUnitLabel && xAxisUnitLabel ? [
           {
             type: 'text',
-            right: 4,
+            right: 10,
             bottom: 4,
             z: 100,
             style: {
@@ -367,7 +367,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       grid: {
         top: latestText !== null ? 30 : 12,
         left: 8,
-        right: 16,
+        right: 22,
         bottom: showXAxisLabels ? 8 : (showUnitLabel ? 18 : 2),
         containLabel: true,
       },
@@ -645,10 +645,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     });
   };
 
-  /**
-   * 合并同一帧内的 option/resize，避免列表滚动时 Resize/Intersection 连击造成麒麟机卡顿。
-   * 滚动进视口只做 resize（修复 canvas 空白），不重复全量 setOption。
-   */
+  /** 合并同一帧内的 option/resize，避免连续触发造成多余重排重绘 */
   const scheduleChartUpdate = (flags: { option?: boolean; resize?: boolean; forceResize?: boolean }) => {
     if (flags.option) {
       pendingUpdateRef.current.option = true;
@@ -786,11 +783,12 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       });
 
       applyOption();
-      // 再刷一帧尺寸，覆盖低代码画布首帧未就绪
-      rafId = requestAnimationFrame(() => {
-        if (!disposed) {
-          resizeChart(true);
+      // 初次挂载时容器尺寸可能仍在变化（如父级刚完成布局），补一帧强制 resize 兜底
+      requestAnimationFrame(() => {
+        if (disposed || !echartsRef.current) {
+          return;
         }
+        resizeChart(true);
       });
     };
 
@@ -802,10 +800,17 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     window.addEventListener('resize', handleWindowResize);
 
     let resizeObserver: ResizeObserver | undefined;
+    let resizeDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     if (typeof ResizeObserver !== 'undefined') {
       resizeObserver = new ResizeObserver(() => {
-        // 尺寸变化只需 resize；数据变更走 buildOption effect
-        scheduleChartUpdate({ resize: true });
+        if (resizeDebounceTimer) {
+          clearTimeout(resizeDebounceTimer);
+        }
+        // 合并短时间多次 RO，避免布局抖动时重复 resize
+        resizeDebounceTimer = setTimeout(() => {
+          resizeDebounceTimer = undefined;
+          scheduleChartUpdate({ resize: true });
+        }, 120);
       });
       resizeObserver.observe(el);
       if (rootRef.current) {
@@ -814,6 +819,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     }
 
     let intersectionObserver: IntersectionObserver | undefined;
+    let intersectionDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     const observeTarget = rootRef.current || el;
     if (typeof IntersectionObserver !== 'undefined' && observeTarget) {
       let scrollRoot: Element | null = observeTarget.parentElement;
@@ -838,9 +844,15 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
         (entries) => {
           const entry = entries[0];
           const isIntersecting = !!(entry && entry.isIntersecting);
-          // 仅在「进入视口」边沿强制 resize，避免 28 卡连续滚动时反复 resize
+          // 仅在「进入视口」边沿考虑 resize
           if (isIntersecting && !wasIntersecting) {
-            scheduleChartUpdate({ forceResize: true });
+            if (intersectionDebounceTimer) {
+              clearTimeout(intersectionDebounceTimer);
+            }
+            intersectionDebounceTimer = setTimeout(() => {
+              intersectionDebounceTimer = undefined;
+              scheduleChartUpdate({ forceResize: true });
+            }, 120);
           }
           wasIntersecting = isIntersecting;
         },
@@ -866,6 +878,12 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       if (ignoreHideTipTimerRef.current) {
         clearTimeout(ignoreHideTipTimerRef.current);
         ignoreHideTipTimerRef.current = null;
+      }
+      if (resizeDebounceTimer) {
+        clearTimeout(resizeDebounceTimer);
+      }
+      if (intersectionDebounceTimer) {
+        clearTimeout(intersectionDebounceTimer);
       }
       window.removeEventListener('resize', handleWindowResize);
       resizeObserver?.disconnect();
@@ -918,8 +936,6 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       style={{
         width,
         height,
-        // 促进合成层稳定，减轻父级 transform 跑马灯导致的 canvas 空白
-        transform: 'translateZ(0)',
         ...style,
       }}
       {...rootDomProps}
