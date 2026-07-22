@@ -72,7 +72,7 @@ const DeviceWarningMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '设备警告数据',
-              tip: '每一项与接口字段一致：ruleName、levelName、levelColor、alarmTime；levelColor 支持十六进制色值；数组为空时展示无警告文案',
+              tip: '每一项与接口字段一致：ruleName、levelName、levelColor、alarmTime、status；status 为 "0" 未解决 / "1" 已解决；levelColor 支持十六进制色值；数组为空时展示无警告文案',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -132,6 +132,20 @@ const DeviceWarningMeta: ComponentMetadata = {
               componentName: 'StringSetter',
               props: {
                 defaultValue: 'alarmTime',
+              },
+            },
+          },
+          {
+            name: 'statusField',
+            title: {
+              label: '状态字段名',
+              tip: '数据中状态对应的字段名，默认为 status；"0" 未解决，"1" 已解决',
+            },
+            defaultValue: 'status',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'status',
               },
             },
           },
@@ -223,6 +237,7 @@ const snippets: Snippet[] = [
         levelNameField: 'levelName',
         levelColorField: 'levelColor',
         alarmTimeField: 'alarmTime',
+        statusField: 'status',
         emptyText: '正常',
         width: 400,
         height: 200,

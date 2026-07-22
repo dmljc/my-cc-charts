@@ -11,6 +11,9 @@ import './index.scss';
 
 export type DeviceWarningLevelColor = 'urgent' | 'normal' | 'regular' | string;
 
+/** 告警状态：0 未解决，1 已解决 */
+export type DeviceWarningStatus = '0' | '1' | string;
+
 export interface DeviceWarningItem {
   id?: string | number;
   /** 规则名称 */
@@ -21,6 +24,8 @@ export interface DeviceWarningItem {
   levelColor?: DeviceWarningLevelColor;
   /** 告警时间 */
   alarmTime?: string;
+  /** 状态：0 未解决，1 已解决 */
+  status?: DeviceWarningStatus;
   [key: string]: unknown;
 }
 
@@ -38,6 +43,8 @@ export interface DeviceWarningProps {
   levelColorField?: string;
   /** 告警时间字段名，默认 alarmTime */
   alarmTimeField?: string;
+  /** 状态字段名，默认 status */
+  statusField?: string;
   /** 无警告数据时展示的文案，默认 '正常' */
   emptyText?: string;
   onItemClick?: (item: DeviceWarningItem, index: number) => void;
@@ -102,6 +109,19 @@ const resolveLevelColor = (raw?: string) => {
   return LEVEL_COLOR_MAP[raw] || raw;
 };
 
+const STATUS_TEXT_MAP: Record<string, string> = {
+  '0': '未解决',
+  '1': '已解决',
+};
+
+const resolveStatusText = (raw?: string) => {
+  if (!raw) {
+    return STATUS_TEXT_MAP['0'];
+  }
+
+  return STATUS_TEXT_MAP[raw] || raw;
+};
+
 const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props) {
   const {
     width = 400,
@@ -112,6 +132,7 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
     levelNameField = 'levelName',
     levelColorField = 'levelColor',
     alarmTimeField = 'alarmTime',
+    statusField = 'status',
     emptyText = '正常',
     onItemClick,
     ...otherProps
@@ -151,6 +172,7 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
   const safeLevelNameField = levelNameField || 'levelName';
   const safeLevelColorField = levelColorField || 'levelColor';
   const safeAlarmTimeField = alarmTimeField || 'alarmTime';
+  const safeStatusField = statusField || 'status';
 
   return (
     <div
@@ -165,6 +187,9 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
             const levelName = resolveFieldValue(item, safeLevelNameField);
             const levelColor = resolveLevelColor(resolveFieldValue(item, safeLevelColorField));
             const alarmTime = resolveFieldValue(item, safeAlarmTimeField);
+            const statusRaw = resolveFieldValue(item, safeStatusField);
+            const statusText = resolveStatusText(statusRaw);
+            const isResolved = statusRaw === '1';
 
             return (
               <button
@@ -185,6 +210,16 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
                 </span>
                 <span className="bizpack-device-warning-time" title={alarmTime}>
                   {alarmTime}
+                </span>
+                <span
+                  className={`bizpack-device-warning-status ${
+                    isResolved
+                      ? 'bizpack-device-warning-status-resolved'
+                      : 'bizpack-device-warning-status-unresolved'
+                  }`}
+                  title={statusText}
+                >
+                  {statusText}
                 </span>
                 <span className="bizpack-device-warning-level" style={{ color: levelColor }}>
                   {levelName}

@@ -42,6 +42,7 @@ export type {
   DeviceWarningLevel,
   DeviceWarningLevelColor,
   DeviceWarningProps,
+  DeviceWarningStatus,
 } from './components/device-warning';
 export { default as DeviceWarning } from './components/device-warning';
 

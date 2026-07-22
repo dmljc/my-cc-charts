@@ -5,6 +5,7 @@ export type {
   DeviceWarningItem,
   DeviceWarningLevelColor,
   DeviceWarningProps,
+  DeviceWarningStatus,
 } from './device-warning';
 /** @deprecated 请使用 DeviceWarningLevelColor */
 export type { DeviceWarningLevelColor as DeviceWarningLevel } from './device-warning';

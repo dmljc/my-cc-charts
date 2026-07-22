@@ -4,6 +4,8 @@ export interface DeviceWarningTestItem {
   levelName: string;
   levelColor: string;
   alarmTime: string;
+  /** 状态：0 未解决，1 已解决 */
+  status: string;
   [key: string]: unknown;
 }
 
@@ -14,6 +16,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '紧急',
     levelColor: '#FF0000',
     alarmTime: '2026-07-06 14:12:12',
+    status: '0',
   },
   {
     id: 2,
@@ -21,6 +24,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '紧急',
     levelColor: '#FF0000',
     alarmTime: '2026-07-06 13:48:05',
+    status: '0',
   },
   {
     id: 3,
@@ -28,6 +32,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '一般',
     levelColor: '#FFBE2F',
     alarmTime: '2026-07-06 12:30:21',
+    status: '1',
   },
   {
     id: 4,
@@ -35,6 +40,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '紧急',
     levelColor: '#FF0000',
     alarmTime: '2026-07-06 11:15:44',
+    status: '0',
   },
   {
     id: 5,
@@ -42,6 +48,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '常规',
     levelColor: '#3399FF',
     alarmTime: '2026-07-06 10:05:08',
+    status: '1',
   },
   {
     id: 6,
@@ -49,6 +56,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '常规',
     levelColor: '#3399FF',
     alarmTime: '2026-07-06 09:47:32',
+    status: '0',
   },
   {
     id: 7,
@@ -56,6 +64,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '一般',
     levelColor: '#FFBE2F',
     alarmTime: '2026-07-06 08:23:15',
+    status: '1',
   },
   {
     id: 8,
@@ -63,6 +72,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '紧急',
     levelColor: '#FF0000',
     alarmTime: '2026-07-05 22:16:30',
+    status: '0',
   },
   {
     id: 9,
@@ -70,6 +80,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '一般',
     levelColor: '#FFBE2F',
     alarmTime: '2026-07-05 20:07:55',
+    status: '0',
   },
   {
     id: 10,
@@ -77,6 +88,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '常规',
     levelColor: '#3399FF',
     alarmTime: '2026-07-05 18:33:27',
+    status: '1',
   },
   {
     id: 11,
@@ -84,6 +96,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '一般',
     levelColor: '#FFBE2F',
     alarmTime: '2026-07-05 16:09:36',
+    status: '0',
   },
   {
     id: 12,
@@ -91,6 +104,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '紧急',
     levelColor: '#FF0000',
     alarmTime: '2026-07-05 14:42:03',
+    status: '0',
   },
   {
     id: 13,
@@ -98,6 +112,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '一般',
     levelColor: '#FFBE2F',
     alarmTime: '2026-07-05 12:30:21',
+    status: '1',
   },
   {
     id: 14,
@@ -105,6 +120,7 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '常规',
     levelColor: '#3399FF',
     alarmTime: '2026-07-05 10:05:08',
+    status: '1',
   },
   {
     id: 15,
@@ -112,5 +128,6 @@ export const DEFAULT_DEVICE_WARNING_TEST_DATA: DeviceWarningTestItem[] = [
     levelName: '紧急',
     levelColor: '#FF0000',
     alarmTime: '2026-07-05 08:23:15',
+    status: '0',
   },
 ];
