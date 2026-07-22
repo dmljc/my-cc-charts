@@ -175,8 +175,6 @@ export const ChartSnippet = {
     dataType: 'data',
     width: 400,
     baseFetchUri: `/tenant-api/humerus/api/dashboard/data/execute/:id`,
-    baseWsUri: 'wss://spring.space.czy3d.com/iot/open/api/ws',
-    // "wss://czy.spacetest.czy3d.com/iot/api/open/ws/plugins/telemetry",
-    token: '21CE4D20DF8E404DAF52DF2D69DA02B2'
-    // '9e43b010-b120-11ee-a5c4-7f2fa0f9c9c3',
+    baseWsUri: '',
+    token: '',
 }
