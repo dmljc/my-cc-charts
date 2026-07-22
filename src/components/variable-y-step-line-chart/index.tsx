@@ -7,5 +7,5 @@ export type {
   VariableYStepSeriesItem,
   YAxisSeriesConfig,
 } from './variable-y-step-line-chart';
-export { transformFlatData, normalizeApiPayload, valueToAxis, axisToValue } from './variable-y-step-line-chart';
+export { transformFlatData, normalizeApiPayload, valueToAxis, axisToValue, buildYAxisTicks } from './variable-y-step-line-chart';
 export default VariableYStepLineChart;

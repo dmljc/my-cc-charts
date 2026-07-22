@@ -125,7 +125,7 @@ const VariableYStepLineChartMeta: ComponentMetadata = {
             name: 'logBase',
             title: {
               label: '对数底数',
-              tip: '兼容旧配置，当前 Y 轴固定为等距分段刻度 0 / 0.5 / 1 / 5000 / 10000',
+              tip: '兼容旧配置；Y 轴上限按数据最大值动态取整：(0,10]→10；更大值按 10^floor(log10(v)) 步进向上取整',
             },
             defaultValue: 10,
             setter: 'NumberSetter',

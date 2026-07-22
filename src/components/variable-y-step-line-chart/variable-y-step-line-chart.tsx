@@ -68,13 +68,13 @@ export interface VariableYStepLineChartProps {
   yField?: string;
   /** @deprecated flat 模式保留 */
   timeField?: string;
-  /** y 轴对数底数（兼容旧配置，当前固定使用等距分段刻度 0 / 0.5 / 1 / 5000 / 10000） */
+  /** y 轴对数底数（兼容旧配置；当前按数据最大值动态生成等距分段刻度） */
   logBase?: number;
   /** 是否显示图例 */
   showLegend?: boolean;
   /** 图例位置 */
   legendPosition?: 'left' | 'right' | 'top' | 'bottom';
-  /** 时序点滑动窗口上限，默认 30 分钟（1 秒 1 点 ≈ 1800） */
+  /** 时序点滑动窗口上限，默认 15 分钟（1 秒 1 点 ≈ 900） */
   maxPoints?: number;
   onPointClick?: (item: any, seriesIndex: number, dataIndex: number) => void;
   [key: string]: unknown;
@@ -96,10 +96,13 @@ interface ChartSourceData {
   timestamps?: number[];
 }
 
-/** y 轴 5 个等距刻度；虚线仅画在 0.5 / 1 / 5000 / 10000 */
-const Y_AXIS_TICKS = [0, 0.5, 1, 5000, 10000];
+/** y 轴固定 5 档等距显示坐标（0~4）；真实刻度值按数据最大值动态生成 */
+const Y_AXIS_TICK_COUNT = 5;
 const Y_AXIS_GRID_DISPLAY_VALUES = [1, 2, 3, 4];
-const Y_AXIS_DISPLAY_MAX = Y_AXIS_TICKS.length - 1;
+const Y_AXIS_DISPLAY_MAX = Y_AXIS_TICK_COUNT - 1;
+const Y_AXIS_DISPLAY_TICKS = [0, 1, 2, 3, 4];
+/** 无数据或外部兜底时使用的默认真实刻度 */
+const FALLBACK_Y_AXIS_TICKS = [0, 0.5, 1, 5000, 10000];
 
 const formatAxisTickValue = (value: number): string => {
   if (value >= 1000) {
@@ -111,6 +114,60 @@ const formatAxisTickValue = (value: number): string => {
   }
 
   return parseFloat(value.toPrecision(3)).toString();
+};
+
+/**
+ * Y 轴上限向上取整（任意量级通用，含 >10000）：
+ * - (0, 10]  → 固定 10
+ * - value>10 → step = 10^floor(log10(value))，结果 = ceil(value/step)*step
+ *   即按当前数量级的首位步进向上取整（十/百/千/万/十万…）
+ */
+const niceCeil = (value: number): number => {
+  if (!Number.isFinite(value) || value <= 0) {
+    return 10;
+  }
+
+  if (value <= 10) {
+    return 10;
+  }
+
+  const exp = Math.floor(Math.log10(value));
+  const step = 10 ** exp;
+
+  return Math.ceil(value / step) * step;
+};
+
+/** 从当前窗口系列数据中取最大值 */
+const getSeriesDataMax = (source: ChartSourceData): number => {
+  let max = 0;
+
+  source.yAxisData.forEach((seriesItem) => {
+    if (!Array.isArray(seriesItem.data)) {
+      return;
+    }
+
+    seriesItem.data.forEach((value) => {
+      const num = Number(value);
+
+      if (Number.isFinite(num) && num > max) {
+        max = num;
+      }
+    });
+  });
+
+  return max;
+};
+
+/**
+ * 根据数据最大值生成 5 档真实刻度：
+ * 上限由 niceCeil 决定；保留 0 / 0.5 / 1 低端分辨率，中高档随 max 动态变化
+ */
+export const buildYAxisTicks = (dataMax: number): number[] => {
+  const niceMax = niceCeil(Number.isFinite(dataMax) && dataMax > 0 ? dataMax : 0);
+  const mid = niceMax / 2;
+
+  // niceCeil 最小为 10，mid 至少为 5，始终走大量程刻度
+  return [0, 0.5, 1, mid, niceMax];
 };
 
 const padTimePart = (value: number) => String(value).padStart(2, '0');
@@ -165,61 +222,76 @@ const formatTimeLabel = (value: string | number | undefined) => {
 };
 
 /** 真实值 → 等距显示坐标（0~4） */
-export const valueToAxis = (value: number | null | undefined): number | null => {
+export const valueToAxis = (
+  value: number | null | undefined,
+  ticks: number[] = FALLBACK_Y_AXIS_TICKS,
+): number | null => {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) {
     return null;
   }
 
+  const safeTicks = ticks.length >= 2 ? ticks : FALLBACK_Y_AXIS_TICKS;
+  const displayMax = safeTicks.length - 1;
   const num = Number(value);
 
-  if (num <= Y_AXIS_TICKS[0]) {
+  if (num <= safeTicks[0]) {
     return 0;
   }
 
-  if (num >= Y_AXIS_TICKS[Y_AXIS_TICKS.length - 1]) {
-    return Y_AXIS_DISPLAY_MAX;
+  if (num >= safeTicks[displayMax]) {
+    return displayMax;
   }
 
-  for (let index = 0; index < Y_AXIS_TICKS.length - 1; index += 1) {
-    const start = Y_AXIS_TICKS[index];
-    const end = Y_AXIS_TICKS[index + 1];
+  for (let index = 0; index < displayMax; index += 1) {
+    const start = safeTicks[index];
+    const end = safeTicks[index + 1];
 
     if (num >= start && num <= end) {
-      const ratio = (num - start) / (end - start);
+      const span = end - start;
 
-      return index + ratio;
+      if (span <= 0) {
+        return index;
+      }
+
+      return index + (num - start) / span;
     }
   }
 
-  return Y_AXIS_DISPLAY_MAX;
+  return displayMax;
 };
 
 /** 等距显示坐标 → 真实值 */
-export const axisToValue = (axisValue: number): number => {
+export const axisToValue = (
+  axisValue: number,
+  ticks: number[] = FALLBACK_Y_AXIS_TICKS,
+): number => {
   if (!Number.isFinite(axisValue)) {
     return 0;
   }
 
+  const safeTicks = ticks.length >= 2 ? ticks : FALLBACK_Y_AXIS_TICKS;
+  const displayMax = safeTicks.length - 1;
+
   if (axisValue <= 0) {
-    return Y_AXIS_TICKS[0];
+    return safeTicks[0];
   }
 
-  if (axisValue >= Y_AXIS_DISPLAY_MAX) {
-    return Y_AXIS_TICKS[Y_AXIS_TICKS.length - 1];
+  if (axisValue >= displayMax) {
+    return safeTicks[displayMax];
   }
 
   const index = Math.floor(axisValue);
   const ratio = axisValue - index;
-  const start = Y_AXIS_TICKS[index];
-  const end = Y_AXIS_TICKS[index + 1];
+  const start = safeTicks[index];
+  const end = safeTicks[index + 1];
 
   return start + (end - start) * ratio;
 };
 
 const DEFAULT_COLORS = ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', '#3ba272', '#fc8452', '#9a60b4'];
 
-/** 与 openview 30 分钟窗口对齐（1 秒 1 点） */
-const DEFAULT_MAX_POINTS = 30 * 60;
+/** 滑动窗口默认 15 分钟（1 秒 1 点 ≈ 900） */
+const DEFAULT_MAX_POINTS = 15 * 60;
 const TOOLTIP_CLASS_NAME = 'bizpack-variable-y-step-line-chart-tooltip';
 
 /** 按「升→降」循环 4 次生成演示数据；图例名与接口 series[].name 一致（设备1…） */
@@ -311,7 +383,10 @@ const formatTooltipValue = (value: number | string | null | undefined): string =
 };
 
 /** 从数据点解析接口原始值；0 是合法值，不能用 != null / 真值判断 */
-const resolveTooltipRawValue = (item: any): number | string | null | undefined => {
+const resolveTooltipRawValue = (
+  item: any,
+  ticks: number[] = FALLBACK_Y_AXIS_TICKS,
+): number | string | null | undefined => {
   const dataItem = item?.data;
 
   if (dataItem && typeof dataItem === 'object' && !Array.isArray(dataItem)) {
@@ -328,7 +403,7 @@ const resolveTooltipRawValue = (item: any): number | string | null | undefined =
 
   if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
     // 无 realValue 时，轴坐标反推（兜底）；0 仍应得到 0
-    return axisToValue(rawValue);
+    return axisToValue(rawValue, ticks);
   }
 
   return rawValue;
@@ -337,6 +412,7 @@ const resolveTooltipRawValue = (item: any): number | string | null | undefined =
 type TooltipContext = {
   getSource: () => ChartSourceData;
   getLegendSelected: () => Record<string, boolean>;
+  getTicks: () => number[];
 };
 
 const buildAxisTooltipConfig = (ctx: TooltipContext) => ({
@@ -412,7 +488,7 @@ const buildAxisTooltipConfig = (ctx: TooltipContext) => ({
           // 直接取接口窗口内原值，0 也会原样进入格式化
           raw = seriesItem.data[dataIndex] as number | null | undefined;
         } else if (param) {
-          raw = resolveTooltipRawValue(param);
+          raw = resolveTooltipRawValue(param, ctx.getTicks());
         } else {
           raw = null;
         }
@@ -731,7 +807,7 @@ const windowChartSource = (source: ChartSourceData, maxPoints: number): ChartSou
   };
 };
 
-const buildSeriesOption = (yAxisData: YAxisSeriesConfig[]) =>
+const buildSeriesOption = (yAxisData: YAxisSeriesConfig[], ticks: number[]) =>
   yAxisData.map((seriesItem, index) => {
     const seriesColor = seriesItem.color ?? DEFAULT_COLORS[index % DEFAULT_COLORS.length];
     const pointCount = Array.isArray(seriesItem.data) ? seriesItem.data.length : 0;
@@ -745,7 +821,7 @@ const buildSeriesOption = (yAxisData: YAxisSeriesConfig[]) =>
       smooth: true,
       // 保留 realValue，tooltip/点击回调直接用原始值，避免坐标往返误差
       data: seriesItem.data.map((value) => {
-        const axisValue = valueToAxis(value);
+        const axisValue = valueToAxis(value, ticks);
 
         if (axisValue === null) {
           return null;
@@ -783,6 +859,38 @@ const buildSeriesOption = (yAxisData: YAxisSeriesConfig[]) =>
       },
     };
   });
+
+const buildYAxisOption = (ticks: number[]) => ({
+  type: 'value',
+  min: 0,
+  max: Y_AXIS_DISPLAY_MAX,
+  interval: 1,
+  axisTick: {
+    show: true,
+    customValues: Y_AXIS_DISPLAY_TICKS,
+  },
+  axisLabel: {
+    customValues: Y_AXIS_DISPLAY_TICKS,
+    color: 'rgba(218, 230, 235, 0.68)',
+    fontSize: 12,
+    formatter: (value: number) => {
+      const tickIndex = Math.round(value);
+
+      if (tickIndex < 0 || tickIndex >= ticks.length) {
+        return '';
+      }
+
+      return formatAxisTickValue(ticks[tickIndex]);
+    },
+  },
+  // 0 刻度不画横线，虚线由 markLine 画在显示坐标 1/2/3/4
+  splitLine: {
+    show: false,
+  },
+  minorSplitLine: {
+    show: false,
+  },
+});
 
 const buildYGridSeries = () => ({
   id: '__y-grid__',
@@ -904,15 +1012,23 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
     resolvedMaxPoints,
   ]);
 
+  const dataMax = useMemo(() => getSeriesDataMax(sourceData), [sourceData]);
+  const yAxisTicks = useMemo(() => buildYAxisTicks(dataMax), [dataMax]);
+
   sourceDataRef.current = sourceData;
+
+  const yAxisTicksRef = useRef(yAxisTicks);
+  yAxisTicksRef.current = yAxisTicks;
 
   const tooltipCtxRef = useRef<TooltipContext>({
     getSource: () => sourceDataRef.current,
     getLegendSelected: () => legendSelectedRef.current,
+    getTicks: () => yAxisTicksRef.current,
   });
   tooltipCtxRef.current = {
     getSource: () => sourceDataRef.current,
     getLegendSelected: () => legendSelectedRef.current,
+    getTicks: () => yAxisTicksRef.current,
   };
 
   const buildOption = useMemo(() => {
@@ -934,6 +1050,7 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
       tooltip: buildAxisTooltipConfig({
         getSource: () => tooltipCtxRef.current.getSource(),
         getLegendSelected: () => tooltipCtxRef.current.getLegendSelected(),
+        getTicks: () => tooltipCtxRef.current.getTicks(),
       }),
       legend: {
         show: showLegend,
@@ -969,47 +1086,17 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
           formatter: (value: string | number) => formatTimeLabel(value),
         },
       },
-      yAxis: {
-        type: 'value',
-        min: 0,
-        max: Y_AXIS_DISPLAY_MAX,
-        interval: 1,
-        axisTick: {
-          show: true,
-          customValues: [0, 1, 2, 3, 4],
-        },
-        axisLabel: {
-          customValues: [0, 1, 2, 3, 4],
-          color: 'rgba(218, 230, 235, 0.68)',
-          fontSize: 12,
-          formatter: (value: number) => {
-            const tickIndex = Math.round(value);
-
-            if (tickIndex < 0 || tickIndex >= Y_AXIS_TICKS.length) {
-              return '';
-            }
-
-            return formatAxisTickValue(Y_AXIS_TICKS[tickIndex]);
-          },
-        },
-        // 0 刻度不画横线，虚线由 markLine 画在 0.5/1/5000/10000
-        splitLine: {
-          show: false,
-        },
-        minorSplitLine: {
-          show: false,
-        },
-      },
+      yAxis: buildYAxisOption(yAxisTicks),
       series: [
-        ...buildSeriesOption(sourceData.yAxisData),
+        ...buildSeriesOption(sourceData.yAxisData, yAxisTicks),
         buildYGridSeries(),
       ],
     };
 
     return option;
-  }, [title, sourceData, showLegend, legendPosition]);
+  }, [title, sourceData, yAxisTicks, showLegend, legendPosition]);
 
-  /** 仅数据面：不带 tooltip/legend，避免 ws 推送时悬浮框与图例被重置 */
+  /** 仅数据面：不带 tooltip/legend，避免 ws 推送时悬浮框与图例被重置；同步刷新 y 轴刻度 */
   const buildDataOption = useMemo(
     () => ({
       animation: false,
@@ -1017,12 +1104,13 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
       xAxis: {
         data: sourceData.xAxisData,
       },
+      yAxis: buildYAxisOption(yAxisTicks),
       series: [
-        ...buildSeriesOption(sourceData.yAxisData),
+        ...buildSeriesOption(sourceData.yAxisData, yAxisTicks),
         buildYGridSeries(),
       ],
     }),
-    [sourceData],
+    [sourceData, yAxisTicks],
   );
 
   const structureKey = useMemo(
@@ -1123,7 +1211,7 @@ const VariableYStepLineChart: React.FC<VariableYStepLineChartProps> = function V
           raw && typeof raw === 'object' && raw.realValue != null
             ? raw.realValue
             : typeof raw === 'number' && Number.isFinite(raw)
-              ? axisToValue(raw)
+              ? axisToValue(raw, yAxisTicksRef.current)
               : raw;
         onPointClickRef.current(realValue, params.seriesIndex ?? 0, params.dataIndex ?? 0);
       }
