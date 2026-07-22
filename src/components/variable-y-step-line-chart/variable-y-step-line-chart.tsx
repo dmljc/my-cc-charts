@@ -5,7 +5,7 @@ import '../jsx-shim';
 import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import * as echarts from 'echarts';
 import { destroy, init } from '../../common/iot';
-import { getNiceAxisMax } from '../../common/chart-axis';
+import { buildNiceAxisTicks, getNiceAxisMax } from '../../common/chart-axis';
 import {
   CHART_SYMBOL_POINT_THRESHOLD,
 } from '../../common/perf';
@@ -97,13 +97,13 @@ interface ChartSourceData {
   timestamps?: number[];
 }
 
-/** y 轴固定 5 档等距显示坐标（0~4）；真实刻度值按数据最大值动态生成 */
-const Y_AXIS_TICK_COUNT = 5;
-const Y_AXIS_GRID_DISPLAY_VALUES = [1, 2, 3, 4];
+/** 与数据监测趋势折线图一致：Y 轴三档等距显示坐标（0~2）。 */
+const Y_AXIS_TICK_COUNT = 3;
+const Y_AXIS_GRID_DISPLAY_VALUES = [1, 2];
 const Y_AXIS_DISPLAY_MAX = Y_AXIS_TICK_COUNT - 1;
-const Y_AXIS_DISPLAY_TICKS = [0, 1, 2, 3, 4];
+const Y_AXIS_DISPLAY_TICKS = [0, 1, 2];
 /** 无数据或外部兜底时使用的默认真实刻度 */
-const FALLBACK_Y_AXIS_TICKS = [0, 0.5, 1, 5000, 10000];
+const FALLBACK_Y_AXIS_TICKS = [0, 5000, 10000];
 
 const formatAxisTickValue = (value: number): string => {
   if (value >= 1000) {
@@ -138,20 +138,11 @@ const getSeriesDataMax = (source: ChartSourceData): number => {
   return max;
 };
 
-/**
- * 根据数据最大值生成 5 档真实刻度：
- * - ≤10：等距五档（如 3→上限 4，刻度为 0/1/2/3/4）
- * - >10：保留 0 / 0.5 / 1 低端分辨率，中高档随 max 动态变化
- */
+/** 与数据监测趋势折线图共用三档刻度：最小值 / 中值 / 最大值。 */
 export const buildYAxisTicks = (dataMax: number): number[] => {
   const niceMax = getNiceAxisMax(Number.isFinite(dataMax) && dataMax > 0 ? dataMax : 0);
-  const clean = (value: number) => parseFloat(value.toPrecision(12));
 
-  if (niceMax <= 10) {
-    return [0, clean(niceMax * 0.25), clean(niceMax * 0.5), clean(niceMax * 0.75), niceMax];
-  }
-
-  return [0, 0.5, 1, niceMax / 2, niceMax];
+  return buildNiceAxisTicks(0, niceMax);
 };
 
 const padTimePart = (value: number) => String(value).padStart(2, '0');
@@ -867,7 +858,7 @@ const buildYAxisOption = (ticks: number[]) => ({
       return formatAxisTickValue(ticks[tickIndex]);
     },
   },
-  // 0 刻度不画横线，虚线由 markLine 画在显示坐标 1/2/3/4
+  // 0 刻度不画横线，虚线由 markLine 画在中值与最大值显示坐标 1/2
   splitLine: {
     show: false,
   },
