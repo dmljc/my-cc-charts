@@ -4,6 +4,9 @@ import DataMonitoringCard from './data-monitoring-card';
 export type {
   DataMonitoringCardData,
   DataMonitoringCardProps,
-  DataMonitoringScrollMode,
 } from './data-monitoring-card';
+export {
+  createDataMonitoringCardTestData,
+  DEFAULT_DATA_MONITORING_CARD_TEST_DATA,
+} from './test-data';
 export default DataMonitoringCard;

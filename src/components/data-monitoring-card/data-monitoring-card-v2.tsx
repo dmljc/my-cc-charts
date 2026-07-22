@@ -1,7 +1,7 @@
 import * as React from 'react';
 import '../jsx-shim';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import DataMonitoringHeader from '../data-monitoring-header';
 import type { DataMonitoringHeaderData } from '../data-monitoring-header/data-monitoring-header';
 import DataMonitoringInfo from '../data-monitoring-info';
@@ -32,8 +32,6 @@ interface BizRef {
   };
 }
 
-export type DataMonitoringScrollMode = 'auto' | 'manual' | 'autoWithManual';
-
 export interface DataMonitoringCardProps {
   data?: DataMonitoringCardData | DataMonitoringCardData[];
   width?: number | string;
@@ -42,51 +40,25 @@ export interface DataMonitoringCardProps {
   infoHeight?: number;
   chartHeight?: number;
   cardGap?: number;
-  /** @deprecated 请使用 scrollMode */
-  autoScroll?: boolean;
-  scrollMode?: DataMonitoringScrollMode;
-  scrollDuration?: number;
-  resumeDelay?: number;
   pauseOnHover?: boolean;
-  showScrollbar?: boolean;
   showLatestValue?: boolean;
-  /** 单卡模式是否挂载完整 ECharts；列表模式仅对虚拟窗口内卡片挂载。 */
+  /** 是否挂载完整 ECharts；列表模式仅对当前页（及切页中的上一页）挂载。 */
   mountChart?: boolean;
+  /** 轮播每页显示的设备数，默认 2。 */
+  devicesPerPage?: number;
+  /** 轮播页面停留时间（毫秒），默认 5000。 */
+  carouselInterval?: number;
+  /** 轮播页面切换动画时长（毫秒），默认 400。 */
+  carouselTransitionDuration?: number;
+  /** 是否循环轮播，默认 true。 */
+  carouselLoop?: boolean;
   className?: string;
   style?: React.CSSProperties;
   [key: string]: unknown;
 }
 
-type TickerCallback = (time: number) => void;
-const tickerCallbacks = new Set<TickerCallback>();
-let tickerId = 0;
-
-const runSharedTicker = (time: number) => {
-  tickerId = 0;
-  tickerCallbacks.forEach((callback) => callback(time));
-  if (tickerCallbacks.size > 0) {
-    tickerId = requestAnimationFrame(runSharedTicker);
-  }
-};
-
-const addSharedTicker = (callback: TickerCallback) => {
-  tickerCallbacks.add(callback);
-  if (!tickerId) {
-    tickerId = requestAnimationFrame(runSharedTicker);
-  }
-  return () => {
-    tickerCallbacks.delete(callback);
-    if (tickerCallbacks.size === 0 && tickerId) {
-      cancelAnimationFrame(tickerId);
-      tickerId = 0;
-    }
-  };
-};
-
 const DEFAULT_LIST_HEIGHT = 650;
 const LIST_CHART_MAX_POINTS = 160;
-const WINDOW_PAD_PX = 240;
-const WINDOW_SYNC_MS = 80;
 
 const resolveNumber = (value: unknown, fallback: number) => {
   const numberValue = Number(value);
@@ -101,13 +73,6 @@ const resolveBoolean = (value: unknown, fallback: boolean) => {
     return false;
   }
   return fallback;
-};
-
-const resolveScrollMode = (scrollMode: unknown, autoScroll: unknown): DataMonitoringScrollMode => {
-  if (scrollMode === 'auto' || scrollMode === 'manual' || scrollMode === 'autoWithManual') {
-    return scrollMode;
-  }
-  return autoScroll === false || autoScroll === 'false' ? 'manual' : 'auto';
 };
 
 const normalizeCardData = (card?: DataMonitoringCardData): DataMonitoringCardData | undefined => {
@@ -143,45 +108,6 @@ const getChartData = (card?: DataMonitoringCardData) => {
     return [];
   }
   return points.length > LIST_CHART_MAX_POINTS ? points.slice(-LIST_CHART_MAX_POINTS) : points;
-};
-
-const hasInfo = (card?: DataMonitoringCardData) => {
-  const info = card?.runtimeParameters ?? card?.info;
-  return Array.isArray(info) && info.length > 0;
-};
-
-const getCardHeight = (
-  card: DataMonitoringCardData | undefined,
-  headerHeight: number,
-  infoHeight: number,
-  chartHeight: number,
-) => {
-  const chartData = getChartData(card);
-  return headerHeight
-    + (hasInfo(card) ? infoHeight + 12 : 0)
-    + (chartData.length > 0 ? chartHeight + 12 : 0);
-};
-
-/** 在一轮循环高度内，按真实偏移定位卡片下标（兼容高低不一的卡片）。 */
-const findItemIndexByOffset = (offsets: number[], heights: number[], offsetInCycle: number) => {
-  if (offsets.length === 0) {
-    return 0;
-  }
-  let low = 0;
-  let high = offsets.length - 1;
-  while (low <= high) {
-    const mid = (low + high) >> 1;
-    const top = offsets[mid];
-    const bottom = top + heights[mid];
-    if (offsetInCycle < top) {
-      high = mid - 1;
-    } else if (offsetInCycle >= bottom) {
-      low = mid + 1;
-    } else {
-      return mid;
-    }
-  }
-  return Math.max(0, Math.min(offsets.length - 1, low));
 };
 
 interface CardContentProps {
@@ -252,14 +178,13 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     infoHeight = 60,
     chartHeight = 120,
     cardGap = 16,
-    autoScroll,
-    scrollMode,
-    scrollDuration = 50,
-    resumeDelay = 1000,
     pauseOnHover = true,
-    showScrollbar = true,
     showLatestValue = true,
     mountChart = true,
+    devicesPerPage = 2,
+    carouselInterval = 5000,
+    carouselTransitionDuration = 400,
+    carouselLoop = true,
     className = '',
     style = {},
     ...otherProps
@@ -276,29 +201,41 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const resolvedHeaderHeight = resolveNumber(headerHeight, 78);
   const resolvedInfoHeight = resolveNumber(infoHeight, 60);
   const resolvedChartHeight = resolveNumber(chartHeight, 120);
-  const resolvedGap = resolveNumber(cardGap, 16);
   const resolvedHeight = resolveNumber(height, DEFAULT_LIST_HEIGHT);
-  const resolvedDuration = resolveNumber(scrollDuration, 50);
-  const resolvedResumeDelay = resolveNumber(resumeDelay, 1000);
-  const resolvedShowScrollbar = resolveBoolean(showScrollbar, true);
   const resolvedPauseOnHover = resolveBoolean(pauseOnHover, true);
   const resolvedShowLatestValue = resolveBoolean(showLatestValue, true);
   const resolvedMountChart = resolveBoolean(mountChart, true);
-  const resolvedMode = resolveScrollMode(scrollMode, autoScroll);
-  const canAutoScroll = isListMode && resolvedMode !== 'manual';
-  const canManualControl = isListMode && resolvedMode !== 'auto';
+  const resolvedDevicesPerPage = Math.max(1, Math.floor(resolveNumber(devicesPerPage, 2)));
+  const resolvedCarouselInterval = resolveNumber(carouselInterval, 5000);
+  const resolvedCarouselTransitionDuration = resolveNumber(carouselTransitionDuration, 400);
+  const resolvedCarouselLoop = resolveBoolean(carouselLoop, true);
   const rootDomProps = pickRootDomProps(otherProps);
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const scrollbarThumbRef = useRef<HTMLDivElement>(null);
-  const offsetRef = useRef(0);
-  const lastTickRef = useRef(0);
-  const manualUntilRef = useRef(0);
-  const hoverPausedRef = useRef(false);
-  const lastWindowSyncRef = useRef(0);
-  const touchYRef = useRef<number | null>(null);
-  const [viewportHeight, setViewportHeight] = useState(resolvedHeight);
-  const [windowRange, setWindowRange] = useState({ start: 0, end: 0 });
+  const [carouselPage, setCarouselPage] = useState(0);
+  const [carouselTrackPage, setCarouselTrackPage] = useState(0);
+  const [outgoingCarouselPage, setOutgoingCarouselPage] = useState<number | null>(null);
+  const [carouselPaused, setCarouselPaused] = useState(false);
+  const [isCarouselResetting, setIsCarouselResetting] = useState(false);
+
+  const carouselPages = useMemo(() => {
+    if (!items) {
+      return [];
+    }
+
+    const pages: DataMonitoringCardData[][] = [];
+    for (let start = 0; start < items.length; start += resolvedDevicesPerPage) {
+      pages.push(items.slice(start, start + resolvedDevicesPerPage));
+    }
+    return pages;
+  }, [items, resolvedDevicesPerPage]);
+
+  const renderedCarouselPages = useMemo(
+    () => (
+      resolvedCarouselLoop && carouselPages.length > 1
+        ? [...carouselPages, carouselPages[0]]
+        : carouselPages
+    ),
+    [carouselPages, resolvedCarouselLoop],
+  );
 
   useEffect(() => {
     setSourceData(data);
@@ -307,6 +244,69 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   useEffect(() => {
     sourceDataRef.current = sourceData;
   }, [sourceData]);
+
+  useEffect(() => {
+    setCarouselPage((current) => Math.min(current, Math.max(carouselPages.length - 1, 0)));
+    setCarouselTrackPage((current) => Math.min(current, Math.max(carouselPages.length - 1, 0)));
+    setOutgoingCarouselPage(null);
+  }, [carouselPages.length]);
+
+  useEffect(() => {
+    if (!isCarouselResetting || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const firstFrame = window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        setIsCarouselResetting(false);
+      });
+    });
+
+    return () => window.cancelAnimationFrame(firstFrame);
+  }, [isCarouselResetting]);
+
+  useEffect(() => {
+    if (carouselPaused || carouselPages.length <= 1 || typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const advancePage = () => {
+      setCarouselPage((current) => {
+        const isLast = current >= carouselPages.length - 1;
+
+        if (isLast && !resolvedCarouselLoop) {
+          return current;
+        }
+
+        const next = isLast ? 0 : current + 1;
+        setOutgoingCarouselPage(current);
+        setCarouselTrackPage(isLast && resolvedCarouselLoop ? carouselPages.length : next);
+        return next;
+      });
+    };
+    const timer = window.setTimeout(advancePage, resolvedCarouselInterval);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    carouselPage,
+    carouselPages.length,
+    carouselPaused,
+    resolvedCarouselInterval,
+    resolvedCarouselLoop,
+  ]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+
+    const onVisibilityChange = () => {
+      setCarouselPaused(document.hidden);
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, []);
 
   useEffect(() => {
     bizRef.current = {
@@ -324,237 +324,10 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const metrics = useMemo(() => {
-    const list = items || [];
-    const heights = list.map((item) => getCardHeight(
-      item,
-      resolvedHeaderHeight,
-      resolvedInfoHeight,
-      resolvedChartHeight,
-    ));
-    const offsets: number[] = [];
-    let cursor = 0;
-    heights.forEach((itemHeight, index) => {
-      offsets.push(cursor);
-      cursor += itemHeight;
-      if (index < heights.length - 1) {
-        cursor += resolvedGap;
-      }
-    });
-    // 循环缝合处补一个间距，保证末卡与首卡视觉间距一致
-    const cycleHeight = list.length > 0 ? cursor + resolvedGap : 0;
-    return { heights, offsets, cycleHeight };
-  }, [items, resolvedChartHeight, resolvedGap, resolvedHeaderHeight, resolvedInfoHeight]);
-
-  const syncAutoScrollingAttr = useCallback((scrolling: boolean) => {
-    const element = viewportRef.current;
-    if (!element) {
-      return;
-    }
-    element.setAttribute('data-bizpack-auto-scrolling', scrolling ? '1' : '0');
-  }, []);
-
-  const syncTrack = useCallback(() => {
-    if (trackRef.current) {
-      trackRef.current.style.transform = `translate3d(0, ${-offsetRef.current}px, 0)`;
-    }
-  }, []);
-
-  const syncScrollbar = useCallback(() => {
-    const thumb = scrollbarThumbRef.current;
-    if (!thumb || metrics.cycleHeight <= viewportHeight) {
-      return;
-    }
-    const thumbHeight = Math.max(24, Math.min(viewportHeight, (viewportHeight * viewportHeight) / metrics.cycleHeight));
-    const trackHeight = Math.max(viewportHeight - thumbHeight, 0);
-    thumb.style.height = `${thumbHeight}px`;
-    thumb.style.transform = `translate3d(0, ${trackHeight * (offsetRef.current / metrics.cycleHeight)}px, 0)`;
-  }, [metrics.cycleHeight, viewportHeight]);
-
-  const syncVirtualWindow = useCallback((force = false) => {
-    if (!items || items.length === 0 || metrics.cycleHeight <= 0) {
-      return;
-    }
-    const now = Date.now();
-    if (!force && now - lastWindowSyncRef.current < WINDOW_SYNC_MS) {
-      return;
-    }
-    lastWindowSyncRef.current = now;
-
-    const viewTop = offsetRef.current - WINDOW_PAD_PX;
-    const viewBottom = offsetRef.current + viewportHeight + WINDOW_PAD_PX;
-    const startCycle = Math.floor(viewTop / metrics.cycleHeight);
-    const endCycle = Math.floor(Math.max(viewBottom - 0.1, viewTop) / metrics.cycleHeight);
-
-    let startIndexInCycle = 0;
-    let endIndexInCycle = items.length - 1;
-    if (startCycle === endCycle) {
-      const localTop = ((viewTop % metrics.cycleHeight) + metrics.cycleHeight) % metrics.cycleHeight;
-      const localBottom = ((viewBottom % metrics.cycleHeight) + metrics.cycleHeight) % metrics.cycleHeight;
-      startIndexInCycle = findItemIndexByOffset(metrics.offsets, metrics.heights, localTop);
-      endIndexInCycle = findItemIndexByOffset(metrics.offsets, metrics.heights, Math.max(localBottom - 0.1, localTop));
-      const start = startCycle * items.length + startIndexInCycle;
-      const end = startCycle * items.length + endIndexInCycle;
-      setWindowRange((current) => (current.start === start && current.end === end ? current : { start, end }));
-      return;
-    }
-
-    // 跨越循环边界：从 startCycle 的命中卡一直铺到 endCycle 的命中卡
-    startIndexInCycle = findItemIndexByOffset(
-      metrics.offsets,
-      metrics.heights,
-      ((viewTop % metrics.cycleHeight) + metrics.cycleHeight) % metrics.cycleHeight,
-    );
-    endIndexInCycle = findItemIndexByOffset(
-      metrics.offsets,
-      metrics.heights,
-      ((viewBottom % metrics.cycleHeight) + metrics.cycleHeight) % metrics.cycleHeight,
-    );
-    const start = startCycle * items.length + startIndexInCycle;
-    const end = endCycle * items.length + endIndexInCycle;
-    setWindowRange((current) => (current.start === start && current.end === end ? current : { start, end }));
-  }, [items, metrics, viewportHeight]);
-
-  const setOffset = useCallback((nextOffset: number, forceWindowSync = false) => {
-    if (metrics.cycleHeight <= 0) {
-      return;
-    }
-    const normalized = ((nextOffset % metrics.cycleHeight) + metrics.cycleHeight) % metrics.cycleHeight;
-    offsetRef.current = normalized;
-    syncTrack();
-    syncScrollbar();
-    syncVirtualWindow(forceWindowSync);
-  }, [metrics.cycleHeight, syncScrollbar, syncTrack, syncVirtualWindow]);
-
-  useEffect(() => {
-    offsetRef.current = 0;
-    syncTrack();
-    syncScrollbar();
-    syncVirtualWindow(true);
-    syncAutoScrollingAttr(canAutoScroll && !hoverPausedRef.current);
-  }, [canAutoScroll, metrics.cycleHeight, syncAutoScrollingAttr, syncScrollbar, syncTrack, syncVirtualWindow]);
-
-  useEffect(() => {
-    const element = viewportRef.current;
-    if (!element || !isListMode) {
-      return undefined;
-    }
-    const updateHeight = () => {
-      const nextHeight = element.clientHeight || resolvedHeight;
-      setViewportHeight((current) => (current === nextHeight ? current : nextHeight));
-    };
-    updateHeight();
-    let observer: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== 'undefined') {
-      observer = new ResizeObserver(updateHeight);
-      observer.observe(element);
-    }
-    window.addEventListener('resize', updateHeight);
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener('resize', updateHeight);
-    };
-  }, [isListMode, resolvedHeight]);
-
-  useEffect(() => {
-    syncScrollbar();
-  }, [syncScrollbar]);
-
-  const takeManualControl = useCallback((delta: number) => {
-    if (!canManualControl) {
-      return;
-    }
-    manualUntilRef.current = performance.now() + resolvedResumeDelay;
-    setOffset(offsetRef.current + delta, true);
-  }, [canManualControl, resolvedResumeDelay, setOffset]);
-
-  // React 的 onWheel/onTouchMove 是 passive，不能 preventDefault；改用原生非被动监听。
-  useEffect(() => {
-    const element = viewportRef.current;
-    if (!element || !canManualControl) {
-      return undefined;
-    }
-
-    const onWheel = (event: WheelEvent) => {
-      event.preventDefault();
-      takeManualControl(event.deltaY);
-    };
-
-    const onTouchStart = (event: TouchEvent) => {
-      touchYRef.current = event.touches[0] ? event.touches[0].clientY : null;
-    };
-
-    const onTouchMove = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      if (!touch || touchYRef.current === null) {
-        return;
-      }
-      event.preventDefault();
-      takeManualControl(touchYRef.current - touch.clientY);
-      touchYRef.current = touch.clientY;
-    };
-
-    const onTouchEnd = () => {
-      touchYRef.current = null;
-    };
-
-    element.addEventListener('wheel', onWheel, { passive: false });
-    element.addEventListener('touchstart', onTouchStart, { passive: true });
-    element.addEventListener('touchmove', onTouchMove, { passive: false });
-    element.addEventListener('touchend', onTouchEnd, { passive: true });
-    element.addEventListener('touchcancel', onTouchEnd, { passive: true });
-
-    return () => {
-      element.removeEventListener('wheel', onWheel);
-      element.removeEventListener('touchstart', onTouchStart);
-      element.removeEventListener('touchmove', onTouchMove);
-      element.removeEventListener('touchend', onTouchEnd);
-      element.removeEventListener('touchcancel', onTouchEnd);
-    };
-  }, [canManualControl, takeManualControl]);
-
-  useEffect(() => {
-    if (!canAutoScroll || metrics.cycleHeight <= viewportHeight) {
-      return undefined;
-    }
-    const removeTicker = addSharedTicker((now) => {
-      if (!lastTickRef.current) {
-        lastTickRef.current = now;
-        return;
-      }
-      const elapsed = Math.min(now - lastTickRef.current, 100);
-      lastTickRef.current = now;
-      if (hoverPausedRef.current || now < manualUntilRef.current) {
-        return;
-      }
-      setOffset(offsetRef.current + (metrics.cycleHeight / (resolvedDuration * 1000)) * elapsed);
-    });
-    return () => {
-      lastTickRef.current = 0;
-      removeTicker();
-    };
-  }, [canAutoScroll, metrics.cycleHeight, resolvedDuration, setOffset, viewportHeight]);
-
-  const slots = useMemo(() => {
-    if (!items || items.length === 0 || metrics.cycleHeight <= 0) {
-      return [];
-    }
-    const count = items.length;
-    const slotsInWindow: Array<{ virtualIndex: number; itemIndex: number; top: number }> = [];
-    const start = windowRange.start;
-    const end = Math.max(windowRange.end, windowRange.start);
-    for (let virtualIndex = start; virtualIndex <= end; virtualIndex += 1) {
-      const itemIndex = ((virtualIndex % count) + count) % count;
-      const cycle = Math.floor(virtualIndex / count);
-      const top = cycle * metrics.cycleHeight + metrics.offsets[itemIndex];
-      slotsInWindow.push({ virtualIndex, itemIndex, top });
-    }
-    return slotsInWindow;
-  }, [items, metrics, windowRange]);
-
   const rootStyle: React.CSSProperties = {
     width,
     ...(isListMode ? { height: resolvedHeight } : height !== undefined ? { height } : {}),
+    ...(isListMode ? { ['--bizpack-data-monitoring-card-gap' as string]: `${resolveNumber(cardGap, 16)}px` } : {}),
     ...style,
   };
 
@@ -573,42 +346,84 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     );
   }
 
+  const canNavigateCarousel = carouselPages.length > 1;
+  const changeCarouselPage = (nextPage: number) => {
+    if (!canNavigateCarousel || nextPage === carouselPage) {
+      return;
+    }
+
+    setOutgoingCarouselPage(carouselPage);
+    setCarouselPage(Math.max(0, Math.min(carouselPages.length - 1, nextPage)));
+    setCarouselTrackPage(Math.max(0, Math.min(carouselPages.length - 1, nextPage)));
+  };
+
   return (
     <div className={`bizpack-data-monitoring-card ${className}`} style={rootStyle} {...rootDomProps}>
       <div
-        ref={viewportRef}
-        className="bizpack-data-monitoring-card-scroll bizpack-data-monitoring-card-virtual-scroll"
-        data-bizpack-auto-scrolling={canAutoScroll ? '1' : '0'}
-        onMouseEnter={resolvedPauseOnHover && canAutoScroll ? () => {
-          hoverPausedRef.current = true;
-          syncAutoScrollingAttr(false);
-        } : undefined}
-        onMouseLeave={resolvedPauseOnHover && canAutoScroll ? () => {
-          hoverPausedRef.current = false;
-          syncAutoScrollingAttr(true);
-        } : undefined}
+        className="bizpack-data-monitoring-card-carousel"
+        onMouseEnter={resolvedPauseOnHover ? () => setCarouselPaused(true) : undefined}
+        onMouseLeave={resolvedPauseOnHover ? () => setCarouselPaused(false) : undefined}
       >
-        <div ref={trackRef} className="bizpack-data-monitoring-card-list bizpack-data-monitoring-card-virtual-track">
-          {slots.map((slot) => (
-            <div
-              key={slot.virtualIndex}
-              className="bizpack-data-monitoring-card-item bizpack-data-monitoring-card-virtual-item"
-              style={{ top: slot.top, height: metrics.heights[slot.itemIndex] }}
-            >
-              <CardContent
-                data={items[slot.itemIndex]}
-                headerHeight={resolvedHeaderHeight}
-                infoHeight={resolvedInfoHeight}
-                chartHeight={resolvedChartHeight}
-                showLatestValue={resolvedShowLatestValue}
-                mountChart={resolvedMountChart}
-              />
-            </div>
-          ))}
+        <div
+          className="bizpack-data-monitoring-card-carousel-track"
+          style={{
+            width: `${renderedCarouselPages.length * 100}%`,
+            transform: `translate3d(-${carouselTrackPage * (100 / Math.max(renderedCarouselPages.length, 1))}%, 0, 0)`,
+            transitionDuration: isCarouselResetting ? '0ms' : `${resolvedCarouselTransitionDuration}ms`,
+          }}
+          onTransitionEnd={(event) => {
+            if (event.target === event.currentTarget) {
+              if (resolvedCarouselLoop && carouselTrackPage === carouselPages.length) {
+                setIsCarouselResetting(true);
+                setCarouselTrackPage(0);
+              }
+              setOutgoingCarouselPage(null);
+            }
+          }}
+        >
+          {renderedCarouselPages.map((page, pageIndex) => {
+            const logicalPageIndex = pageIndex === carouselPages.length ? 0 : pageIndex;
+            const mountPageCharts = pageIndex === carouselTrackPage || logicalPageIndex === outgoingCarouselPage;
+
+            return (
+              <div
+                key={pageIndex === carouselPages.length ? 'page-clone-first' : `page-${pageIndex}`}
+                className="bizpack-data-monitoring-card-carousel-page"
+                style={{ width: `${100 / Math.max(renderedCarouselPages.length, 1)}%` }}
+              >
+                {page.map((item, itemIndex) => (
+                  <div
+                    key={item.id != null ? `${pageIndex}-${String(item.id)}` : `card-${pageIndex}-${itemIndex}`}
+                    className="bizpack-data-monitoring-card-carousel-item"
+                  >
+                    <CardContent
+                      data={item}
+                      headerHeight={resolvedHeaderHeight}
+                      infoHeight={resolvedInfoHeight}
+                      chartHeight={resolvedChartHeight}
+                      showLatestValue={resolvedShowLatestValue}
+                      mountChart={resolvedMountChart && mountPageCharts}
+                    />
+                  </div>
+                ))}
+              </div>
+            );
+          })}
         </div>
-        {resolvedShowScrollbar && resolvedMode !== 'auto' && metrics.cycleHeight > viewportHeight ? (
-          <div className="bizpack-data-monitoring-card-virtual-scrollbar" aria-hidden="true">
-            <div ref={scrollbarThumbRef} className="bizpack-data-monitoring-card-virtual-scrollbar-thumb" />
+        {canNavigateCarousel ? (
+          <div className="bizpack-data-monitoring-card-carousel-pagination" aria-label="设备轮播分页">
+            {carouselPages.map((_, pageIndex) => (
+              <button
+                key={pageIndex}
+                type="button"
+                className={`bizpack-data-monitoring-card-carousel-dot ${
+                  pageIndex === carouselPage ? 'bizpack-data-monitoring-card-carousel-dot-active' : ''
+                }`}
+                aria-label={`第 ${pageIndex + 1} 页`}
+                aria-current={pageIndex === carouselPage ? 'true' : undefined}
+                onClick={() => changeCarouselPage(pageIndex)}
+              />
+            ))}
           </div>
         ) : null}
       </div>

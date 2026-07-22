@@ -1,9 +1,9 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
-import { DEFAULT_DATA_MONITORING_PANEL_TEST_DATA } from '../../src/components/data-monitoring-panel/test-data';
+import { DEFAULT_DATA_MONITORING_CARD_TEST_DATA } from '../../src/components/data-monitoring-card/test-data';
 
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
-const defaultData = DEFAULT_DATA_MONITORING_PANEL_TEST_DATA;
+const defaultData = DEFAULT_DATA_MONITORING_CARD_TEST_DATA;
 
 const DataMonitoringCardMeta: ComponentMetadata = {
   componentName: 'DataMonitoringCard',
@@ -130,64 +130,47 @@ const DataMonitoringCardMeta: ComponentMetadata = {
         type: 'group',
         display: 'accordion',
         title: {
-          label: '滚动配置',
+          label: '轮播配置',
         },
         items: [
           {
-            name: 'scrollMode',
-            title: '滚动模式',
-            defaultValue: 'autoWithManual',
-            setter: {
-              componentName: 'SelectSetter',
-              props: {
-                options: [
-                  { label: '自动滚动', value: 'auto' },
-                  { label: '手动滚动', value: 'manual' },
-                  { label: '自动滚动（可手动接管）', value: 'autoWithManual' },
-                ],
-              },
+            name: 'devicesPerPage',
+            title: {
+              label: '每页设备数',
+              tip: '每个轮播页面展示的设备数量，默认 2',
             },
+            defaultValue: 2,
+            setter: 'NumberSetter',
           },
           {
-            name: 'scrollDuration',
-            title: '滚动时长',
-            tip: '完成一轮滚动所需秒数，手动模式不生效',
-            defaultValue: 50,
-            setter: 'NumberSetter',
-            condition: (target: any) => {
-              const mode = target.getProps().getPropValue('scrollMode');
-              return mode !== 'manual';
+            name: 'carouselInterval',
+            title: {
+              label: '轮播间隔',
+              tip: '每页停留时间，单位毫秒，默认 5000',
             },
+            defaultValue: 5000,
+            setter: 'NumberSetter',
           },
           {
-            name: 'resumeDelay',
-            title: '恢复自动滚动延迟',
-            tip: '手动操作后恢复自动滚动的等待毫秒数',
-            defaultValue: 1000,
-            setter: 'NumberSetter',
-            condition: (target: any) => {
-              return target.getProps().getPropValue('scrollMode') === 'autoWithManual';
+            name: 'carouselTransitionDuration',
+            title: {
+              label: '切换动画时长',
+              tip: '页面切换动画时长，单位毫秒，默认 400',
             },
+            defaultValue: 400,
+            setter: 'NumberSetter',
+          },
+          {
+            name: 'carouselLoop',
+            title: '循环轮播',
+            defaultValue: true,
+            setter: 'BoolSetter',
           },
           {
             name: 'pauseOnHover',
             title: '悬停暂停',
             defaultValue: true,
             setter: 'BoolSetter',
-            condition: (target: any) => {
-              const mode = target.getProps().getPropValue('scrollMode');
-              return mode !== 'manual';
-            },
-          },
-          {
-            name: 'showScrollbar',
-            title: '显示滚动条',
-            defaultValue: true,
-            setter: 'BoolSetter',
-            condition: (target: any) => {
-              const mode = target.getProps().getPropValue('scrollMode');
-              return mode === 'manual' || mode === 'autoWithManual';
-            },
           },
         ],
       },
@@ -210,11 +193,11 @@ const snippets: Snippet[] = [
         infoHeight: 60,
         chartHeight: 120,
         cardGap: 16,
-        scrollMode: 'autoWithManual',
-        scrollDuration: 50,
-        resumeDelay: 1000,
+        devicesPerPage: 2,
+        carouselInterval: 5000,
+        carouselTransitionDuration: 400,
+        carouselLoop: true,
         pauseOnHover: true,
-        showScrollbar: true,
         showLatestValue: true,
       },
     },

@@ -5,5 +5,4 @@ export {
 export type {
   DataMonitoringCardData,
   DataMonitoringCardProps,
-  DataMonitoringScrollMode,
 } from './data-monitoring-card-v2';

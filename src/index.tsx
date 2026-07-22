@@ -61,8 +61,15 @@ export type {
 } from './components/data-monitoring-line-chart';
 export { default as DataMonitoringLineChart } from './components/data-monitoring-line-chart';
 
-export type { DataMonitoringCardData, DataMonitoringCardProps, DataMonitoringScrollMode } from './components/data-monitoring-card';
-export { default as DataMonitoringCard } from './components/data-monitoring-card';
+export type {
+  DataMonitoringCardData,
+  DataMonitoringCardProps,
+} from './components/data-monitoring-card';
+export {
+  createDataMonitoringCardTestData,
+  DEFAULT_DATA_MONITORING_CARD_TEST_DATA,
+  default as DataMonitoringCard,
+} from './components/data-monitoring-card';
 
 export type { DataMonitoringPanelProps } from './components/data-monitoring-panel';
 export {
