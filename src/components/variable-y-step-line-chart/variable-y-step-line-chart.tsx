@@ -5,6 +5,7 @@ import '../jsx-shim';
 import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import * as echarts from 'echarts';
 import { destroy, init } from '../../common/iot';
+import { getNiceAxisMax } from '../../common/chart-axis';
 import {
   CHART_SYMBOL_POINT_THRESHOLD,
 } from '../../common/perf';
@@ -116,27 +117,6 @@ const formatAxisTickValue = (value: number): string => {
   return parseFloat(value.toPrecision(3)).toString();
 };
 
-/**
- * Y 轴上限向上取整（任意量级通用，含 >10000）：
- * - (0, 10]  → 固定 10
- * - value>10 → step = 10^floor(log10(value))，结果 = ceil(value/step)*step
- *   即按当前数量级的首位步进向上取整（十/百/千/万/十万…）
- */
-const niceCeil = (value: number): number => {
-  if (!Number.isFinite(value) || value <= 0) {
-    return 10;
-  }
-
-  if (value <= 10) {
-    return 10;
-  }
-
-  const exp = Math.floor(Math.log10(value));
-  const step = 10 ** exp;
-
-  return Math.ceil(value / step) * step;
-};
-
 /** 从当前窗口系列数据中取最大值 */
 const getSeriesDataMax = (source: ChartSourceData): number => {
   let max = 0;
@@ -160,14 +140,18 @@ const getSeriesDataMax = (source: ChartSourceData): number => {
 
 /**
  * 根据数据最大值生成 5 档真实刻度：
- * 上限由 niceCeil 决定；保留 0 / 0.5 / 1 低端分辨率，中高档随 max 动态变化
+ * - ≤10：等距五档（如 3→上限 4，刻度为 0/1/2/3/4）
+ * - >10：保留 0 / 0.5 / 1 低端分辨率，中高档随 max 动态变化
  */
 export const buildYAxisTicks = (dataMax: number): number[] => {
-  const niceMax = niceCeil(Number.isFinite(dataMax) && dataMax > 0 ? dataMax : 0);
-  const mid = niceMax / 2;
+  const niceMax = getNiceAxisMax(Number.isFinite(dataMax) && dataMax > 0 ? dataMax : 0);
+  const clean = (value: number) => parseFloat(value.toPrecision(12));
 
-  // niceCeil 最小为 10，mid 至少为 5，始终走大量程刻度
-  return [0, 0.5, 1, mid, niceMax];
+  if (niceMax <= 10) {
+    return [0, clean(niceMax * 0.25), clean(niceMax * 0.5), clean(niceMax * 0.75), niceMax];
+  }
+
+  return [0, 0.5, 1, niceMax / 2, niceMax];
 };
 
 const padTimePart = (value: number) => String(value).padStart(2, '0');

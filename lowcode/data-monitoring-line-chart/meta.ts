@@ -117,7 +117,7 @@ const DataMonitoringLineChartMeta: ComponentMetadata = {
             name: 'max',
             title: {
               label: 'y轴最大值',
-              tip: '默认 10000',
+              tip: '留空时按当前 15 分钟窗口内数据最大值自动取整（≤10 取 floor(v)+1；更大值按比数量级小一档步长）；填写数值时固定使用该上限',
             },
             setter: 'NumberSetter',
           },
@@ -214,7 +214,6 @@ const snippets: Snippet[] = [
         xField: 'label',
         yField: 'value',
         min: 0,
-        max: 10000,
         showXAxisLabels: false,
         xAxisLabelCount: 5,
         xAxisUnitLabel: 't',

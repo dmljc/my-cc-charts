@@ -140,7 +140,8 @@
     display: flex;
     flex: none;
     flex-direction: column;
-    gap: var(--bizpack-data-monitoring-card-gap, 16px);
+    justify-content: flex-start;
+    gap: 0;
     box-sizing: border-box;
     min-width: 0;
     height: 100%;
@@ -149,10 +150,29 @@
 
   &-carousel-item {
     display: flex;
-    flex: 1 1 0;
+    flex: none;
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
+  }
+
+  // 占满两台设备之间的空隙，虚线几何居中（避免 border 偏移）
+  &-carousel-separator {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 84%;
+    margin: 0 auto;
+
+    &::before {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 0;
+      border-top: 1px dashed rgba(144, 206, 225, 0.55);
+      pointer-events: none;
+    }
   }
 
   &-carousel-pagination {

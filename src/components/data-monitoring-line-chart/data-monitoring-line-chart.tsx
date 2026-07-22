@@ -5,6 +5,7 @@ import '../jsx-shim';
 import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import * as echarts from 'echarts';
 import { destroy, init } from '../../common/iot';
+import { buildNiceAxisTicks, getNiceAxisMax } from '../../common/chart-axis';
 import { sliceWindow } from '../../common/perf';
 import { DEFAULT_DATA_MONITORING_LINE_CHART_TEST_DATA } from './test-data';
 import './index.scss';
@@ -24,7 +25,7 @@ export interface DataMonitoringLineChartProps {
   yField?: string;
   /** y 轴最小值，默认 0 */
   min?: number;
-  /** y 轴最大值，默认 10000 */
+  /** y 轴最大值；不传时按当前窗口数据最大值自动取整 */
   max?: number;
   /** 曲线颜色，默认浅蓝色 */
   lineColor?: string;
@@ -38,7 +39,7 @@ export interface DataMonitoringLineChartProps {
   xAxisUnitLabel?: string;
   /** 是否在曲线末端展示最新数值标注，默认 true */
   showLatestValue?: boolean;
-  /** 时序点滑动窗口上限，默认 1800（最近 30 分钟，按 1 秒 1 点） */
+  /** 时序点滑动窗口上限，默认 900（最近 15 分钟，按 1 秒 1 点） */
   maxPoints?: number;
   width?: number | string;
   height?: number | string;
@@ -57,8 +58,8 @@ interface BizRef {
 
 const DEFAULT_DATA = DEFAULT_DATA_MONITORING_LINE_CHART_TEST_DATA as DataMonitoringLineChartPoint[];
 const EMPTY_AXIS_PLACEHOLDER_COUNT = 5;
-/** 与 openview / qtc 一致：最近 30 分钟 ≈ 1800 点 */
-const DEFAULT_MAX_POINTS = 30 * 60;
+/** 最近 15 分钟（1 秒 1 点 ≈ 900） */
+const DEFAULT_MAX_POINTS = 15 * 60;
 
 const DEFAULT_LINE_COLOR = '#5bc8ff';
 const DEFAULT_AREA_COLOR: [string, string] = ['rgba(30, 110, 220, 0.85)', 'rgba(20, 60, 140, 0.15)'];
@@ -223,7 +224,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     xField = 'label',
     yField = 'value',
     min = 0,
-    max = 10000,
+    max,
     lineColor = DEFAULT_LINE_COLOR,
     areaColor = DEFAULT_AREA_COLOR,
     showXAxisLabels = true,
@@ -300,23 +301,15 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       ? seriesData.map((value) => Number(value)).filter((value) => Number.isFinite(value))
       : [];
     const dataMax = numericValues.length > 0 ? Math.max(...numericValues) : 0;
-    // 真实数据远小于默认 max(10000) 时自适应刻度，避免曲线贴底看起来像“没数据”
-    let axisMin = min;
-    let axisMax = max;
-    if (hasData && dataMax < max * 0.1) {
-      if (dataMax <= 0) {
-        axisMax = 1;
-      } else if (dataMax <= 1) {
-        axisMax = 1;
-      } else if (dataMax <= 5) {
-        axisMax = 5;
-      } else if (dataMax <= 10) {
-        axisMax = 10;
-      } else {
-        axisMax = Math.ceil(dataMax * 1.2);
-      }
-      axisMin = 0;
-    }
+    const configuredMin = Number(min);
+    const axisMin = Number.isFinite(configuredMin) ? configuredMin : 0;
+    const configuredMax = Number(max);
+    const autoAxisMax = getNiceAxisMax(dataMax);
+    // 显式传入 max 时保持用户配置；未传时与可变 Y 轴折线图共用同一取整规则。
+    const axisMax = Number.isFinite(configuredMax) && configuredMax > axisMin
+      ? configuredMax
+      : Math.max(autoAxisMax, axisMin + 1);
+    const yAxisTicks = buildNiceAxisTicks(axisMin, axisMax);
     const showUnitLabel = !showXAxisLabels && Boolean(xAxisUnitLabel);
     const lastRawValue = hasData ? (items[items.length - 1] as any)[yField] : undefined;
     const latestText = showLatestValue && lastRawValue !== null && lastRawValue !== undefined
@@ -324,8 +317,6 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
       : null;
     const isLargeData = items.length > 500;
     const xAxisLabelIndexSet = buildXAxisLabelIndexSet(xAxisData.length, xAxisLabelCount);
-    const yAxisTicks = [axisMin, (axisMin + axisMax) / 2, axisMax];
-
     return {
       // 大屏多实例（监测卡列表）场景关闭动画，降低麒麟机滚动/断网稳态 CPU
       animation: false,

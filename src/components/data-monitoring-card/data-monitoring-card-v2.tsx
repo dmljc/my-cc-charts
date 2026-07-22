@@ -57,8 +57,10 @@ export interface DataMonitoringCardProps {
   [key: string]: unknown;
 }
 
-const DEFAULT_LIST_HEIGHT = 650;
-const LIST_CHART_MAX_POINTS = 160;
+/** 双设备轮播下容纳 150px 趋势图与分页器的默认高度。 */
+const DEFAULT_LIST_HEIGHT = 700;
+/** 与数据监测趋势折线图统一：最近 15 分钟（1 秒 1 点 ≈ 900） */
+const LIST_CHART_MAX_POINTS = 15 * 60;
 
 const resolveNumber = (value: unknown, fallback: number) => {
   const numberValue = Number(value);
@@ -176,7 +178,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     height,
     headerHeight = 78,
     infoHeight = 60,
-    chartHeight = 120,
+    chartHeight = 150,
     cardGap = 16,
     pauseOnHover = true,
     showLatestValue = true,
@@ -200,7 +202,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     : sourceData;
   const resolvedHeaderHeight = resolveNumber(headerHeight, 78);
   const resolvedInfoHeight = resolveNumber(infoHeight, 60);
-  const resolvedChartHeight = resolveNumber(chartHeight, 120);
+  const resolvedChartHeight = resolveNumber(chartHeight, 150);
   const resolvedHeight = resolveNumber(height, DEFAULT_LIST_HEIGHT);
   const resolvedPauseOnHover = resolveBoolean(pauseOnHover, true);
   const resolvedShowLatestValue = resolveBoolean(showLatestValue, true);
@@ -209,8 +211,10 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const resolvedCarouselInterval = resolveNumber(carouselInterval, 5000);
   const resolvedCarouselTransitionDuration = resolveNumber(carouselTransitionDuration, 400);
   const resolvedCarouselLoop = resolveBoolean(carouselLoop, true);
+  const resolvedCardGap = resolveNumber(cardGap, 16);
   const rootDomProps = pickRootDomProps(otherProps);
   const [carouselPage, setCarouselPage] = useState(0);
+  const carouselPageRef = useRef(0);
   const [carouselTrackPage, setCarouselTrackPage] = useState(0);
   const [outgoingCarouselPage, setOutgoingCarouselPage] = useState<number | null>(null);
   const [carouselPaused, setCarouselPaused] = useState(false);
@@ -246,10 +250,20 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   }, [sourceData]);
 
   useEffect(() => {
-    setCarouselPage((current) => Math.min(current, Math.max(carouselPages.length - 1, 0)));
-    setCarouselTrackPage((current) => Math.min(current, Math.max(carouselPages.length - 1, 0)));
+    carouselPageRef.current = carouselPage;
+  }, [carouselPage]);
+
+  // 循环开关或页数变化时，取消克隆页动画并回到真实页面索引。
+  // 防止在「末页 → 首页克隆页」的过渡中关闭循环导致轨道越界、显示空白页。
+  useEffect(() => {
+    const normalizedPage = Math.min(carouselPageRef.current, Math.max(carouselPages.length - 1, 0));
+
+    carouselPageRef.current = normalizedPage;
+    setCarouselPage(normalizedPage);
+    setCarouselTrackPage(normalizedPage);
     setOutgoingCarouselPage(null);
-  }, [carouselPages.length]);
+    setIsCarouselResetting(true);
+  }, [carouselPages.length, resolvedCarouselLoop]);
 
   useEffect(() => {
     if (!isCarouselResetting || typeof window === 'undefined') {
@@ -327,7 +341,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const rootStyle: React.CSSProperties = {
     width,
     ...(isListMode ? { height: resolvedHeight } : height !== undefined ? { height } : {}),
-    ...(isListMode ? { ['--bizpack-data-monitoring-card-gap' as string]: `${resolveNumber(cardGap, 16)}px` } : {}),
+    ...(isListMode ? { ['--bizpack-data-monitoring-card-gap' as string]: `${resolvedCardGap}px` } : {}),
     ...style,
   };
 
@@ -392,19 +406,27 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
                 style={{ width: `${100 / Math.max(renderedCarouselPages.length, 1)}%` }}
               >
                 {page.map((item, itemIndex) => (
-                  <div
+                  <React.Fragment
                     key={item.id != null ? `${pageIndex}-${String(item.id)}` : `card-${pageIndex}-${itemIndex}`}
-                    className="bizpack-data-monitoring-card-carousel-item"
                   >
-                    <CardContent
-                      data={item}
-                      headerHeight={resolvedHeaderHeight}
-                      infoHeight={resolvedInfoHeight}
-                      chartHeight={resolvedChartHeight}
-                      showLatestValue={resolvedShowLatestValue}
-                      mountChart={resolvedMountChart && mountPageCharts}
-                    />
-                  </div>
+                    {itemIndex > 0 ? (
+                      <div
+                        className="bizpack-data-monitoring-card-carousel-separator"
+                        style={{ height: resolvedCardGap }}
+                        aria-hidden="true"
+                      />
+                    ) : null}
+                    <div className="bizpack-data-monitoring-card-carousel-item">
+                      <CardContent
+                        data={item}
+                        headerHeight={resolvedHeaderHeight}
+                        infoHeight={resolvedInfoHeight}
+                        chartHeight={resolvedChartHeight}
+                        showLatestValue={resolvedShowLatestValue}
+                        mountChart={resolvedMountChart && mountPageCharts}
+                      />
+                    </div>
+                  </React.Fragment>
                 ))}
               </div>
             );

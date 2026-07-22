@@ -82,7 +82,7 @@ const DataMonitoringCardMeta: ComponentMetadata = {
           {
             name: 'height',
             title: '高度',
-            defaultValue: 650,
+            defaultValue: 700,
             setter: 'NumberSetter',
           },
           {
@@ -100,7 +100,7 @@ const DataMonitoringCardMeta: ComponentMetadata = {
           {
             name: 'chartHeight',
             title: '图表高度',
-            defaultValue: 120,
+            defaultValue: 150,
             setter: 'NumberSetter',
           },
           {
@@ -188,10 +188,10 @@ const snippets: Snippet[] = [
         ...ChartSnippet,
         data: defaultData,
         width: 400,
-        height: 650,
+        height: 700,
         headerHeight: 78,
         infoHeight: 60,
-        chartHeight: 120,
+        chartHeight: 150,
         cardGap: 16,
         devicesPerPage: 2,
         carouselInterval: 5000,
