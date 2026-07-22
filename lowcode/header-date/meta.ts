@@ -91,7 +91,7 @@ const snippets: Snippet[] = [
       componentName: 'HeaderDate',
       props: {
         ...ChartSnippet,
-        width: 200,
+        width: 280,
         height: 32,
       },
     },
