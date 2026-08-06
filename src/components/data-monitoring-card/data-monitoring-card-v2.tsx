@@ -232,14 +232,9 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     return pages;
   }, [items, resolvedDevicesPerPage]);
 
-  const renderedCarouselPages = useMemo(
-    () => (
-      resolvedCarouselLoop && carouselPages.length > 1
-        ? [...carouselPages, carouselPages[0]]
-        : carouselPages
-    ),
-    [carouselPages, resolvedCarouselLoop],
-  );
+  // 轮播页必须与输入数据一一对应。此前为实现无缝循环追加了首页克隆页，
+  // 导致克隆页可能被当作额外设备展示。
+  const renderedCarouselPages = carouselPages;
 
   useEffect(() => {
     setSourceData(data);
@@ -253,8 +248,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     carouselPageRef.current = carouselPage;
   }, [carouselPage]);
 
-  // 循环开关或页数变化时，取消克隆页动画并回到真实页面索引。
-  // 防止在「末页 → 首页克隆页」的过渡中关闭循环导致轨道越界、显示空白页。
+  // 循环开关或页数变化时，回到有效页面索引，避免轨道越界或显示空白页。
   useEffect(() => {
     const normalizedPage = Math.min(carouselPageRef.current, Math.max(carouselPages.length - 1, 0));
 
@@ -294,7 +288,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
 
         const next = isLast ? 0 : current + 1;
         setOutgoingCarouselPage(current);
-        setCarouselTrackPage(isLast && resolvedCarouselLoop ? carouselPages.length : next);
+        setCarouselTrackPage(next);
         return next;
       });
     };
@@ -387,21 +381,16 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
           }}
           onTransitionEnd={(event) => {
             if (event.target === event.currentTarget) {
-              if (resolvedCarouselLoop && carouselTrackPage === carouselPages.length) {
-                setIsCarouselResetting(true);
-                setCarouselTrackPage(0);
-              }
               setOutgoingCarouselPage(null);
             }
           }}
         >
           {renderedCarouselPages.map((page, pageIndex) => {
-            const logicalPageIndex = pageIndex === carouselPages.length ? 0 : pageIndex;
-            const mountPageCharts = pageIndex === carouselTrackPage || logicalPageIndex === outgoingCarouselPage;
+            const mountPageCharts = pageIndex === carouselTrackPage || pageIndex === outgoingCarouselPage;
 
             return (
               <div
-                key={pageIndex === carouselPages.length ? 'page-clone-first' : `page-${pageIndex}`}
+                key={`page-${pageIndex}`}
                 className="bizpack-data-monitoring-card-carousel-page"
                 style={{ width: `${100 / Math.max(renderedCarouselPages.length, 1)}%` }}
               >

@@ -55,7 +55,7 @@ class LowcodeComponent extends Component {
      *   · qtcList：折线增量拼接 / 整窗替换，裁 30 分钟
      */
     handleWss() {
-      this.ws = new WebSocket('ws://192.168.1.3:8088/api/ws/realtime');
+      this.ws = new WebSocket('ws://192.168.8.101:8088/api/ws/realtime');
   
       this.ws.onopen = () => {
         console.log('✅ WebSocket 连接已建立');
@@ -91,6 +91,14 @@ class LowcodeComponent extends Component {
           // btnClass3: 'bottom-btn btn-background-unclick',
           sceneIndex: 1,
         });
+  
+        // 发送切换指令:subscribe订阅
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+          this.ws.send(JSON.stringify({
+            topic: 'subscribe',
+            buildingId: 12
+          }));
+        }
       }
     }
   
@@ -100,6 +108,13 @@ class LowcodeComponent extends Component {
         btnClass1: 'bottom-btn btn-background-click',
         sceneIndex: 0,
       });
+  
+      // 发送切换指令:unsubscribe 取消订阅
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        this.ws.send(JSON.stringify({
+          topic: 'unsubscribe'
+        }));
+      }
     }
   
     /** 折线窗口：最近 30 分钟（1 秒 1 点 ≈ 1800） */
@@ -443,9 +458,9 @@ class LowcodeComponent extends Component {
         next.inspectionList = this.replaceList(payload.inspectionList);
       }
   
-      // 监测卡：字段合并 + 折线拼接
+      // 监测卡：直接使用接口返回的完整列表，不与旧数据合并。
       if (this.hasOwn(payload, 'monitoringList')) {
-        next.monitoringList = this.mergeMonitoring(s.monitoringList, payload.monitoringList);
+        next.monitoringList = this.trimMonitoring(payload.monitoringList);
       }
   
       // qtc：增量拼接 / 整窗替换
