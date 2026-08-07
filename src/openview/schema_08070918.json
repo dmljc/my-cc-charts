@@ -47,7 +47,7 @@
       ]
     },
     "css": "body {\n  font-size: 12px;\n}\n\n.button {\n  width: 100px;\n  color: #ff00ff\n}\n\n.next-table-fixed table {\n  table-layout: fixed;\n  background: transparent;\n}\n\ntd.next-table-cell {\n  background-color: transparent !important;\n  text-align: center;\n}\n\n::-webkit-scrollbar {\n  width: 5px;\n  height: 5px;\n}\n\n/* 滚动条轨道 */\n::-webkit-scrollbar-track {\n  /*  background: rgb(239, 239, 239); */\n  border-radius: 5px;\n}\n\n/*  小滑块 */\n::-webkit-scrollbar-thumb {\n  background: #40a0ff49;\n  border-radius: 10px;\n}\n\n::-webkit-scrollbar-thumb:hover {\n  background: #40a0ff;\n}\n\n.table-common {\n  width: 100%;\n}\n\n.table-common tbody .next-table-cell-wrapper {\n  width: 100px;\n  /* 限制容器宽度 */\n  white-space: nowrap;\n  /* 禁止文本换行 */\n  overflow: hidden;\n  /* 隐藏超出范围的内容 */\n  text-overflow: ellipsis;\n  /* 使用省略号 */\n}\n\n.table-common .next-table-row td:nth-child(2) .next-table-cell-wrapper {\n  width: 220px;\n}\n\n.table-common table {\n  background: none;\n}\n\n.table-common .next-table-header {\n  height: 32px;\n}\n\n.table-common .next-table-cell-wrapper {\n  font-size: 16px !important;\n  height: 32px !important;\n  padding: 0 !important;\n  line-height: 32px !important;\n  text-align: center;\n}\n\n.table-common th {\n  background: rgba(41, 121, 255, 0.3);\n  color: #00CFE4;\n}\n\n.table-common .next-table-row {\n  background: none;\n  height: 29px;\n  font-size: 14px;\n}\n\n\n.table-common.zebra tr:nth-child(even) td {\n  background: rgba(26, 52, 93, 0.6);\n}\n\n/* .table-common .next-table-row.hovered {\n  background: none !important;\n}\n\n.table-common .next-table-row.hovered td {\n  background: none !important;\n} */\n\n.table-common td {\n  color: rgba(255, 255, 255, 1);\n  background-color: rgba(26, 52, 93, 1);\n}\n\n.table-common.zebra tr:nth-child(odd) td {\n  background: none;\n  /* opacity: 0.5; */\n}\n\n.table-common .next-table-body tr:nth-child(odd).hovered td {\n  background: none;\n  color: rgba(255, 255, 255, 1);\n  /* opacity: 0.5; */\n}\n\n.table-common .next-table-body tr:nth-child(even).hovered td {\n\n  color: rgba(255, 255, 255, 1);\n  background: rgba(26, 52, 93, 0.6);\n  /* color: #00CFE4; */\n  /* opacity: 0.5; */\n}\n\n.bottom-btn-box {\n  position: absolute;\n  bottom: 20px;\n  right: 410px;\n  display: flex;\n  flex-direction: column;\n  width: 150px;\n}\n\n.bottom-btn {\n  width: 132px;\n  height: 46px !important;\n  text-align: center;\n  z-index: 100;\n  cursor: pointer;\n}\n\n.btn-background-click {\n  background: url('/simu/static/screenImg/mxxz-btn-click1.png') !important;\n  background-position: center !important;\n  background-repeat: no-repeat !important;\n  background-size: 100% 100% !important;\n}\n\n.btn-background-unclick {\n  background: url('/simu/static/screenImg/mxxz-btn-unclick1.png') !important;\n  background-position: center !important;\n  background-repeat: no-repeat !important;\n  background-size: 100% 100% !important;\n}",
-    "originCode": "class LowcodeComponent extends Component {\n  state = {\n    btnClass1: 'bottom-btn btn-background-click',\n    // btnClass2: 'bottom-btn btn-background-unclick',\n    // btnClass3: 'bottom-btn btn-background-unclick',\n    /**\n     * 当前场景索引（枚举）\n     * 0 = 首页 / 大屏概览页\n     * 1 = X12 厂房\n     */\n    sceneIndex: 0,\n    // 流出物\n    effluentList: [],\n    // 告警状态概览\n    alertOverviewList: [],\n    // 数据监测卡片\n    monitoringList: [],\n    // 操作日志\n    operationLogList: [],\n    // 设备警告\n    alarmList: [],\n    // 设备定检\n    inspectionList: [],\n    // QTC流出物\n    qtcList: {},\n  };\n\n    // 内置加载器配置\n    // {\n    //   \"componentName\": \"DevLoader\",\n    //   \"id\": \"node_ocmca8tqmc1\",\n    //   \"props\": {\n    //     \"width\": \"100vw\",\n    //     \"height\": \"100vh\",\n    //     \"sceneIndex\": 0\n    //   },\n    //   \"hidden\": false,\n    //   \"title\": \"\",\n    //   \"isLocked\": false,\n    //   \"condition\": true,\n    //   \"conditionGroup\": \"\"\n    // },\n\n  componentDidMount() {\n    this.handleWss();\n  }\n\n  /**\n   * WebSocket\n   * - init_data：全量写入\n   * - ws_data：字段结构一致\n   *   · alarmList / operationLogList / inspectionList / alertOverviewList：整表覆盖\n   *   · effluentList：按 id 更新 value（不追加、空推送不清空）\n   *   · monitoringList：卡片按 id 合并；tritiumConcentration 增量拼接，裁 30 分钟\n   *   · qtcList：折线增量拼接 / 整窗替换，裁 30 分钟\n   */\n  handleWss() {\n    this.ws = new WebSocket('ws://192.168.8.101:8088/api/ws/realtime');\n\n    this.ws.onopen = () => {\n      console.log('✅ WebSocket 连接已建立');\n    };\n\n    this.ws.onmessage = (e) => {\n      try {\n        const msg = JSON.parse(e.data);\n        if (!msg || !msg.data) {\n          return;\n        }\n        if (msg.topic === 'init_data') {\n          this.applyInitData(msg.data);\n          return;\n        }\n        if (msg.topic === 'ws_data') {\n          this.applyWsData(msg.data);\n        }\n      } catch (error) {\n        console.error('❌ 解析消息失败:', error);\n      }\n    };\n\n    this.ws.onerror = () => { };\n  }\n\n  // 跳转到x12 厂房\n  goX12(e, params) {\n    if (params && params.key === 1) {\n      this.setState({\n        btnClass1: 'bottom-btn btn-background-click',\n        // btnClass2: 'bottom-btn btn-background-click',\n        // btnClass3: 'bottom-btn btn-background-unclick',\n        sceneIndex: 1,\n      });\n\n      // 发送切换指令:subscribe订阅\n      if (this.ws && this.ws.readyState === WebSocket.OPEN) {\n        this.ws.send(JSON.stringify({\n          topic: 'subscribe',\n          buildingId: 12\n        }));\n      }\n    }\n  }\n\n  // 跳转到概览页\n  goHome() {\n    this.setState({\n      btnClass1: 'bottom-btn btn-background-click',\n      sceneIndex: 0,\n    });\n\n    // 发送切换指令:unsubscribe 取消订阅\n    if (this.ws && this.ws.readyState === WebSocket.OPEN) {\n      this.ws.send(JSON.stringify({\n        topic: 'unsubscribe'\n      }));\n    }\n  }\n\n  /** 折线窗口：最近 30 分钟（1 秒 1 点 ≈ 1800） */\n  getMaxChartPoints() {\n    return 30 * 60;\n  }\n\n  asArray(value) {\n    return Object.prototype.toString.call(value) === '[object Array]' ? value : [];\n  }\n\n  asObject(value) {\n    return Object.prototype.toString.call(value) === '[object Object]' ? value : {};\n  }\n\n  hasOwn(obj, key) {\n    return Object.prototype.hasOwnProperty.call(obj, key);\n  }\n\n  /** 整表覆盖：拷贝新引用，避免低代码复用旧数组不刷新 */\n  replaceList(value) {\n    return this.asArray(value).slice();\n  }\n\n  tail(list, max) {\n    const arr = this.asArray(list);\n    return arr.length > max ? arr.slice(-max) : arr;\n  }\n\n  /**\n   * 流出物（ws_data）：按 id / 下标对齐，只更新 value、arrow\n   * - 空推送保留原列表（避免误清空槽位）\n   * - 不追加新项（与 Effluent 组件槽位锁定一致）\n   */\n  mergeEffluentList(prevList, incomingList) {\n    const prev = this.asArray(prevList);\n    const incoming = this.asArray(incomingList);\n    if (!incoming.length) {\n      return prev;\n    }\n    if (!prev.length) {\n      return incoming.slice();\n    }\n\n    const next = prev.map((item) => (item && typeof item === 'object' ? { ...item } : item));\n    const used = {};\n\n    incoming.forEach((item, i) => {\n      if (!item || typeof item !== 'object') {\n        return;\n      }\n\n      let idx = -1;\n      if (item.id != null) {\n        idx = next.findIndex((row, rowIdx) => !used[rowIdx] && row && row.id == item.id);\n      }\n      if (idx < 0 && i < next.length && !used[i]) {\n        idx = i;\n      }\n      if (idx < 0) {\n        return;\n      }\n\n      used[idx] = true;\n      if (this.hasOwn(item, 'value')) {\n        next[idx].value = item.value;\n      }\n      if (this.hasOwn(item, 'arrow')) {\n        next[idx].arrow = item.arrow;\n      }\n    });\n\n    return next;\n  }\n\n  getCardPoints(card) {\n    if (!card || typeof card !== 'object') {\n      return [];\n    }\n    const points = card.tritiumConcentration != null ? card.tritiumConcentration : card.chart;\n    return this.asArray(points);\n  }\n\n  /** 监测卡折线裁到 30 分钟窗口 */\n  trimMonitoring(list) {\n    const maxPoints = this.getMaxChartPoints();\n    return this.asArray(list).map((card) => {\n      if (!card || typeof card !== 'object') {\n        return card;\n      }\n      const points = this.getCardPoints(card);\n      if (!points.length && card.tritiumConcentration == null && card.chart == null) {\n        return card;\n      }\n      return {\n        ...card,\n        tritiumConcentration: this.tail(points, maxPoints),\n      };\n    });\n  }\n\n  /**\n   * 合并监测列表（ws_data）\n   * - 卡片按 id（无 id 用下标）更新字段\n   * - tritiumConcentration：≤5 点视为增量 append，否则整窗替换；空数组不覆盖已有时序\n   */\n  mergeMonitoring(prevList, incomingList) {\n    const incoming = this.asArray(incomingList);\n    if (!incoming.length) {\n      return this.trimMonitoring(prevList);\n    }\n\n    const maxPoints = this.getMaxChartPoints();\n    const map = new Map();\n\n    this.asArray(prevList).forEach((card, i) => {\n      const key = card && card.id != null ? String(card.id) : `i_${i}`;\n      map.set(key, {\n        ...card,\n        tritiumConcentration: this.getCardPoints(card).slice(),\n      });\n    });\n\n    incoming.forEach((card, i) => {\n      const key = card && card.id != null ? String(card.id) : `i_${i}`;\n      const addPoints = this.getCardPoints(card);\n      const prev = map.get(key);\n\n      if (!prev) {\n        map.set(key, {\n          ...card,\n          tritiumConcentration: this.tail(addPoints, maxPoints),\n        });\n        return;\n      }\n\n      const prevPts = this.asArray(prev.tritiumConcentration);\n      let mergedPts = prevPts;\n      if (addPoints.length) {\n        const isIncremental = prevPts.length > 0 && addPoints.length <= 5;\n        mergedPts = isIncremental ? prevPts.concat(addPoints) : addPoints.slice();\n      }\n\n      map.set(key, {\n        ...prev,\n        ...card,\n        tritiumConcentration: this.tail(mergedPts, maxPoints),\n      });\n    });\n\n    return Array.from(map.values());\n  }\n\n  /** 取 qtc 系列数值：优先 topic，其次非空的 data / init_data */\n  pickQtcSeriesValues(seriesItem, topic) {\n    if (!seriesItem || typeof seriesItem !== 'object') {\n      return [];\n    }\n    const keys = topic ? [topic, 'data', 'init_data'] : ['data', 'init_data'];\n    let fallback = null;\n    for (let i = 0; i < keys.length; i += 1) {\n      const arr = seriesItem[keys[i]];\n      if (!Array.isArray(arr)) {\n        continue;\n      }\n      if (arr.length) {\n        return arr;\n      }\n      if (fallback == null) {\n        fallback = arr;\n      }\n    }\n    return fallback || [];\n  }\n\n  /** 裁剪 qtc：xAxis / data / init_data 对齐到最近窗口 */\n  trimQtc(qtc) {\n    const maxPoints = this.getMaxChartPoints();\n    const source = this.asObject(qtc);\n    const xAxis = this.asArray(source.xAxis);\n    const start = xAxis.length > maxPoints ? xAxis.length - maxPoints : 0;\n    const trimmedX = start > 0 ? xAxis.slice(start) : xAxis.slice();\n    const len = trimmedX.length;\n    const topic =\n      typeof source.topic === 'string' && source.topic.trim() !== ''\n        ? source.topic.trim()\n        : undefined;\n\n    return {\n      ...source,\n      xAxis: trimmedX,\n      legend: this.asArray(source.series)\n        .map((item) => (item && item.name != null ? String(item.name) : ''))\n        .filter(Boolean),\n      series: this.asArray(source.series).map((item) => {\n        if (!item || typeof item !== 'object') {\n          return item;\n        }\n        const next = { ...item };\n        const values = this.pickQtcSeriesValues(item, topic);\n        const aligned = values.length > start ? values.slice(start) : values.slice();\n        const synced = aligned.length > len ? aligned.slice(-len) : aligned;\n        if (Array.isArray(item.data) || topic === 'data' || !topic) {\n          next.data = synced;\n        }\n        if (Array.isArray(item.init_data) || topic === 'init_data') {\n          next.init_data = synced.slice();\n        }\n        if (!Array.isArray(next.data) && !Array.isArray(next.init_data)) {\n          next.data = synced;\n        }\n        return next;\n      }),\n    };\n  }\n\n  /**\n   * 合并 qtc（ws_data）\n   * - 短横轴增量：append 后裁窗\n   * - 整窗快照 / 系列名不重叠：直接替换\n   */\n  mergeQtc(prevQtc, incomingQtc) {\n    const prev = this.asObject(prevQtc);\n    const next = this.asObject(incomingQtc);\n    const nextX = this.asArray(next.xAxis);\n    if (!nextX.length) {\n      return this.trimQtc(prev);\n    }\n\n    const prevX = this.asArray(prev.xAxis);\n    const nextSeries = this.asArray(next.series);\n    const topic =\n      (typeof next.topic === 'string' && next.topic.trim()) ||\n      (typeof prev.topic === 'string' && prev.topic.trim()) ||\n      undefined;\n\n    const incomingValueLens = nextSeries.map((item) => this.pickQtcSeriesValues(item, topic).length);\n    const maxIncomingVals = incomingValueLens.length\n      ? Math.max.apply(null, incomingValueLens)\n      : 0;\n\n    const isIncremental =\n      prevX.length > 0 &&\n      nextX.length <= 5 &&\n      maxIncomingVals > 0 &&\n      maxIncomingVals <= nextX.length;\n\n    const prevNames = new Set(\n      this.asArray(prev.series)\n        .map((item) => (item && item.name != null ? String(item.name) : ''))\n        .filter(Boolean),\n    );\n    const hasNameOverlap = nextSeries.some(\n      (item) => item && item.name != null && prevNames.has(String(item.name)),\n    );\n\n    if (!isIncremental || !hasNameOverlap) {\n      return this.trimQtc({\n        ...prev,\n        ...next,\n        topic: topic || next.topic || prev.topic,\n        xAxis: nextX,\n        series: nextSeries.map((item) =>\n          item && typeof item === 'object' ? { ...item } : item,\n        ),\n      });\n    }\n\n    const mergedX = prevX.concat(nextX);\n    const seriesMap = new Map();\n\n    this.asArray(prev.series).forEach((item, i) => {\n      seriesMap.set(item && item.name != null ? String(item.name) : `s_${i}`, { ...item });\n    });\n\n    nextSeries.forEach((item, i) => {\n      const name = item && item.name != null ? String(item.name) : `s_${i}`;\n      const prevItem = seriesMap.get(name);\n      const addPts = this.pickQtcSeriesValues(item, topic);\n      if (!prevItem) {\n        const seeded = item && typeof item === 'object' ? { ...item } : { name };\n        const pts = addPts.slice();\n        seeded.data = pts;\n        seeded.init_data = pts.slice();\n        seriesMap.set(name, seeded);\n        return;\n      }\n      const mergedPts = this.pickQtcSeriesValues(prevItem, topic).concat(addPts);\n      const merged = { ...prevItem, ...item };\n      merged.data = mergedPts;\n      merged.init_data = mergedPts.slice();\n      seriesMap.set(name, merged);\n    });\n\n    return this.trimQtc({\n      ...prev,\n      ...next,\n      topic: topic || next.topic || prev.topic,\n      xAxis: mergedX,\n      series: Array.from(seriesMap.values()),\n    });\n  }\n\n  applyInitData(data) {\n    const payload = this.asObject(data);\n    this.setState({\n      effluentList: this.replaceList(payload.effluentList),\n      alertOverviewList: this.replaceList(payload.alertOverviewList),\n      monitoringList: this.trimMonitoring(payload.monitoringList),\n      operationLogList: this.replaceList(payload.operationLogList),\n      alarmList: this.replaceList(payload.alarmList),\n      inspectionList: this.replaceList(payload.inspectionList),\n      qtcList: this.trimQtc(payload.qtcList),\n    });\n  }\n\n  applyWsData(data) {\n    const payload = this.asObject(data);\n    if (!Object.keys(payload).length) {\n      return;\n    }\n\n    const s = this.state;\n    const next = {};\n\n    // 流出物：按槽位改 value，禁止 concat / 整表误清空\n    if (this.hasOwn(payload, 'effluentList')) {\n      next.effluentList = this.mergeEffluentList(s.effluentList, payload.effluentList);\n    }\n    // 整表覆盖（空数组表示当前无数据，如告警「正常」）\n    if (this.hasOwn(payload, 'alertOverviewList')) {\n      next.alertOverviewList = this.replaceList(payload.alertOverviewList);\n    }\n    if (this.hasOwn(payload, 'operationLogList')) {\n      next.operationLogList = this.replaceList(payload.operationLogList);\n    }\n    if (this.hasOwn(payload, 'alarmList')) {\n      next.alarmList = this.replaceList(payload.alarmList);\n    }\n    if (this.hasOwn(payload, 'inspectionList')) {\n      next.inspectionList = this.replaceList(payload.inspectionList);\n    }\n\n    // 监测卡：直接使用接口返回的完整列表，不与旧数据合并。\n    if (this.hasOwn(payload, 'monitoringList')) {\n      next.monitoringList = this.trimMonitoring(payload.monitoringList);\n    }\n\n    // qtc：增量拼接 / 整窗替换\n    if (this.hasOwn(payload, 'qtcList')) {\n      next.qtcList = this.mergeQtc(s.qtcList, payload.qtcList);\n    }\n\n    if (Object.keys(next).length) {\n      this.setState(next);\n    }\n  }\n\n  componentWillUnmount() {\n    if (this.ws) {\n      this.ws.onopen = null;\n      this.ws.onmessage = null;\n      this.ws.onerror = null;\n      this.ws.onclose = null;\n      this.ws.close();\n      this.ws = null;\n    }\n  }\n}\n",
+    "originCode": "class LowcodeComponent extends Component {\n  state = {\n    btnClass1: 'bottom-btn btn-background-click',\n    // btnClass2: 'bottom-btn btn-background-unclick',\n    // btnClass3: 'bottom-btn btn-background-unclick',\n    /**\n     * 当前场景索引（枚举）\n     * 0 = 首页 / 大屏概览页\n     * 1 = X12 厂房\n     */\n    sceneIndex: 0,\n    // 流出物\n    effluentList: {\n      X12: [],\n      X03: [],\n    },\n    // 告警状态概览\n    alertOverviewList: [],\n    // 数据监测卡片\n    monitoringList: [],\n    // 操作日志\n    operationLogList: [],\n    // 设备警告\n    alarmList: [],\n    // 设备定检\n    inspectionList: [],\n    // QTC流出物\n    qtcList: {},\n  };\n\n  // 内置加载器配置\n  // {\n  //   \"componentName\": \"DevLoader\",\n  //   \"id\": \"node_ocmca8tqmc1\",\n  //   \"props\": {\n  //     \"width\": \"100vw\",\n  //     \"height\": \"100vh\",\n  //     \"sceneIndex\": 0\n  //   },\n  //   \"hidden\": false,\n  //   \"title\": \"\",\n  //   \"isLocked\": false,\n  //   \"condition\": true,\n  //   \"conditionGroup\": \"\"\n  // },\n\n  componentDidMount() {\n    this.handleWss();\n  }\n\n  /**\n   * WebSocket\n   * - init_data：全量写入\n   * - ws_data：字段结构一致\n   *   · alarmList / operationLogList / inspectionList / alertOverviewList：整表覆盖\n   *   · effluentList：按厂房编码保存完整指标列表，整组覆盖\n   *   · monitoringList：卡片按 id 合并；tritiumConcentration 增量拼接，裁 30 分钟\n   *   · qtcList：折线增量拼接 / 整窗替换，裁 30 分钟\n   */\n  handleWss() {\n    this.ws = new WebSocket('ws://192.168.8.101:8088/api/ws/realtime');\n\n    this.ws.onopen = () => {\n      console.log('✅ WebSocket 连接已建立');\n    };\n\n    this.ws.onmessage = (e) => {\n      try {\n        const msg = JSON.parse(e.data);\n        if (!msg || !msg.data) {\n          return;\n        }\n        if (msg.topic === 'init_data') {\n          this.applyInitData(msg.data);\n          return;\n        }\n        if (msg.topic === 'ws_data') {\n          this.applyWsData(msg.data);\n        }\n      } catch (error) {\n        console.error('❌ 解析消息失败:', error);\n      }\n    };\n\n    this.ws.onerror = () => { };\n  }\n\n  // 跳转到x12 厂房\n  goX12(e, params) {\n    if (params && params.key === 1) {\n      this.setState({\n        btnClass1: 'bottom-btn btn-background-click',\n        // btnClass2: 'bottom-btn btn-background-click',\n        // btnClass3: 'bottom-btn btn-background-unclick',\n        sceneIndex: 1,\n      });\n\n      // 发送切换指令:subscribe订阅\n      if (this.ws && this.ws.readyState === WebSocket.OPEN) {\n        this.ws.send(JSON.stringify({\n          topic: 'subscribe',\n          buildingId: 12\n        }));\n      }\n    }\n  }\n\n  // 跳转到概览页\n  goHome() {\n    this.setState({\n      btnClass1: 'bottom-btn btn-background-click',\n      sceneIndex: 0,\n    });\n\n    // 发送切换指令:unsubscribe 取消订阅\n    if (this.ws && this.ws.readyState === WebSocket.OPEN) {\n      this.ws.send(JSON.stringify({\n        topic: 'unsubscribe'\n      }));\n    }\n  }\n\n  /** 折线窗口：最近 30 分钟（1 秒 1 点 ≈ 1800） */\n  getMaxChartPoints() {\n    return 30 * 60;\n  }\n\n  asArray(value) {\n    return Object.prototype.toString.call(value) === '[object Array]' ? value : [];\n  }\n\n  asObject(value) {\n    return Object.prototype.toString.call(value) === '[object Object]' ? value : {};\n  }\n\n  hasOwn(obj, key) {\n    return Object.prototype.hasOwnProperty.call(obj, key);\n  }\n\n  /** 整表覆盖：拷贝新引用，避免低代码复用旧数组不刷新 */\n  replaceList(value) {\n    return this.asArray(value).slice();\n  }\n\n  /** 流出物按厂房分组：复制每个厂房的数组，保留接口返回的动态厂房编码。 */\n  replaceEffluentGroups(value) {\n    const groups = this.asObject(value);\n    return Object.keys(groups).reduce((result, buildingCode) => {\n      result[buildingCode] = this.replaceList(groups[buildingCode]);\n      return result;\n    }, {});\n  }\n\n  tail(list, max) {\n    const arr = this.asArray(list);\n    return arr.length > max ? arr.slice(-max) : arr;\n  }\n\n  getCardPoints(card) {\n    if (!card || typeof card !== 'object') {\n      return [];\n    }\n    const points = card.tritiumConcentration != null ? card.tritiumConcentration : card.chart;\n    return this.asArray(points);\n  }\n\n  /** 监测卡折线裁到 30 分钟窗口 */\n  trimMonitoring(list) {\n    const maxPoints = this.getMaxChartPoints();\n    return this.asArray(list).map((card) => {\n      if (!card || typeof card !== 'object') {\n        return card;\n      }\n      const points = this.getCardPoints(card);\n      if (!points.length && card.tritiumConcentration == null && card.chart == null) {\n        return card;\n      }\n      return {\n        ...card,\n        tritiumConcentration: this.tail(points, maxPoints),\n      };\n    });\n  }\n\n  /**\n   * 合并监测列表（ws_data）\n   * - 卡片按 id（无 id 用下标）更新字段\n   * - tritiumConcentration：≤5 点视为增量 append，否则整窗替换；空数组不覆盖已有时序\n   */\n  mergeMonitoring(prevList, incomingList) {\n    const incoming = this.asArray(incomingList);\n    if (!incoming.length) {\n      return this.trimMonitoring(prevList);\n    }\n\n    const maxPoints = this.getMaxChartPoints();\n    const map = new Map();\n\n    this.asArray(prevList).forEach((card, i) => {\n      const key = card && card.id != null ? String(card.id) : `i_${i}`;\n      map.set(key, {\n        ...card,\n        tritiumConcentration: this.getCardPoints(card).slice(),\n      });\n    });\n\n    incoming.forEach((card, i) => {\n      const key = card && card.id != null ? String(card.id) : `i_${i}`;\n      const addPoints = this.getCardPoints(card);\n      const prev = map.get(key);\n\n      if (!prev) {\n        map.set(key, {\n          ...card,\n          tritiumConcentration: this.tail(addPoints, maxPoints),\n        });\n        return;\n      }\n\n      const prevPts = this.asArray(prev.tritiumConcentration);\n      let mergedPts = prevPts;\n      if (addPoints.length) {\n        const isIncremental = prevPts.length > 0 && addPoints.length <= 5;\n        mergedPts = isIncremental ? prevPts.concat(addPoints) : addPoints.slice();\n      }\n\n      map.set(key, {\n        ...prev,\n        ...card,\n        tritiumConcentration: this.tail(mergedPts, maxPoints),\n      });\n    });\n\n    return Array.from(map.values());\n  }\n\n  /** 取 qtc 系列数值：优先 topic，其次非空的 data / init_data */\n  pickQtcSeriesValues(seriesItem, topic) {\n    if (!seriesItem || typeof seriesItem !== 'object') {\n      return [];\n    }\n    const keys = topic ? [topic, 'data', 'init_data'] : ['data', 'init_data'];\n    let fallback = null;\n    for (let i = 0; i < keys.length; i += 1) {\n      const arr = seriesItem[keys[i]];\n      if (!Array.isArray(arr)) {\n        continue;\n      }\n      if (arr.length) {\n        return arr;\n      }\n      if (fallback == null) {\n        fallback = arr;\n      }\n    }\n    return fallback || [];\n  }\n\n  /** 裁剪 qtc：xAxis / data / init_data 对齐到最近窗口 */\n  trimQtc(qtc) {\n    const maxPoints = this.getMaxChartPoints();\n    const source = this.asObject(qtc);\n    const xAxis = this.asArray(source.xAxis);\n    const start = xAxis.length > maxPoints ? xAxis.length - maxPoints : 0;\n    const trimmedX = start > 0 ? xAxis.slice(start) : xAxis.slice();\n    const len = trimmedX.length;\n    const topic =\n      typeof source.topic === 'string' && source.topic.trim() !== ''\n        ? source.topic.trim()\n        : undefined;\n\n    return {\n      ...source,\n      xAxis: trimmedX,\n      legend: this.asArray(source.series)\n        .map((item) => (item && item.name != null ? String(item.name) : ''))\n        .filter(Boolean),\n      series: this.asArray(source.series).map((item) => {\n        if (!item || typeof item !== 'object') {\n          return item;\n        }\n        const next = { ...item };\n        const values = this.pickQtcSeriesValues(item, topic);\n        const aligned = values.length > start ? values.slice(start) : values.slice();\n        const synced = aligned.length > len ? aligned.slice(-len) : aligned;\n        if (Array.isArray(item.data) || topic === 'data' || !topic) {\n          next.data = synced;\n        }\n        if (Array.isArray(item.init_data) || topic === 'init_data') {\n          next.init_data = synced.slice();\n        }\n        if (!Array.isArray(next.data) && !Array.isArray(next.init_data)) {\n          next.data = synced;\n        }\n        return next;\n      }),\n    };\n  }\n\n  /**\n   * 合并 qtc（ws_data）\n   * - 短横轴增量：append 后裁窗\n   * - 整窗快照 / 系列名不重叠：直接替换\n   */\n  mergeQtc(prevQtc, incomingQtc) {\n    const prev = this.asObject(prevQtc);\n    const next = this.asObject(incomingQtc);\n    const nextX = this.asArray(next.xAxis);\n    if (!nextX.length) {\n      return this.trimQtc(prev);\n    }\n\n    const prevX = this.asArray(prev.xAxis);\n    const nextSeries = this.asArray(next.series);\n    const topic =\n      (typeof next.topic === 'string' && next.topic.trim()) ||\n      (typeof prev.topic === 'string' && prev.topic.trim()) ||\n      undefined;\n\n    const incomingValueLens = nextSeries.map((item) => this.pickQtcSeriesValues(item, topic).length);\n    const maxIncomingVals = incomingValueLens.length\n      ? Math.max.apply(null, incomingValueLens)\n      : 0;\n\n    const isIncremental =\n      prevX.length > 0 &&\n      nextX.length <= 5 &&\n      maxIncomingVals > 0 &&\n      maxIncomingVals <= nextX.length;\n\n    const prevNames = new Set(\n      this.asArray(prev.series)\n        .map((item) => (item && item.name != null ? String(item.name) : ''))\n        .filter(Boolean),\n    );\n    const hasNameOverlap = nextSeries.some(\n      (item) => item && item.name != null && prevNames.has(String(item.name)),\n    );\n\n    if (!isIncremental || !hasNameOverlap) {\n      return this.trimQtc({\n        ...prev,\n        ...next,\n        topic: topic || next.topic || prev.topic,\n        xAxis: nextX,\n        series: nextSeries.map((item) =>\n          item && typeof item === 'object' ? { ...item } : item,\n        ),\n      });\n    }\n\n    const mergedX = prevX.concat(nextX);\n    const seriesMap = new Map();\n\n    this.asArray(prev.series).forEach((item, i) => {\n      seriesMap.set(item && item.name != null ? String(item.name) : `s_${i}`, { ...item });\n    });\n\n    nextSeries.forEach((item, i) => {\n      const name = item && item.name != null ? String(item.name) : `s_${i}`;\n      const prevItem = seriesMap.get(name);\n      const addPts = this.pickQtcSeriesValues(item, topic);\n      if (!prevItem) {\n        const seeded = item && typeof item === 'object' ? { ...item } : { name };\n        const pts = addPts.slice();\n        seeded.data = pts;\n        seeded.init_data = pts.slice();\n        seriesMap.set(name, seeded);\n        return;\n      }\n      const mergedPts = this.pickQtcSeriesValues(prevItem, topic).concat(addPts);\n      const merged = { ...prevItem, ...item };\n      merged.data = mergedPts;\n      merged.init_data = mergedPts.slice();\n      seriesMap.set(name, merged);\n    });\n\n    return this.trimQtc({\n      ...prev,\n      ...next,\n      topic: topic || next.topic || prev.topic,\n      xAxis: mergedX,\n      series: Array.from(seriesMap.values()),\n    });\n  }\n\n  applyInitData(data) {\n    const payload = this.asObject(data);\n    this.setState({\n      effluentList: this.replaceEffluentGroups(payload.effluentList),\n      alertOverviewList: this.replaceList(payload.alertOverviewList),\n      monitoringList: this.trimMonitoring(payload.monitoringList),\n      operationLogList: this.replaceList(payload.operationLogList),\n      alarmList: this.replaceList(payload.alarmList),\n      inspectionList: this.replaceList(payload.inspectionList),\n      qtcList: this.trimQtc(payload.qtcList),\n    });\n  }\n\n  applyWsData(data) {\n    const payload = this.asObject(data);\n    if (!Object.keys(payload).length) {\n      return;\n    }\n\n    const s = this.state;\n    const next = {};\n\n    // 流出物：接口按厂房返回完整分组，直接整体覆盖。\n    if (this.hasOwn(payload, 'effluentList')) {\n      next.effluentList = this.replaceEffluentGroups(payload.effluentList);\n    }\n    // 整表覆盖（空数组表示当前无数据，如告警「正常」）\n    if (this.hasOwn(payload, 'alertOverviewList')) {\n      next.alertOverviewList = this.replaceList(payload.alertOverviewList);\n    }\n    if (this.hasOwn(payload, 'operationLogList')) {\n      next.operationLogList = this.replaceList(payload.operationLogList);\n    }\n    if (this.hasOwn(payload, 'alarmList')) {\n      next.alarmList = this.replaceList(payload.alarmList);\n    }\n    if (this.hasOwn(payload, 'inspectionList')) {\n      next.inspectionList = this.replaceList(payload.inspectionList);\n    }\n\n    // 监测卡：直接使用接口返回的完整列表，不与旧数据合并。\n    if (this.hasOwn(payload, 'monitoringList')) {\n      next.monitoringList = this.trimMonitoring(payload.monitoringList);\n    }\n\n    // qtc：增量拼接 / 整窗替换\n    if (this.hasOwn(payload, 'qtcList')) {\n      next.qtcList = this.mergeQtc(s.qtcList, payload.qtcList);\n    }\n\n    if (Object.keys(next).length) {\n      this.setState(next);\n    }\n  }\n\n  componentWillUnmount() {\n    if (this.ws) {\n      this.ws.onopen = null;\n      this.ws.onmessage = null;\n      this.ws.onerror = null;\n      this.ws.onclose = null;\n      this.ws.close();\n      this.ws = null;\n    }\n  }\n}\n",
     "hidden": false,
     "title": "",
     "isLocked": false,
@@ -64,7 +64,7 @@
       },
       "effluentList": {
         "type": "JSExpression",
-        "value": "[]"
+        "value": "{\n  X12: [],\n  X03: []\n}"
       },
       "alertOverviewList": {
         "type": "JSExpression",
@@ -132,15 +132,15 @@
         "value": "function replaceList(value) {\n  return this.asArray(value).slice();\n}",
         "source": "function replaceList(value) {\n  return this.asArray(value).slice();\n}"
       },
+      "replaceEffluentGroups": {
+        "type": "JSFunction",
+        "value": "function replaceEffluentGroups(value) {\n  const groups = this.asObject(value);\n  return Object.keys(groups).reduce((result, buildingCode) => {\n    result[buildingCode] = this.replaceList(groups[buildingCode]);\n    return result;\n  }, {});\n}",
+        "source": "function replaceEffluentGroups(value) {\n  const groups = this.asObject(value);\n  return Object.keys(groups).reduce((result, buildingCode) => {\n    result[buildingCode] = this.replaceList(groups[buildingCode]);\n    return result;\n  }, {});\n}"
+      },
       "tail": {
         "type": "JSFunction",
         "value": "function tail(list, max) {\n  const arr = this.asArray(list);\n  return arr.length > max ? arr.slice(-max) : arr;\n}",
         "source": "function tail(list, max) {\n  const arr = this.asArray(list);\n  return arr.length > max ? arr.slice(-max) : arr;\n}"
-      },
-      "mergeEffluentList": {
-        "type": "JSFunction",
-        "value": "function mergeEffluentList(prevList, incomingList) {\n  const prev = this.asArray(prevList);\n  const incoming = this.asArray(incomingList);\n  if (!incoming.length) {\n    return prev;\n  }\n  if (!prev.length) {\n    return incoming.slice();\n  }\n  const next = prev.map(item => item && typeof item === 'object' ? {\n    ...item\n  } : item);\n  const used = {};\n  incoming.forEach((item, i) => {\n    if (!item || typeof item !== 'object') {\n      return;\n    }\n    let idx = -1;\n    if (item.id != null) {\n      idx = next.findIndex((row, rowIdx) => !used[rowIdx] && row && row.id == item.id);\n    }\n    if (idx < 0 && i < next.length && !used[i]) {\n      idx = i;\n    }\n    if (idx < 0) {\n      return;\n    }\n    used[idx] = true;\n    if (this.hasOwn(item, 'value')) {\n      next[idx].value = item.value;\n    }\n    if (this.hasOwn(item, 'arrow')) {\n      next[idx].arrow = item.arrow;\n    }\n  });\n  return next;\n}",
-        "source": "function mergeEffluentList(prevList, incomingList) {\n  const prev = this.asArray(prevList);\n  const incoming = this.asArray(incomingList);\n  if (!incoming.length) {\n    return prev;\n  }\n  if (!prev.length) {\n    return incoming.slice();\n  }\n  const next = prev.map(item => item && typeof item === 'object' ? {\n    ...item\n  } : item);\n  const used = {};\n  incoming.forEach((item, i) => {\n    if (!item || typeof item !== 'object') {\n      return;\n    }\n    let idx = -1;\n    if (item.id != null) {\n      idx = next.findIndex((row, rowIdx) => !used[rowIdx] && row && row.id == item.id);\n    }\n    if (idx < 0 && i < next.length && !used[i]) {\n      idx = i;\n    }\n    if (idx < 0) {\n      return;\n    }\n    used[idx] = true;\n    if (this.hasOwn(item, 'value')) {\n      next[idx].value = item.value;\n    }\n    if (this.hasOwn(item, 'arrow')) {\n      next[idx].arrow = item.arrow;\n    }\n  });\n  return next;\n}"
       },
       "getCardPoints": {
         "type": "JSFunction",
@@ -174,13 +174,13 @@
       },
       "applyInitData": {
         "type": "JSFunction",
-        "value": "function applyInitData(data) {\n  const payload = this.asObject(data);\n  this.setState({\n    effluentList: this.replaceList(payload.effluentList),\n    alertOverviewList: this.replaceList(payload.alertOverviewList),\n    monitoringList: this.trimMonitoring(payload.monitoringList),\n    operationLogList: this.replaceList(payload.operationLogList),\n    alarmList: this.replaceList(payload.alarmList),\n    inspectionList: this.replaceList(payload.inspectionList),\n    qtcList: this.trimQtc(payload.qtcList)\n  });\n}",
-        "source": "function applyInitData(data) {\n  const payload = this.asObject(data);\n  this.setState({\n    effluentList: this.replaceList(payload.effluentList),\n    alertOverviewList: this.replaceList(payload.alertOverviewList),\n    monitoringList: this.trimMonitoring(payload.monitoringList),\n    operationLogList: this.replaceList(payload.operationLogList),\n    alarmList: this.replaceList(payload.alarmList),\n    inspectionList: this.replaceList(payload.inspectionList),\n    qtcList: this.trimQtc(payload.qtcList)\n  });\n}"
+        "value": "function applyInitData(data) {\n  const payload = this.asObject(data);\n  this.setState({\n    effluentList: this.replaceEffluentGroups(payload.effluentList),\n    alertOverviewList: this.replaceList(payload.alertOverviewList),\n    monitoringList: this.trimMonitoring(payload.monitoringList),\n    operationLogList: this.replaceList(payload.operationLogList),\n    alarmList: this.replaceList(payload.alarmList),\n    inspectionList: this.replaceList(payload.inspectionList),\n    qtcList: this.trimQtc(payload.qtcList)\n  });\n}",
+        "source": "function applyInitData(data) {\n  const payload = this.asObject(data);\n  this.setState({\n    effluentList: this.replaceEffluentGroups(payload.effluentList),\n    alertOverviewList: this.replaceList(payload.alertOverviewList),\n    monitoringList: this.trimMonitoring(payload.monitoringList),\n    operationLogList: this.replaceList(payload.operationLogList),\n    alarmList: this.replaceList(payload.alarmList),\n    inspectionList: this.replaceList(payload.inspectionList),\n    qtcList: this.trimQtc(payload.qtcList)\n  });\n}"
       },
       "applyWsData": {
         "type": "JSFunction",
-        "value": "function applyWsData(data) {\n  const payload = this.asObject(data);\n  if (!Object.keys(payload).length) {\n    return;\n  }\n  const s = this.state;\n  const next = {};\n\n  // 流出物：按槽位改 value，禁止 concat / 整表误清空\n  if (this.hasOwn(payload, 'effluentList')) {\n    next.effluentList = this.mergeEffluentList(s.effluentList, payload.effluentList);\n  }\n  // 整表覆盖（空数组表示当前无数据，如告警「正常」）\n  if (this.hasOwn(payload, 'alertOverviewList')) {\n    next.alertOverviewList = this.replaceList(payload.alertOverviewList);\n  }\n  if (this.hasOwn(payload, 'operationLogList')) {\n    next.operationLogList = this.replaceList(payload.operationLogList);\n  }\n  if (this.hasOwn(payload, 'alarmList')) {\n    next.alarmList = this.replaceList(payload.alarmList);\n  }\n  if (this.hasOwn(payload, 'inspectionList')) {\n    next.inspectionList = this.replaceList(payload.inspectionList);\n  }\n\n  // 监测卡：直接使用接口返回的完整列表，不与旧数据合并。\n  if (this.hasOwn(payload, 'monitoringList')) {\n    next.monitoringList = this.trimMonitoring(payload.monitoringList);\n  }\n\n  // qtc：增量拼接 / 整窗替换\n  if (this.hasOwn(payload, 'qtcList')) {\n    next.qtcList = this.mergeQtc(s.qtcList, payload.qtcList);\n  }\n  if (Object.keys(next).length) {\n    this.setState(next);\n  }\n}",
-        "source": "function applyWsData(data) {\n  const payload = this.asObject(data);\n  if (!Object.keys(payload).length) {\n    return;\n  }\n  const s = this.state;\n  const next = {};\n\n  // 流出物：按槽位改 value，禁止 concat / 整表误清空\n  if (this.hasOwn(payload, 'effluentList')) {\n    next.effluentList = this.mergeEffluentList(s.effluentList, payload.effluentList);\n  }\n  // 整表覆盖（空数组表示当前无数据，如告警「正常」）\n  if (this.hasOwn(payload, 'alertOverviewList')) {\n    next.alertOverviewList = this.replaceList(payload.alertOverviewList);\n  }\n  if (this.hasOwn(payload, 'operationLogList')) {\n    next.operationLogList = this.replaceList(payload.operationLogList);\n  }\n  if (this.hasOwn(payload, 'alarmList')) {\n    next.alarmList = this.replaceList(payload.alarmList);\n  }\n  if (this.hasOwn(payload, 'inspectionList')) {\n    next.inspectionList = this.replaceList(payload.inspectionList);\n  }\n\n  // 监测卡：直接使用接口返回的完整列表，不与旧数据合并。\n  if (this.hasOwn(payload, 'monitoringList')) {\n    next.monitoringList = this.trimMonitoring(payload.monitoringList);\n  }\n\n  // qtc：增量拼接 / 整窗替换\n  if (this.hasOwn(payload, 'qtcList')) {\n    next.qtcList = this.mergeQtc(s.qtcList, payload.qtcList);\n  }\n  if (Object.keys(next).length) {\n    this.setState(next);\n  }\n}"
+        "value": "function applyWsData(data) {\n  const payload = this.asObject(data);\n  if (!Object.keys(payload).length) {\n    return;\n  }\n  const s = this.state;\n  const next = {};\n\n  // 流出物：接口按厂房返回完整分组，直接整体覆盖。\n  if (this.hasOwn(payload, 'effluentList')) {\n    next.effluentList = this.replaceEffluentGroups(payload.effluentList);\n  }\n  // 整表覆盖（空数组表示当前无数据，如告警「正常」）\n  if (this.hasOwn(payload, 'alertOverviewList')) {\n    next.alertOverviewList = this.replaceList(payload.alertOverviewList);\n  }\n  if (this.hasOwn(payload, 'operationLogList')) {\n    next.operationLogList = this.replaceList(payload.operationLogList);\n  }\n  if (this.hasOwn(payload, 'alarmList')) {\n    next.alarmList = this.replaceList(payload.alarmList);\n  }\n  if (this.hasOwn(payload, 'inspectionList')) {\n    next.inspectionList = this.replaceList(payload.inspectionList);\n  }\n\n  // 监测卡：直接使用接口返回的完整列表，不与旧数据合并。\n  if (this.hasOwn(payload, 'monitoringList')) {\n    next.monitoringList = this.trimMonitoring(payload.monitoringList);\n  }\n\n  // qtc：增量拼接 / 整窗替换\n  if (this.hasOwn(payload, 'qtcList')) {\n    next.qtcList = this.mergeQtc(s.qtcList, payload.qtcList);\n  }\n  if (Object.keys(next).length) {\n    this.setState(next);\n  }\n}",
+        "source": "function applyWsData(data) {\n  const payload = this.asObject(data);\n  if (!Object.keys(payload).length) {\n    return;\n  }\n  const s = this.state;\n  const next = {};\n\n  // 流出物：接口按厂房返回完整分组，直接整体覆盖。\n  if (this.hasOwn(payload, 'effluentList')) {\n    next.effluentList = this.replaceEffluentGroups(payload.effluentList);\n  }\n  // 整表覆盖（空数组表示当前无数据，如告警「正常」）\n  if (this.hasOwn(payload, 'alertOverviewList')) {\n    next.alertOverviewList = this.replaceList(payload.alertOverviewList);\n  }\n  if (this.hasOwn(payload, 'operationLogList')) {\n    next.operationLogList = this.replaceList(payload.operationLogList);\n  }\n  if (this.hasOwn(payload, 'alarmList')) {\n    next.alarmList = this.replaceList(payload.alarmList);\n  }\n  if (this.hasOwn(payload, 'inspectionList')) {\n    next.inspectionList = this.replaceList(payload.inspectionList);\n  }\n\n  // 监测卡：直接使用接口返回的完整列表，不与旧数据合并。\n  if (this.hasOwn(payload, 'monitoringList')) {\n    next.monitoringList = this.trimMonitoring(payload.monitoringList);\n  }\n\n  // qtc：增量拼接 / 整窗替换\n  if (this.hasOwn(payload, 'qtcList')) {\n    next.qtcList = this.mergeQtc(s.qtcList, payload.qtcList);\n  }\n  if (Object.keys(next).length) {\n    this.setState(next);\n  }\n}"
       }
     },
     "lifeCycles": {
@@ -562,7 +562,7 @@
                     "width": "671px",
                     "background": "linear-gradient(\n    to right,                      /* 从左到右 */\n    rgba(0, 0, 0, 0.8) 0%,\n    rgba(0, 0, 0, 0.38) 52.54%,\n    rgba(138, 138, 138, 0) 100%\n  )"
                   },
-                  "justify": "space-between",
+                  "justify": "flex-start",
                   "align": "flex-start",
                   "ref": "box-257d1943",
                   "_unsafe_MixedSetter____condition____select": "VariableSetter"
@@ -578,12 +578,171 @@
                 "children": [
                   {
                     "componentName": "IndexBoxContainer",
+                    "id": "node_ocmsh5n8sb1",
+                    "props": {
+                      "backgroundImgUrl": "./static/screenImg/index-box-bg.png",
+                      "filePropName": "backgroundImgUrl",
+                      "divWidth": "400px",
+                      "divHeight": "10.6vh",
+                      "title": "这是一段title文本",
+                      "position": "relative",
+                      "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
+                      "IndexBoxContainer": [
+                        "浙江正泰电缆有限公司",
+                        "陕西正泰电缆有限公司",
+                        "山东正泰电缆有限公司"
+                      ],
+                      "absolutePosi": "0,0,0,0",
+                      "style": {
+                        "marginBottom": "16px",
+                        "backgroundSize": "inherit",
+                        "display": "flex",
+                        "background": "rgba(4,32,59,0.28)",
+                        "backdropFilter": "blur(10px)"
+                      },
+                      "ref": "indexboxcontainer-2e5bacec"
+                    },
+                    "hidden": false,
+                    "title": "流出物",
+                    "isLocked": false,
+                    "condition": true,
+                    "conditionGroup": "",
+                    "loopArgs": [
+                      "",
+                      ""
+                    ],
+                    "children": [
+                      {
+                        "componentName": "TopDivWithBackGroundImg",
+                        "id": "node_ocmsh5n8sb2",
+                        "props": {
+                          "backgroundImgUrl": "https://openview.czy3d.com/czybucket/czy/tenant/openview/7738F2879717420B962C32CE221C69C9/2026/06/title_bg_1x.webp",
+                          "filePropName": "backgroundImgUrl",
+                          "divWidth": "",
+                          "divHeight": "40px",
+                          "title": "X12流出物",
+                          "fontSize": 20,
+                          "fontWeight": "normal",
+                          "backgroundLittleUrl": "",
+                          "innerBackgroundColor": "rgba(0, 0, 0, 0)",
+                          "isLittleContainer": true,
+                          "fontColor": "#fff",
+                          "justifyContent": "left",
+                          "marginLeft": 24,
+                          "hasSubTitle": false,
+                          "style": {
+                            "fontFamily": "\"庞门正道标题体\"",
+                            "letterSpacing": "2px"
+                          },
+                          "isfontGradient": false,
+                          "fontColors": {
+                            "type": "JSExpression",
+                            "value": "this.state.fontLineGradient"
+                          },
+                          "angle": 180,
+                          "_unsafe_MixedSetter_fontColors_select": "ExpressionSetter",
+                          "ref": "topdivwithbackgroundimg-58e497f9"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "loopArgs": [
+                          "",
+                          ""
+                        ]
+                      },
+                      {
+                        "componentName": "Box",
+                        "id": "node_ocmsh5n8sb3",
+                        "props": {
+                          "direction": "column",
+                          "style": {
+                            "height": "calc(100% - 40px)",
+                            "padding": "16px 12px",
+                            "width": "100%"
+                          },
+                          "justify": "center",
+                          "align": "center",
+                          "ref": "box-c393c665"
+                        },
+                        "hidden": false,
+                        "title": "",
+                        "isLocked": false,
+                        "condition": true,
+                        "conditionGroup": "",
+                        "children": [
+                          {
+                            "componentName": "Effluent",
+                            "id": "node_ocmsh5n8sb4",
+                            "props": {
+                              "height": 62,
+                              "dataType": "data",
+                              "width": 376,
+                              "baseFetchUri": "/tenant-api/humerus/api/dashboard/data/execute/:id",
+                              "baseWsUri": "",
+                              "token": "",
+                              "data": {
+                                "type": "JSExpression",
+                                "value": "this.state.effluentList.X12",
+                                "mock": [
+                                  {
+                                    "id": 1,
+                                    "label": "全排",
+                                    "value": 1.2,
+                                    "trend": "up"
+                                  },
+                                  {
+                                    "id": 2,
+                                    "label": "特排",
+                                    "value": 1.2,
+                                    "trend": "flat"
+                                  },
+                                  {
+                                    "id": 3,
+                                    "label": "局排",
+                                    "value": 1.2,
+                                    "trend": "down"
+                                  },
+                                  {
+                                    "id": 4,
+                                    "label": "特排",
+                                    "value": 1.2,
+                                    "trend": "flat"
+                                  }
+                                ]
+                              },
+                              "labelField": "label",
+                              "valueField": "value",
+                              "trendField": "trend",
+                              "ref": "effluent-cbddb1a0",
+                              "nameField": "name",
+                              "thresholdField": "threshold",
+                              "arrowField": "arrow"
+                            },
+                            "hidden": false,
+                            "title": "",
+                            "isLocked": false,
+                            "condition": true,
+                            "conditionGroup": "",
+                            "loopArgs": [
+                              "",
+                              ""
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "componentName": "IndexBoxContainer",
                     "id": "node_ocmra2x7jpv",
                     "props": {
                       "backgroundImgUrl": "./static/screenImg/index-box-bg.png",
                       "filePropName": "backgroundImgUrl",
                       "divWidth": "400px",
-                      "divHeight": "14vh",
+                      "divHeight": "10.6vh",
                       "title": "这是一段title文本",
                       "position": "relative",
                       "content": "致力于成为国内领先的全过程电力传输解决方案提供商",
@@ -620,7 +779,7 @@
                           "filePropName": "backgroundImgUrl",
                           "divWidth": "",
                           "divHeight": "40px",
-                          "title": "X12流出物",
+                          "title": "X03流出物",
                           "fontSize": 20,
                           "fontWeight": "normal",
                           "backgroundLittleUrl": "",
@@ -685,7 +844,7 @@
                               "token": "",
                               "data": {
                                 "type": "JSExpression",
-                                "value": "this.state.effluentList",
+                                "value": "this.state.effluentList.X03",
                                 "mock": [
                                   {
                                     "id": 1,
