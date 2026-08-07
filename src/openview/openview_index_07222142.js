@@ -10,7 +10,10 @@ class LowcodeComponent extends Component {
        */
       sceneIndex: 0,
       // 流出物
-      effluentList: [],
+      effluentList: {
+        X12: [],
+        X03: [],
+      },
       // 告警状态概览
       alertOverviewList: [],
       // 数据监测卡片
@@ -50,7 +53,7 @@ class LowcodeComponent extends Component {
      * - init_data：全量写入
      * - ws_data：字段结构一致
      *   · alarmList / operationLogList / inspectionList / alertOverviewList：整表覆盖
-     *   · effluentList：按 id 更新 value（不追加、空推送不清空）
+     *   · effluentList：按厂房编码保存完整指标列表，整组覆盖
      *   · monitoringList：卡片按 id 合并；tritiumConcentration 增量拼接，裁 30 分钟
      *   · qtcList：折线增量拼接 / 整窗替换，裁 30 分钟
      */
@@ -138,56 +141,19 @@ class LowcodeComponent extends Component {
     replaceList(value) {
       return this.asArray(value).slice();
     }
+
+    /** 流出物按厂房分组：复制每个厂房的数组，保留接口返回的动态厂房编码。 */
+    replaceEffluentGroups(value) {
+      const groups = this.asObject(value);
+      return Object.keys(groups).reduce((result, buildingCode) => {
+        result[buildingCode] = this.replaceList(groups[buildingCode]);
+        return result;
+      }, {});
+    }
   
     tail(list, max) {
       const arr = this.asArray(list);
       return arr.length > max ? arr.slice(-max) : arr;
-    }
-  
-    /**
-     * 流出物（ws_data）：按 id / 下标对齐，只更新 value、arrow
-     * - 空推送保留原列表（避免误清空槽位）
-     * - 不追加新项（与 Effluent 组件槽位锁定一致）
-     */
-    mergeEffluentList(prevList, incomingList) {
-      const prev = this.asArray(prevList);
-      const incoming = this.asArray(incomingList);
-      if (!incoming.length) {
-        return prev;
-      }
-      if (!prev.length) {
-        return incoming.slice();
-      }
-  
-      const next = prev.map((item) => (item && typeof item === 'object' ? { ...item } : item));
-      const used = {};
-  
-      incoming.forEach((item, i) => {
-        if (!item || typeof item !== 'object') {
-          return;
-        }
-  
-        let idx = -1;
-        if (item.id != null) {
-          idx = next.findIndex((row, rowIdx) => !used[rowIdx] && row && row.id == item.id);
-        }
-        if (idx < 0 && i < next.length && !used[i]) {
-          idx = i;
-        }
-        if (idx < 0) {
-          return;
-        }
-  
-        used[idx] = true;
-        if (this.hasOwn(item, 'value')) {
-          next[idx].value = item.value;
-        }
-        if (this.hasOwn(item, 'arrow')) {
-          next[idx].arrow = item.arrow;
-        }
-      });
-  
-      return next;
     }
   
     getCardPoints(card) {
@@ -421,7 +387,7 @@ class LowcodeComponent extends Component {
     applyInitData(data) {
       const payload = this.asObject(data);
       this.setState({
-        effluentList: this.replaceList(payload.effluentList),
+        effluentList: this.replaceEffluentGroups(payload.effluentList),
         alertOverviewList: this.replaceList(payload.alertOverviewList),
         monitoringList: this.trimMonitoring(payload.monitoringList),
         operationLogList: this.replaceList(payload.operationLogList),
@@ -440,9 +406,9 @@ class LowcodeComponent extends Component {
       const s = this.state;
       const next = {};
   
-      // 流出物：按槽位改 value，禁止 concat / 整表误清空
+      // 流出物：接口按厂房返回完整分组，直接整体覆盖。
       if (this.hasOwn(payload, 'effluentList')) {
-        next.effluentList = this.mergeEffluentList(s.effluentList, payload.effluentList);
+        next.effluentList = this.replaceEffluentGroups(payload.effluentList);
       }
       // 整表覆盖（空数组表示当前无数据，如告警「正常」）
       if (this.hasOwn(payload, 'alertOverviewList')) {

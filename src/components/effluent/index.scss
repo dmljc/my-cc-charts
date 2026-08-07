@@ -15,13 +15,17 @@
     color: #eaf7ff;
     font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
 
+    // 按最多 4 列等分（3 个 8px gap），单项不再被拉满整行
+    $effluent-slot-width: calc((100% - 24px) / 4);
+
     &-item {
         display: flex;
-        flex: 1 1 0;
+        flex: 0 1 $effluent-slot-width;
         flex-direction: column;
         align-items: center;
+        width: $effluent-slot-width;
         min-width: 0;
-        max-width: 100%;
+        max-width: $effluent-slot-width;
         padding: 0;
         cursor: pointer;
         background: transparent;
@@ -64,7 +68,7 @@
         position: relative;
         z-index: 1;
         display: inline-flex;
-        flex: 1 1 auto;
+        flex: 0 1 auto;
         align-items: center;
         justify-content: center;
         min-width: 0;
