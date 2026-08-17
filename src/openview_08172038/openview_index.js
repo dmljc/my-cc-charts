@@ -28,21 +28,21 @@ class LowcodeComponent extends Component {
       qtcList: {},
     };
   
-      // 内置加载器配置
-      // {
-      //   "componentName": "DevLoader",
-      //   "id": "node_ocmca8tqmc1",
-      //   "props": {
-      //     "width": "100vw",
-      //     "height": "100vh",
-      //     "sceneIndex": 0
-      //   },
-      //   "hidden": false,
-      //   "title": "",
-      //   "isLocked": false,
-      //   "condition": true,
-      //   "conditionGroup": ""
-      // },
+    // 内置加载器配置
+    // {
+    //   "componentName": "DevLoader",
+    //   "id": "node_ocmca8tqmc1",
+    //   "props": {
+    //     "width": "100vw",
+    //     "height": "100vh",
+    //     "sceneIndex": 0
+    //   },
+    //   "hidden": false,
+    //   "title": "",
+    //   "isLocked": false,
+    //   "condition": true,
+    //   "conditionGroup": ""
+    // },
   
     componentDidMount() {
       this.handleWss();
@@ -58,7 +58,7 @@ class LowcodeComponent extends Component {
      *   · qtcList：折线增量拼接 / 整窗替换，裁 30 分钟
      */
     handleWss() {
-      this.ws = new WebSocket('ws://192.168.8.101:8088/api/ws/realtime');
+      this.ws = new WebSocket('ws://192.168.1.2:8088/api/ws/realtime');
   
       this.ws.onopen = () => {
         console.log('✅ WebSocket 连接已建立');
@@ -141,7 +141,7 @@ class LowcodeComponent extends Component {
     replaceList(value) {
       return this.asArray(value).slice();
     }
-
+  
     /** 流出物按厂房分组：复制每个厂房的数组，保留接口返回的动态厂房编码。 */
     replaceEffluentGroups(value) {
       const groups = this.asObject(value);
