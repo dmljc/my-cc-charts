@@ -59,7 +59,9 @@ export interface DataMonitoringCardProps {
 
 /** 双设备轮播下容纳 150px 趋势图与分页器的默认高度。 */
 const DEFAULT_LIST_HEIGHT = 700;
-/** 与数据监测趋势折线图统一：最近 15 分钟（1 秒 1 点 ≈ 900） */
+/** 数据监测趋势折线图只保留最近 15 分钟。 */
+const CHART_WINDOW_SECONDS = 15 * 60;
+/** 时间字段不可识别时，按 1 秒 1 点降级裁剪。 */
 const LIST_CHART_MAX_POINTS = 15 * 60;
 
 const resolveNumber = (value: unknown, fallback: number) => {
@@ -94,6 +96,198 @@ const normalizeCardData = (card?: DataMonitoringCardData): DataMonitoringCardDat
   return { ...card, baseInfo, runtimeParameters, tritiumConcentration };
 };
 
+interface PointTime {
+  value: number;
+  cyclic: boolean;
+}
+
+const parsePointTime = (point: DataMonitoringLineChartPoint): PointTime | null => {
+  const rawValue = point.label;
+  if (rawValue === null || rawValue === undefined || rawValue === '') {
+    return null;
+  }
+
+  if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
+    if (rawValue >= 0 && rawValue < 24 * 60 * 60) {
+      return { value: rawValue, cyclic: true };
+    }
+    return { value: rawValue > 1e12 ? rawValue / 1000 : rawValue, cyclic: false };
+  }
+
+  const text = String(rawValue);
+  const hasCalendarDate = /\d{4}[-/]\d{1,2}[-/]\d{1,2}/.test(text);
+  if (hasCalendarDate) {
+    const timestamp = new Date(text.replace(/-/g, '/')).getTime();
+    if (!Number.isNaN(timestamp)) {
+      return { value: timestamp / 1000, cyclic: false };
+    }
+  }
+
+  const timeMatch = text.match(/(?:^|\s|T)(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (timeMatch) {
+    return {
+      value: Number(timeMatch[1]) * 3600 + Number(timeMatch[2]) * 60 + Number(timeMatch[3] || 0),
+      cyclic: true,
+    };
+  }
+
+  const numericValue = Number(text);
+  if (Number.isFinite(numericValue)) {
+    return parsePointTime({ label: numericValue });
+  }
+
+  const timestamp = new Date(text.replace(/-/g, '/')).getTime();
+  return Number.isNaN(timestamp) ? null : { value: timestamp / 1000, cyclic: false };
+};
+
+const trimChartWindow = (
+  points: DataMonitoringLineChartPoint[] | null | undefined,
+): DataMonitoringLineChartPoint[] => {
+  if (!Array.isArray(points) || points.length === 0) {
+    return [];
+  }
+
+  let elapsedSeconds = 0;
+  let windowStart = points.length - 1;
+  let nextTime = parsePointTime(points[points.length - 1]);
+
+  if (!nextTime) {
+    return points.length > LIST_CHART_MAX_POINTS ? points.slice(-LIST_CHART_MAX_POINTS) : points;
+  }
+
+  for (let index = points.length - 2; index >= 0; index -= 1) {
+    const currentTime = parsePointTime(points[index]);
+    if (!currentTime || currentTime.cyclic !== nextTime.cyclic) {
+      return points.length > LIST_CHART_MAX_POINTS ? points.slice(-LIST_CHART_MAX_POINTS) : points;
+    }
+
+    let interval = nextTime.value - currentTime.value;
+    if (nextTime.cyclic && interval < 0) {
+      interval += 24 * 60 * 60;
+    }
+    if (interval < 0) {
+      return points.length > LIST_CHART_MAX_POINTS ? points.slice(-LIST_CHART_MAX_POINTS) : points;
+    }
+
+    elapsedSeconds += interval;
+    if (elapsedSeconds > CHART_WINDOW_SECONDS) {
+      break;
+    }
+
+    windowStart = index;
+    nextTime = currentTime;
+  }
+
+  const windowedPoints = windowStart > 0 ? points.slice(windowStart) : points;
+  return windowedPoints.length > LIST_CHART_MAX_POINTS
+    ? windowedPoints.slice(-LIST_CHART_MAX_POINTS)
+    : windowedPoints;
+};
+
+const getPointKey = (point: DataMonitoringLineChartPoint) => {
+  const label = point?.label;
+  return label === null || label === undefined || label === '' ? null : String(label);
+};
+
+const mergeChartPoints = (
+  history: DataMonitoringLineChartPoint[] | null | undefined,
+  realtime: DataMonitoringLineChartPoint[] | null | undefined,
+) => {
+  const merged = Array.isArray(history) ? history.slice() : [];
+  const pointIndexByKey = new Map<string, number>();
+
+  merged.forEach((point, index) => {
+    const key = getPointKey(point);
+    if (key !== null) {
+      pointIndexByKey.set(key, index);
+    }
+  });
+
+  if (Array.isArray(realtime)) {
+    realtime.forEach((point) => {
+      const key = getPointKey(point);
+      const existingIndex = key === null ? undefined : pointIndexByKey.get(key);
+      if (existingIndex !== undefined) {
+        merged[existingIndex] = point;
+        return;
+      }
+
+      merged.push(point);
+      if (key !== null) {
+        pointIndexByKey.set(key, merged.length - 1);
+      }
+    });
+  }
+
+  return trimChartWindow(merged);
+};
+
+const getCardKey = (card: DataMonitoringCardData, index: number) => {
+  if (card.id !== null && card.id !== undefined) {
+    return `id:${String(card.id)}`;
+  }
+  const normalized = normalizeCardData(card);
+  const deviceValue = normalized?.baseInfo?.deviceValue;
+  return deviceValue !== null && deviceValue !== undefined && deviceValue !== ''
+    ? `device:${String(deviceValue)}`
+    : `index:${index}`;
+};
+
+const mergeCard = (
+  history: DataMonitoringCardData | undefined,
+  realtime: DataMonitoringCardData,
+): DataMonitoringCardData => {
+  const previous = normalizeCardData(history);
+  const incoming = normalizeCardData(realtime) as DataMonitoringCardData;
+  const incomingPoints = incoming.tritiumConcentration;
+
+  return {
+    ...previous,
+    ...incoming,
+    tritiumConcentration: incomingPoints === undefined
+      ? trimChartWindow(previous?.tritiumConcentration)
+      : mergeChartPoints(previous?.tritiumConcentration, incomingPoints),
+  };
+};
+
+const mergeMonitoringData = (
+  history: DataMonitoringCardData | DataMonitoringCardData[] | undefined,
+  realtime: DataMonitoringCardData | DataMonitoringCardData[],
+): DataMonitoringCardData | DataMonitoringCardData[] => {
+  if (!Array.isArray(realtime)) {
+    return mergeCard(Array.isArray(history) ? history[0] : history, realtime);
+  }
+
+  const previousList = Array.isArray(history) ? history : history ? [history] : [];
+  const incomingKeys = new Set<string>();
+  const incomingByKey = new Map<string, DataMonitoringCardData>();
+  realtime.forEach((card, index) => {
+    const key = getCardKey(card, index);
+    incomingKeys.add(key);
+    incomingByKey.set(key, card);
+  });
+
+  const merged = previousList.map((card, index) => {
+    const key = getCardKey(card, index);
+    const incoming = incomingByKey.get(key);
+    if (!incoming) {
+      return mergeCard(undefined, card);
+    }
+    incomingByKey.delete(key);
+    return mergeCard(card, incoming);
+  });
+
+  realtime.forEach((card, index) => {
+    const key = getCardKey(card, index);
+    if (incomingKeys.has(key) && incomingByKey.has(key)) {
+      merged.push(mergeCard(undefined, card));
+      incomingByKey.delete(key);
+    }
+  });
+
+  return merged;
+};
+
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
   Object.keys(props).forEach((key) => {
@@ -109,7 +303,7 @@ const getChartData = (card?: DataMonitoringCardData) => {
   if (!Array.isArray(points)) {
     return [];
   }
-  return points.length > LIST_CHART_MAX_POINTS ? points.slice(-LIST_CHART_MAX_POINTS) : points;
+  return trimChartWindow(points);
 };
 
 interface CardContentProps {
@@ -191,8 +385,16 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     style = {},
     ...otherProps
   } = props;
-  const [sourceData, setSourceData] = useState(data);
+  const [sourceData, setSourceData] = useState<
+    DataMonitoringCardData | DataMonitoringCardData[] | undefined
+  >(() => {
+    if (data === undefined) {
+      return undefined;
+    }
+    return mergeMonitoringData(undefined, data);
+  });
   const sourceDataRef = useRef(sourceData);
+  const previousDataPropRef = useRef(data);
   const bizRef = useRef<BizRef | null>(null);
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
   const items = Array.isArray(sourceData) ? sourceData : null;
@@ -237,7 +439,15 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const renderedCarouselPages = carouselPages;
 
   useEffect(() => {
-    setSourceData(data);
+    if (data === undefined || data === previousDataPropRef.current) {
+      return;
+    }
+    previousDataPropRef.current = data;
+    setSourceData((previous) => {
+      const next = mergeMonitoringData(previous, data);
+      sourceDataRef.current = next;
+      return next;
+    });
   }, [data]);
 
   useEffect(() => {
@@ -320,7 +530,11 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     bizRef.current = {
       chart: {
         changeData: (nextData) => {
-          setSourceData(nextData);
+          setSourceData((previous) => {
+            const next = mergeMonitoringData(previous, nextData);
+            sourceDataRef.current = next;
+            return next;
+          });
         },
         getData: () => sourceDataRef.current,
       },
