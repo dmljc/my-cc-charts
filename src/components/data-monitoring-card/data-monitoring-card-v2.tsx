@@ -42,6 +42,10 @@ export interface DataMonitoringCardProps {
   cardGap?: number;
   pauseOnHover?: boolean;
   showLatestValue?: boolean;
+  /** 折线图 Y 轴最小值；传入则固定使用。未传时按当前卡片趋势数据最小值动态取整。 */
+  min?: number;
+  /** 折线图 Y 轴最大值；传入则固定使用。未传时按当前卡片趋势数据最大值动态取整。 */
+  max?: number;
   /** 是否挂载完整 ECharts；列表模式仅对当前页（及切页中的上一页）挂载。 */
   mountChart?: boolean;
   /** 轮播每页显示的设备数，默认 2。 */
@@ -312,6 +316,8 @@ interface CardContentProps {
   infoHeight: number;
   chartHeight: number;
   showLatestValue: boolean;
+  min?: number;
+  max?: number;
   mountChart: boolean;
 }
 
@@ -321,6 +327,8 @@ const CardContent: React.FC<CardContentProps> = function CardContent({
   infoHeight,
   chartHeight,
   showLatestValue,
+  min,
+  max,
   mountChart,
 }) {
   const card = normalizeCardData(data);
@@ -349,6 +357,8 @@ const CardContent: React.FC<CardContentProps> = function CardContent({
           width="100%"
           height={chartHeight}
           data={chartData}
+          min={min}
+          max={max}
           maxPoints={LIST_CHART_MAX_POINTS}
           showXAxisLabels={false}
           showLatestValue={showLatestValue}
@@ -376,6 +386,8 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     cardGap = 16,
     pauseOnHover = true,
     showLatestValue = true,
+    min,
+    max,
     mountChart = true,
     devicesPerPage = 2,
     carouselInterval = 5000,
@@ -562,6 +574,8 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
           infoHeight={resolvedInfoHeight}
           chartHeight={resolvedChartHeight}
           showLatestValue={resolvedShowLatestValue}
+          min={min}
+          max={max}
           mountChart={resolvedMountChart}
         />
       </div>
@@ -626,6 +640,8 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
                         infoHeight={resolvedInfoHeight}
                         chartHeight={resolvedChartHeight}
                         showLatestValue={resolvedShowLatestValue}
+                        min={min}
+                        max={max}
                         mountChart={resolvedMountChart && mountPageCharts}
                       />
                     </div>

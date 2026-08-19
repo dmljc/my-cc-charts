@@ -5,7 +5,7 @@ import '../jsx-shim';
 import { createElement, useEffect, useMemo, useRef, useState } from 'react';
 import * as echarts from 'echarts';
 import { destroy, init } from '../../common/iot';
-import { buildNiceAxisTicks, getNiceAxisMax } from '../../common/chart-axis';
+import { buildNiceAxisRange, buildNiceAxisTicks, formatAxisNumber } from '../../common/chart-axis';
 import { sliceWindow } from '../../common/perf';
 import { DEFAULT_DATA_MONITORING_LINE_CHART_TEST_DATA } from './test-data';
 import './index.scss';
@@ -23,7 +23,7 @@ export interface DataMonitoringLineChartProps {
   xField?: string;
   /** y 轴数值映射字段名，默认 value */
   yField?: string;
-  /** y 轴最小值，默认 0 */
+  /** y 轴最小值；不传时按当前窗口数据最小值自动取整 */
   min?: number;
   /** y 轴最大值；不传时按当前窗口数据最大值自动取整 */
   max?: number;
@@ -182,15 +182,7 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
   return domProps;
 };
 
-const formatTooltipValue = (value: number | string | undefined) => {
-  if (value === null || value === undefined || value === '') {
-    return '-';
-  }
-
-  const num = Number(value);
-
-  return Number.isNaN(num) ? String(value) : String(parseFloat(num.toFixed(2)));
-};
+const formatTooltipValue = (value: number | string | undefined) => formatAxisNumber(value);
 
 const normalizePoints = (
   nextData: DataMonitoringLineChartPoint[] | undefined | null,
@@ -223,7 +215,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     data,
     xField = 'label',
     yField = 'value',
-    min = 0,
+    min,
     max,
     lineColor = DEFAULT_LINE_COLOR,
     areaColor = DEFAULT_AREA_COLOR,
@@ -300,15 +292,18 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     const numericValues = hasData
       ? seriesData.map((value) => Number(value)).filter((value) => Number.isFinite(value))
       : [];
+    const dataMin = numericValues.length > 0 ? Math.min(...numericValues) : 0;
     const dataMax = numericValues.length > 0 ? Math.max(...numericValues) : 0;
+    const autoRange = buildNiceAxisRange(dataMin, dataMax);
     const configuredMin = Number(min);
-    const axisMin = Number.isFinite(configuredMin) ? configuredMin : 0;
     const configuredMax = Number(max);
-    const autoAxisMax = getNiceAxisMax(dataMax);
-    // 显式传入 max 时保持用户配置；未传时与可变 Y 轴折线图共用同一取整规则。
-    const axisMax = Number.isFinite(configuredMax) && configuredMax > axisMin
-      ? configuredMax
-      : Math.max(autoAxisMax, axisMin + 1);
+    const hasConfiguredMin = min !== undefined && min !== null && min !== '' && Number.isFinite(configuredMin);
+    const hasConfiguredMax = max !== undefined && max !== null && max !== '' && Number.isFinite(configuredMax);
+    let axisMin = hasConfiguredMin ? configuredMin : autoRange.min;
+    let axisMax = hasConfiguredMax ? configuredMax : autoRange.max;
+    if (!(axisMax > axisMin)) {
+      axisMax = axisMin + Math.max(autoRange.max - autoRange.min, 1);
+    }
     const yAxisTicks = buildNiceAxisTicks(axisMin, axisMax);
     const showUnitLabel = !showXAxisLabels && Boolean(xAxisUnitLabel);
     const lastRawValue = hasData ? (items[items.length - 1] as any)[yField] : undefined;
@@ -405,6 +400,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
           customValues: yAxisTicks,
           color: 'rgba(218, 230, 235, 0.75)',
           fontSize: 12,
+          formatter: (value: number) => formatAxisNumber(value),
         },
       },
       series: [
