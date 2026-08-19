@@ -275,7 +275,8 @@ const mergeMonitoringData = (
     const key = getCardKey(card, index);
     const incoming = incomingByKey.get(key);
     if (!incoming) {
-      return mergeCard(undefined, card);
+      // 增量更新未带上的设备保持原引用，避免每轮 WS 让全部卡片重渲染。
+      return card;
     }
     incomingByKey.delete(key);
     return mergeCard(card, incoming);
@@ -304,10 +305,7 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
 
 const getChartData = (card?: DataMonitoringCardData) => {
   const points = card?.tritiumConcentration ?? card?.chart;
-  if (!Array.isArray(points)) {
-    return [];
-  }
-  return trimChartWindow(points);
+  return Array.isArray(points) ? points : [];
 };
 
 interface CardContentProps {
@@ -321,7 +319,7 @@ interface CardContentProps {
   mountChart: boolean;
 }
 
-const CardContent: React.FC<CardContentProps> = function CardContent({
+const CardContent: React.FC<CardContentProps> = React.memo(function CardContent({
   data,
   headerHeight,
   infoHeight,
@@ -373,7 +371,8 @@ const CardContent: React.FC<CardContentProps> = function CardContent({
       ) : null}
     </React.Fragment>
   );
-};
+});
+CardContent.displayName = 'DataMonitoringCardContent';
 
 const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonitoringCard(props) {
   const {
@@ -433,6 +432,8 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const [outgoingCarouselPage, setOutgoingCarouselPage] = useState<number | null>(null);
   const [carouselPaused, setCarouselPaused] = useState(false);
   const [isCarouselResetting, setIsCarouselResetting] = useState(false);
+  const carouselHoverRef = useRef(false);
+  const navigateToPageRef = useRef<(nextPage: number) => void>(() => undefined);
 
   const carouselPages = useMemo(() => {
     if (!items) {
@@ -470,16 +471,49 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     carouselPageRef.current = carouselPage;
   }, [carouselPage]);
 
-  // 循环开关或页数变化时，回到有效页面索引，避免轨道越界或显示空白页。
+  navigateToPageRef.current = (nextPage: number) => {
+    const pageCount = carouselPages.length;
+    if (pageCount <= 1) {
+      return;
+    }
+
+    const clamped = Math.max(0, Math.min(pageCount - 1, nextPage));
+    const current = carouselPageRef.current;
+    if (clamped === current) {
+      return;
+    }
+
+    const isAdjacent = Math.abs(clamped - current) === 1;
+    const isLoopEdge = resolvedCarouselLoop && (
+      (current === 0 && clamped === pageCount - 1)
+      || (current === pageCount - 1 && clamped === 0)
+    );
+    const animate = isAdjacent && !isLoopEdge;
+
+    carouselPageRef.current = clamped;
+    if (animate) {
+      setOutgoingCarouselPage(current);
+    } else {
+      setOutgoingCarouselPage(null);
+      setIsCarouselResetting(true);
+    }
+    setCarouselPage(clamped);
+    setCarouselTrackPage(clamped);
+  };
+
+  // 仅在页数缩短导致越界时回正，避免循环开关切换时无意义地打断当前页。
   useEffect(() => {
     const normalizedPage = Math.min(carouselPageRef.current, Math.max(carouselPages.length - 1, 0));
+    if (normalizedPage === carouselPageRef.current) {
+      return;
+    }
 
     carouselPageRef.current = normalizedPage;
     setCarouselPage(normalizedPage);
     setCarouselTrackPage(normalizedPage);
     setOutgoingCarouselPage(null);
     setIsCarouselResetting(true);
-  }, [carouselPages.length, resolvedCarouselLoop]);
+  }, [carouselPages.length]);
 
   useEffect(() => {
     if (!isCarouselResetting || typeof window === 'undefined') {
@@ -501,18 +535,12 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     }
 
     const advancePage = () => {
-      setCarouselPage((current) => {
-        const isLast = current >= carouselPages.length - 1;
-
-        if (isLast && !resolvedCarouselLoop) {
-          return current;
-        }
-
-        const next = isLast ? 0 : current + 1;
-        setOutgoingCarouselPage(current);
-        setCarouselTrackPage(next);
-        return next;
-      });
+      const current = carouselPageRef.current;
+      const isLast = current >= carouselPages.length - 1;
+      if (isLast && !resolvedCarouselLoop) {
+        return;
+      }
+      navigateToPageRef.current(isLast ? 0 : current + 1);
     };
     const timer = window.setTimeout(advancePage, resolvedCarouselInterval);
 
@@ -531,7 +559,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     }
 
     const onVisibilityChange = () => {
-      setCarouselPaused(document.hidden);
+      setCarouselPaused(document.hidden || carouselHoverRef.current);
     };
     document.addEventListener('visibilitychange', onVisibilityChange);
 
@@ -557,6 +585,16 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (outgoingCarouselPage === null || typeof window === 'undefined') {
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      setOutgoingCarouselPage(null);
+    }, resolvedCarouselTransitionDuration + 80);
+    return () => window.clearTimeout(timer);
+  }, [outgoingCarouselPage, carouselPage, resolvedCarouselTransitionDuration]);
 
   const rootStyle: React.CSSProperties = {
     width,
@@ -584,21 +622,21 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
 
   const canNavigateCarousel = carouselPages.length > 1;
   const changeCarouselPage = (nextPage: number) => {
-    if (!canNavigateCarousel || nextPage === carouselPage) {
-      return;
-    }
-
-    setOutgoingCarouselPage(carouselPage);
-    setCarouselPage(Math.max(0, Math.min(carouselPages.length - 1, nextPage)));
-    setCarouselTrackPage(Math.max(0, Math.min(carouselPages.length - 1, nextPage)));
+    navigateToPageRef.current(nextPage);
   };
 
   return (
     <div className={`bizpack-data-monitoring-card ${className}`} style={rootStyle} {...rootDomProps}>
       <div
         className="bizpack-data-monitoring-card-carousel"
-        onMouseEnter={resolvedPauseOnHover ? () => setCarouselPaused(true) : undefined}
-        onMouseLeave={resolvedPauseOnHover ? () => setCarouselPaused(false) : undefined}
+        onMouseEnter={resolvedPauseOnHover ? () => {
+          carouselHoverRef.current = true;
+          setCarouselPaused(true);
+        } : undefined}
+        onMouseLeave={resolvedPauseOnHover ? () => {
+          carouselHoverRef.current = false;
+          setCarouselPaused(document.hidden);
+        } : undefined}
       >
         <div
           className="bizpack-data-monitoring-card-carousel-track"
