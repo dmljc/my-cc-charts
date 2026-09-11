@@ -46,6 +46,13 @@ export type {
 } from './components/device-warning';
 export { default as DeviceWarning } from './components/device-warning';
 
+export type {
+  WarningStatisticsData,
+  WarningStatisticsItem,
+  WarningStatisticsProps,
+} from './components/warning-statistics';
+export { default as WarningStatistics } from './components/warning-statistics';
+
 export type { OperationLogItem, OperationLogProps } from './components/operation-log';
 export { default as OperationLog } from './components/operation-log';
 
