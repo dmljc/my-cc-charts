@@ -21,7 +21,7 @@ export interface DataMonitoringPanelProps {
   cardGap?: number;
   /** 卡片头部高度，默认 78 */
   headerHeight?: number;
-  /** 卡片指标区域高度，默认 60 */
+  /** 卡片指标区域高度，默认 110 */
   infoHeight?: number;
   /** 卡片折线图高度，默认 120 */
   chartHeight?: number;
@@ -102,7 +102,7 @@ const DataMonitoringPanel: React.FC<DataMonitoringPanelProps> = function DataMon
     style = {},
     cardGap = 16,
     headerHeight = 78,
-    infoHeight = 60,
+    infoHeight = 110,
     chartHeight = 120,
     showXAxisLabels = true,
     showLatestValue = true,

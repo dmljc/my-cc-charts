@@ -106,6 +106,14 @@ const DataMonitoringInfoMeta: ComponentMetadata = {
             },
             setter: 'StringSetter',
           },
+          {
+            name: 'iconField',
+            title: {
+              label: '图标字段名',
+              tip: '自定义图标地址对应的数据字段名，默认 icon；未配置时按指标名使用内置图标',
+            },
+            setter: 'StringSetter',
+          },
         ],
       },
       {
@@ -167,8 +175,9 @@ const snippets: Snippet[] = [
         valueField: 'value',
         unitField: 'unit',
         labelField: 'label',
-        width: 400,
-        height: 60,
+        iconField: 'icon',
+        width: 395,
+        height: 110,
       },
     },
   },

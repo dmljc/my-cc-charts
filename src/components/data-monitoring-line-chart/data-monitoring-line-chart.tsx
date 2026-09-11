@@ -62,7 +62,8 @@ const EMPTY_AXIS_PLACEHOLDER_COUNT = 5;
 const DEFAULT_MAX_POINTS = 15 * 60;
 
 const DEFAULT_LINE_COLOR = '#5bc8ff';
-const DEFAULT_AREA_COLOR: [string, string] = ['rgba(30, 110, 220, 0.85)', 'rgba(20, 60, 140, 0.15)'];
+/** 对应设计稿：linear-gradient(180deg, #0142C4 0%, rgba(1,66,196,0) 100%) + opacity 0.8 */
+const DEFAULT_AREA_COLOR: [string, string] = ['rgba(1, 66, 196, 0.8)', 'rgba(1, 66, 196, 0)'];
 
 const areaGradientCache = new Map<string, echarts.graphic.LinearGradient>();
 
@@ -420,11 +421,17 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
           animationDurationUpdate: 0,
           lineStyle: {
             color: lineColor,
-            width: 3,
+            width: 2,
+            shadowColor: 'rgba(91, 200, 255, 0.45)',
+            shadowBlur: 6,
+          },
+          emphasis: {
+            disabled: true,
           },
           areaStyle: hasData
             ? {
               color: getAreaGradient(areaColor[0], areaColor[1]),
+              origin: 'start',
             }
             : undefined,
         },

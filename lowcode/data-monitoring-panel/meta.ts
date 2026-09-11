@@ -194,7 +194,7 @@ const snippets: Snippet[] = [
         height: 640,
         cardGap: 16,
         headerHeight: 78,
-        infoHeight: 60,
+        infoHeight: 110,
         chartHeight: 120,
         showXAxisLabels: true,
         showLatestValue: true,
