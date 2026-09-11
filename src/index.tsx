@@ -33,6 +33,17 @@ export {
   default as DeviceSpotCheck,
 } from './components/device-spot-check';
 
+export type {
+  DisposalStatisticsData,
+  DisposalStatisticsProps,
+  DisposalStatisticsSlotKey,
+  DisposalStatisticsStats,
+} from './components/disposal-statistics';
+export {
+  DEFAULT_DISPOSAL_STATISTICS_TEST_DATA,
+  default as DisposalStatistics,
+} from './components/disposal-statistics';
+
 export type { HeaderDateProps } from './components/header-date';
 export { default as HeaderDate } from './components/header-date';
 
