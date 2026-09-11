@@ -15,14 +15,18 @@
 
   &-info {
     flex: none;
-    margin-top: 12px;
-    background: rgba(26, 42, 54, 0.78);
+    margin: 10px 0;
+    overflow: visible;
   }
 
   &-chart {
     flex: none;
     margin-top: 12px;
     background: transparent;
+  }
+
+  &-info + &-chart {
+    margin-top: 0;
   }
 
   &-scroll {

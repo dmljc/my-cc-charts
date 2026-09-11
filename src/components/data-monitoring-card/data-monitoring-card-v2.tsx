@@ -61,8 +61,10 @@ export interface DataMonitoringCardProps {
   [key: string]: unknown;
 }
 
-/** 双设备轮播下容纳 150px 趋势图与分页器的默认高度。 */
-const DEFAULT_LIST_HEIGHT = 700;
+/** 与 DataMonitoringInfo 设计稿高度对齐，避免旧默认 60 压扁背景框。 */
+const DEFAULT_INFO_HEIGHT = 110;
+/** 双设备轮播下容纳 110px 指标区、150px 趋势图与分页器的默认高度。 */
+const DEFAULT_LIST_HEIGHT = 780;
 /** 数据监测趋势折线图只保留最近 15 分钟。 */
 const CHART_WINDOW_SECONDS = 15 * 60;
 /** 时间字段不可识别时，按 1 秒 1 点降级裁剪。 */
@@ -382,7 +384,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     width = '100%',
     height,
     headerHeight = 78,
-    infoHeight = 98,
+    infoHeight = DEFAULT_INFO_HEIGHT,
     chartHeight = 150,
     cardGap = 16,
     pauseOnHover = true,
@@ -416,7 +418,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     ? (sourceData.length === 1 ? sourceData[0] : undefined)
     : sourceData;
   const resolvedHeaderHeight = resolveNumber(headerHeight, 78);
-  const resolvedInfoHeight = resolveNumber(infoHeight, 98);
+  const resolvedInfoHeight = Math.max(resolveNumber(infoHeight, DEFAULT_INFO_HEIGHT), DEFAULT_INFO_HEIGHT);
   const resolvedChartHeight = resolveNumber(chartHeight, 150);
   const resolvedHeight = resolveNumber(height, DEFAULT_LIST_HEIGHT);
   const resolvedPauseOnHover = resolveBoolean(pauseOnHover, true);
