@@ -1,0 +1,172 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-left1 {
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    gap: 6px;
+    overflow: hidden;
+    color: #ffffff;
+    font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+
+    &-bottom {
+        display: flex;
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 0;
+        gap: 6px;
+    }
+
+    &-card {
+        position: relative;
+        display: flex;
+        flex: 1 1 0;
+        align-items: center;
+        box-sizing: border-box;
+        min-width: 0;
+        min-height: 0;
+        padding: 0;
+        overflow: visible;
+        color: #ffffff;
+        text-align: left;
+        cursor: pointer;
+        background-color: transparent;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 100% 100%;
+        border: 0;
+        outline: none;
+        appearance: none;
+    }
+
+    &-card-total {
+        flex: 1 1 0;
+        padding: 0 28px 0 20px;
+        background-image: url('./bg1.png');
+    }
+
+    &-card-small {
+        flex: 1 1 0;
+        padding: 0 6px 0 10px;
+        background-image: url('./bg2.png');
+    }
+
+    &-label {
+        display: block;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        font-family: SourceHanSansCN, SourceHanSansCN, PingFang SC, Microsoft YaHei, Arial, sans-serif;
+        font-size: 16px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 24px;
+        color: #ffffff;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-shadow: 0 0 6px rgba(255, 255, 255, 0.28);
+    }
+
+    &-right {
+        position: relative;
+        display: block;
+        flex: none;
+        width: 108px;
+        height: 80px;
+        margin-left: 8px;
+        overflow: visible;
+    }
+
+    &-card-total &-right {
+        width: 128px;
+    }
+
+    &-card-small &-right {
+        width: 92px;
+        height: 68px;
+    }
+
+    &-metric {
+        position: absolute;
+        top: 50%;
+        left: 6px;
+        z-index: 1;
+        display: inline-flex;
+        align-items: baseline;
+        line-height: 1;
+        pointer-events: none;
+        transform: translateY(-50%);
+    }
+
+    &-card-small &-metric {
+        left: 14px;
+    }
+
+    &-value {
+        display: block;
+        flex: none;
+        font-family: D-DIN, DIN Alternate, Arial, sans-serif;
+        font-size: 28px;
+        font-style: normal;
+        font-weight: bold;
+        line-height: 32px;
+        color: #ffffff;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        text-shadow: 0 0 8px rgba(0, 0, 0, 0.45), 0 0 8px rgba(255, 255, 255, 0.25);
+    }
+
+    &-card-small &-value {
+        font-size: 22px;
+        line-height: 26px;
+    }
+
+    &-unit {
+        display: block;
+        flex: none;
+        margin: 0 0 0 2px;
+        font-family: SourceHanSansCN, SourceHanSansCN, PingFang SC, Microsoft YaHei, Arial, sans-serif;
+        font-size: 12px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 16px;
+        color: rgba(255, 255, 255, 0.92);
+        white-space: nowrap;
+    }
+
+    &-gauge {
+        position: absolute;
+        top: 50%;
+        right: 0;
+        z-index: 0;
+        display: block;
+        width: 80px;
+        height: 80px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        pointer-events: none;
+        transform: translateY(-50%);
+    }
+
+    &-card-small &-gauge {
+        width: 68px;
+        height: 68px;
+    }
+
+    &-gauge-orange {
+        background-image: url('./origin.png');
+    }
+
+    &-gauge-blue {
+        background-image: url('./blue.png');
+    }
+
+    &-gauge-green {
+        background-image: url('./green.png');
+    }
+}

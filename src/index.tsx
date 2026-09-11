@@ -4,6 +4,35 @@ export { default as ColorfulButton } from './components/colorful-button';
 export type { FilletColumnChartProps } from './components/fillet-column-chart';
 export { default as FilletColumnChart } from './components/fillet-column-chart';
 
+export type {
+  Left1Item,
+  Left1ObjectData,
+  Left1Props,
+  Left1Theme,
+} from './components/device-overview';
+export { DEFAULT_LEFT1_TEST_DATA, default as Left1 } from './components/device-overview';
+
+export type {
+  Left2DataInput,
+  Left2DeviceTypesMap,
+  Left2DeviceTypesPayload,
+  Left2Item,
+  Left2Props,
+  Left2Theme,
+} from './components/device-type';
+export { DEFAULT_LEFT2_TEST_DATA, default as Left2 } from './components/device-type';
+
+export type {
+  DeviceSpotCheckData,
+  DeviceSpotCheckProps,
+  DeviceSpotCheckSlotKey,
+  DeviceSpotCheckStats,
+} from './components/device-spot-check';
+export {
+  DEFAULT_DEVICE_SPOT_CHECK_TEST_DATA,
+  default as DeviceSpotCheck,
+} from './components/device-spot-check';
+
 export type { HeaderDateProps } from './components/header-date';
 export { default as HeaderDate } from './components/header-date';
 
