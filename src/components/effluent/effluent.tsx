@@ -6,6 +6,7 @@ import '../jsx-shim';
 import { createElement, useEffect, useState } from 'react';
 import { destroy, init } from '../../common/iot';
 import { normalizeListData } from '../../common/perf';
+import { DEFAULT_EFFLUENT_LIST_TEST_DATA } from './test-data';
 import './index.scss';
 
 /** 箭头方向，与接口字段 arrow 一致 */
@@ -21,38 +22,63 @@ export interface EffluentItem {
   value?: number | string;
   /** 阈值，接口字段 threshold */
   threshold?: number | string;
-  /** 箭头方向，接口字段 arrow，取值 up/down */
+  /** 箭头方向，接口字段 arrow，取值 up/down/flat */
   arrow?: EffluentArrow;
   [key: string]: unknown;
 }
 
+/** 厂房 -> 指标列表，与接口 effluentList 一致 */
+export type EffluentListMap = Record<string, EffluentItem[]>;
+
+export interface EffluentListPayload {
+  effluentList?: EffluentListMap;
+  [key: string]: unknown;
+}
+
+export type EffluentDataInput = EffluentListPayload | EffluentListMap | EffluentItem[];
+
+export interface EffluentGroupView {
+  key: string;
+  items: EffluentItem[];
+}
+
 export interface EffluentProps {
+  /** 单卡标题；仅当 data 为数组时生效，map 模式用 key 作标题 */
   title?: string;
-  data?: EffluentItem[];
+  /**
+   * 支持三种形态：
+   * 1) { effluentList: { X12: [...], X03: [...] } }
+   * 2) { X12: [...], X03: [...] }
+   * 3) EffluentItem[]（单卡，兼容旧绑定）
+   */
+  data?: EffluentDataInput;
   /** 名称字段名，默认 name */
   nameField?: string;
   /** 数值字段名，默认 value */
   valueField?: string;
   /** 阈值字段名，默认 threshold */
   thresholdField?: string;
-  /** 箭头字段名，默认 arrow，取值 up/down */
+  /** 箭头字段名，默认 arrow，取值 up/down/flat */
   arrowField?: string;
   /** 数值单位后缀 */
   unit?: string;
+  /** 卡片间距 */
+  gap?: number | string;
   /** 可选；不传则由内容自适应撑开 */
   width?: number | string;
   /** 可选；不传则由内容自适应撑开 */
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
-  onItemClick?: (item: EffluentItem, index: number) => void;
+  onItemClick?: (item: EffluentItem, index: number, groupKey: string) => void;
+  onCardClick?: (groupKey: string, items: EffluentItem[]) => void;
   [key: string]: unknown;
 }
 
 interface BizRef {
   chart: {
-    changeData: (nextData: EffluentItem[]) => void;
-    getData?: () => EffluentItem[];
+    changeData: (nextData: EffluentDataInput) => void;
+    getData?: () => EffluentListMap;
   };
 }
 
@@ -77,12 +103,7 @@ const ArrowIcon: React.FC = function ArrowIcon() {
   );
 };
 
-const defaultData: EffluentItem[] = [
-  { id: 1, name: '全排', value: 0.3, threshold: 1, arrow: 'down' },
-  { id: 2, name: '特排', value: 0.285, threshold: 100, arrow: 'down' },
-  { id: 3, name: '局排', value: 0.285, threshold: 10, arrow: 'down' },
-  { id: 4, name: '特排', value: 1000, threshold: 100, arrow: 'up' },
-];
+const defaultData = DEFAULT_EFFLUENT_LIST_TEST_DATA as EffluentDataInput;
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
   const domProps: Record<string, unknown> = {};
@@ -100,6 +121,88 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
   });
 
   return domProps;
+};
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === 'object' && !Array.isArray(value);
+
+/** 判断对象是否为厂房 map（值为数组），而非 { effluentList } 包装 */
+const isEffluentListMap = (value: unknown): value is EffluentListMap => {
+  if (!isPlainObject(value) || Object.prototype.hasOwnProperty.call(value, 'effluentList')) {
+    return false;
+  }
+  const keys = Object.keys(value);
+  if (!keys.length) {
+    return false;
+  }
+  return keys.every((key) => Array.isArray(value[key]));
+};
+
+/** 按 id 去重，去掉 concat 造成的重复节点（名称可重复故不用 name） */
+const dedupeById = (list: EffluentItem[]): EffluentItem[] => {
+  if (!Array.isArray(list) || list.length <= 1) {
+    return Array.isArray(list) ? list.slice() : [];
+  }
+  const seen = new Set<string>();
+  const result: EffluentItem[] = [];
+  list.forEach((item, index) => {
+    if (!item || typeof item !== 'object') {
+      return;
+    }
+    const key = item.id != null ? `id:${String(item.id)}` : `idx:${index}`;
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    result.push({ ...item });
+  });
+  return result;
+};
+
+const normalizeMap = (map: EffluentListMap): EffluentListMap => {
+  const next: EffluentListMap = {};
+  Object.keys(map).forEach((key) => {
+    const list = map[key];
+    next[key] = Array.isArray(list) ? dedupeById(normalizeListData(list)) : [];
+  });
+  return next;
+};
+
+/**
+ * 统一解析入参：
+ * - { effluentList: { X12: [] } }
+ * - { X12: [] }
+ * - EffluentItem[]（单卡）
+ */
+const resolveGroups = (
+  value?: EffluentDataInput | null,
+  singleTitle = '流出物',
+): EffluentGroupView[] => {
+  if (Array.isArray(value)) {
+    return [{ key: singleTitle, items: dedupeById(normalizeListData(value)) }];
+  }
+
+  if (isPlainObject(value)) {
+    if (isPlainObject(value.effluentList)) {
+      const map = value.effluentList as EffluentListMap;
+      return Object.entries(normalizeMap(map)).map(([key, items]) => ({ key, items }));
+    }
+    if (isEffluentListMap(value)) {
+      return Object.entries(normalizeMap(value)).map(([key, items]) => ({ key, items }));
+    }
+  }
+
+  return Object.entries(normalizeMap(DEFAULT_EFFLUENT_LIST_TEST_DATA.effluentList)).map(
+    ([key, items]) => ({ key, items }),
+  );
+};
+
+const groupsToMap = (groups: EffluentGroupView[]): EffluentListMap => {
+  const map: EffluentListMap = {};
+  groups.forEach((group) => {
+    map[group.key] = group.items;
+  });
+  return map;
 };
 
 const resolveFieldValue = (item: EffluentItem, field: string) => {
@@ -137,27 +240,6 @@ const resolveArrow = (
   }
 
   return 'flat';
-};
-
-/** 按 id 去重，去掉 concat 造成的重复节点（名称可重复故不用 name） */
-const dedupeById = (list: EffluentItem[]): EffluentItem[] => {
-  if (!Array.isArray(list) || list.length <= 1) {
-    return Array.isArray(list) ? list.slice() : [];
-  }
-  const seen = new Set<string>();
-  const result: EffluentItem[] = [];
-  list.forEach((item, index) => {
-    if (!item || typeof item !== 'object') {
-      return;
-    }
-    const key = item.id != null ? `id:${String(item.id)}` : `idx:${index}`;
-    if (seen.has(key)) {
-      return;
-    }
-    seen.add(key);
-    result.push({ ...item });
-  });
-  return result;
 };
 
 /**
@@ -203,33 +285,63 @@ const patchEffluentItems = (prev: EffluentItem[], incoming: EffluentItem[]): Eff
   return next;
 };
 
+const patchGroups = (
+  prev: EffluentGroupView[],
+  incoming: EffluentGroupView[],
+  structureReady: boolean,
+): EffluentGroupView[] => {
+  if (!incoming.length) {
+    return [];
+  }
+  if (!structureReady || !prev.length) {
+    return incoming;
+  }
+
+  const prevMap = groupsToMap(prev);
+  const nextKeys = incoming.map((g) => g.key);
+  // 保留旧顺序：已有 key 在前，新增 key 追加
+  const orderedKeys = [
+    ...prev.map((g) => g.key).filter((key) => nextKeys.indexOf(key) >= 0),
+    ...nextKeys.filter((key) => !Object.prototype.hasOwnProperty.call(prevMap, key)),
+  ];
+
+  return orderedKeys.map((key) => {
+    const incomingGroup = incoming.find((g) => g.key === key);
+    const prevItems = prevMap[key] || [];
+    const incomingItems = incomingGroup ? incomingGroup.items : [];
+    if (!prevItems.length) {
+      return { key, items: incomingItems };
+    }
+    if (incomingItems.length < prevItems.length) {
+      return { key, items: incomingItems };
+    }
+    return { key, items: patchEffluentItems(prevItems, incomingItems) };
+  });
+};
+
 const Effluent: React.FC<EffluentProps> = function Effluent(props) {
   const {
+    title = '流出物',
     data = defaultData,
     nameField = 'name',
     valueField = 'value',
     thresholdField = 'threshold',
     arrowField = 'arrow',
     unit = '',
+    gap = 12,
     width,
     height,
     style = {},
     className = '',
     onItemClick,
+    onCardClick,
     ...otherProps
   } = props;
-  const [items, setItems] = useState<EffluentItem[]>(() => {
-    if (Array.isArray(data) && data !== defaultData) {
-      return dedupeById(normalizeListData(data));
-    }
-    return defaultData;
-  });
-  /** 首次非默认数据建槽后锁定长度；之后只改 value */
-  const structureReadyRef = React.useRef(
-    Array.isArray(data) && data.length > 0 && data !== defaultData,
-  );
-  const itemsRef = React.useRef(items);
-  itemsRef.current = items;
+  const [groups, setGroups] = useState<EffluentGroupView[]>(() => resolveGroups(data, title));
+  /** 首次非默认数据建槽后锁定结构；之后只改 value / arrow */
+  const structureReadyRef = React.useRef(data !== defaultData);
+  const groupsRef = React.useRef(groups);
+  groupsRef.current = groups;
   const rootDomProps = pickRootDomProps(otherProps);
   const bizRef = React.useRef<BizRef | null>(null);
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
@@ -238,62 +350,39 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
     if (props.dataType && props.dataType !== 'data') {
       return;
     }
-    if (!Array.isArray(data)) {
-      return;
-    }
     if (data === defaultData) {
-      setItems(defaultData);
+      setGroups(resolveGroups(defaultData, title));
       return;
     }
 
-    const list = dedupeById(normalizeListData(data));
-    if (!list.length) {
+    const nextGroups = resolveGroups(data, title);
+    if (!nextGroups.length) {
       structureReadyRef.current = false;
-      setItems([]);
+      setGroups([]);
       return;
     }
 
-    if (!structureReadyRef.current) {
-      setItems(list);
-      structureReadyRef.current = true;
-      return;
-    }
-
-    setItems((prev) => {
-      // 去重后变短：用真实列表纠正历史堆积
-      if (list.length < prev.length) {
-        return list;
-      }
-      return patchEffluentItems(prev, list);
-    });
-  }, [data, props.dataType]);
+    setGroups((prev) => patchGroups(prev, nextGroups, structureReadyRef.current));
+    structureReadyRef.current = true;
+  }, [data, props.dataType, title]);
 
   useEffect(() => {
     bizRef.current = {
       chart: {
-        changeData: (nextData: EffluentItem[]) => {
-          if (!Array.isArray(nextData)) {
-            return;
-          }
-          const list = dedupeById(normalizeListData(nextData));
-          if (!list.length) {
+        changeData: (nextData: EffluentDataInput) => {
+          const nextGroups = resolveGroups(nextData, title);
+          if (!nextGroups.length) {
             structureReadyRef.current = false;
-            setItems([]);
+            setGroups([]);
             return;
           }
-          setItems((prev) => {
-            if (!structureReadyRef.current || !prev.length) {
-              structureReadyRef.current = true;
-              return list;
-            }
-            if (list.length < prev.length) {
-              return list;
-            }
-            // isAdd concat 的长数组也只按槽位改 value
-            return patchEffluentItems(prev, list);
+          setGroups((prev) => {
+            const patched = patchGroups(prev, nextGroups, structureReadyRef.current);
+            structureReadyRef.current = true;
+            return patched;
           });
         },
-        getData: () => itemsRef.current,
+        getData: () => groupsToMap(groupsRef.current),
       },
     };
 
@@ -312,57 +401,91 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
   const rootStyle: React.CSSProperties = {
     ...(width !== undefined && width !== null && width !== '' ? { width } : {}),
     ...(height !== undefined && height !== null && height !== '' ? { height } : {}),
+    gap,
     ...style,
   };
 
+  const hasMultipleCards = groups.length > 1;
+
   return (
     <div
-      className={`bizpack-effluent ${className}`}
+      className={`bizpack-effluent ${hasMultipleCards ? 'bizpack-effluent-multi' : ''} ${className}`}
       style={rootStyle}
       {...rootDomProps}
     >
-      {items.map((item, index) => {
-        const name = String(resolveFieldValue(item, safeNameField) || '-');
-        const value = resolveFieldValue(item, safeValueField);
-        const threshold = resolveFieldValue(item, safeThresholdField);
-        const arrow = resolveArrow(
-          resolveFieldValue(item, safeArrowField),
-          value,
-          threshold,
-        );
-        const tipParts = [
-          name,
-          value !== '' ? `值 ${value}` : '',
-          threshold !== '' ? `阈值 ${threshold}` : '',
-        ].filter(Boolean);
+      {groups.map((group) => (
+        <div
+          key={group.key}
+          className="bizpack-effluent-card"
+          role={onCardClick ? 'button' : undefined}
+          tabIndex={onCardClick ? 0 : undefined}
+          onClick={() => {
+            if (onCardClick) {
+              onCardClick(group.key, group.items);
+            }
+          }}
+          onKeyDown={(event) => {
+            if (!onCardClick) {
+              return;
+            }
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              onCardClick(group.key, group.items);
+            }
+          }}
+        >
+          <div className="bizpack-effluent-header">
+            <span className="bizpack-effluent-header-icon" />
+            <span className="bizpack-effluent-header-title">{group.key}</span>
+          </div>
+          <div className="bizpack-effluent-divider" />
+          <div className="bizpack-effluent-body">
+            {group.items.map((item, index) => {
+              const name = String(resolveFieldValue(item, safeNameField) || '-');
+              const value = resolveFieldValue(item, safeValueField);
+              const threshold = resolveFieldValue(item, safeThresholdField);
+              const arrow = resolveArrow(
+                resolveFieldValue(item, safeArrowField),
+                value,
+                threshold,
+              );
+              const tipParts = [
+                name,
+                value !== '' ? `值 ${value}` : '',
+                threshold !== '' ? `阈值 ${threshold}` : '',
+              ].filter(Boolean);
 
-        return (
-          <button
-            type="button"
-            key={item.id != null ? String(item.id) : `effluent-slot-${index}`}
-            className="bizpack-effluent-item"
-            title={tipParts.join(' / ')}
-            onClick={() => {
-              if (onItemClick) {
-                onItemClick(item, index);
-              }
-            }}
-          >
-            <span className="bizpack-effluent-box">
-              <span className="bizpack-effluent-value">
-                {value !== '' ? value : '-'}
-                {unit ? <span className="bizpack-effluent-unit">{unit}</span> : null}
-              </span>
-              <span className={`bizpack-effluent-arrow bizpack-effluent-arrow-${arrow}`}>
-                <ArrowIcon />
-              </span>
-            </span>
-            <span className="bizpack-effluent-label" title={name}>
-              {name}
-            </span>
-          </button>
-        );
-      })}
+              return (
+                <button
+                  type="button"
+                  key={item.id != null ? `${group.key}-${item.id}` : `${group.key}-slot-${index}`}
+                  className="bizpack-effluent-item"
+                  title={tipParts.join(' / ')}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (onItemClick) {
+                      onItemClick(item, index, group.key);
+                    }
+                  }}
+                >
+                  <span className="bizpack-effluent-box">
+                    <span className="bizpack-effluent-value">
+                      {value !== '' ? value : '-'}
+                      {unit ? <span className="bizpack-effluent-unit">{unit}</span> : null}
+                    </span>
+                    <span className={`bizpack-effluent-arrow bizpack-effluent-arrow-${arrow}`}>
+                      <ArrowIcon />
+                    </span>
+                  </span>
+                  <span className="bizpack-effluent-label" title={name}>
+                    {name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

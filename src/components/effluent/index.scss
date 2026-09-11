@@ -1,155 +1,237 @@
 @import '../../variables.scss';
 
 #{$biz-css-prefix}-effluent {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  gap: 12px;
+  overflow: auto;
+  color: #eaf7ff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+
+  &-card {
     position: relative;
     box-sizing: border-box;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    width: 100%;
+    min-height: 118px;
+    padding: 14px 16px 16px;
+    overflow: hidden;
+    background: url('./bg.webp') center / 100% 100% no-repeat;
+  }
+
+  &-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 28px;
+  }
+
+  &-header-icon {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: url('./icon.webp') center / contain no-repeat;
+  }
+
+  &-header-title {
+    overflow: hidden;
+    font-family: PingFangSC, PingFang SC, sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    font-style: normal;
+    line-height: 28px;
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(120, 210, 255, 0.45);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &-divider {
+    position: relative;
+    width: 100%;
+    height: 2px;
+    margin: 8px 0 12px;
+    background: linear-gradient(
+      90deg,
+      rgba(61, 230, 255, 0.95) 0%,
+      rgba(61, 230, 255, 0.55) 18%,
+      rgba(61, 230, 255, 0.15) 55%,
+      rgba(61, 230, 255, 0) 100%
+    );
+
+    &::before {
+      position: absolute;
+      top: -1px;
+      left: 0;
+      width: 28px;
+      height: 4px;
+      content: '';
+      background: linear-gradient(90deg, #3de6ff 0%, rgba(61, 230, 255, 0) 100%);
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(61, 230, 255, 0.8);
+    }
+  }
+
+  &-body {
     display: flex;
     flex-wrap: nowrap;
     align-items: flex-start;
     justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  // 按最多 4 列等分（3 个 8px gap）
+  $effluent-slot-width: calc((100% - 24px) / 4);
+
+  &-item {
+    display: flex;
+    flex: 0 1 $effluent-slot-width;
+    flex-direction: column;
+    align-items: center;
+    width: $effluent-slot-width;
+    min-width: 0;
+    max-width: $effluent-slot-width;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    outline: none;
+  }
+
+  &-box {
+    position: relative;
+    display: flex;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    min-height: 37px;
+    padding: 6px 8px;
+    background: linear-gradient(
+      180deg,
+      rgba(61, 96, 133, 0.85) 0%,
+      rgba(30, 51, 75, 0.92) 40%,
+      rgba(22, 39, 58, 0.95) 100%
+    );
+    border: 1.5px solid rgba(86, 190, 255, 0.85);
+    border-radius: 10px;
+    box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.18), inset 0 -8px 12px rgba(0, 0, 0, 0.25),
+      0 0 10px rgba(60, 180, 255, 0.5);
+
+    &::before {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      left: 2px;
+      height: 14px;
+      content: '';
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+      border-radius: 8px 8px 0 0;
+      pointer-events: none;
+    }
+  }
+
+  &-value {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    font-family: SourceHanSansCN, PingFang SC, sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 22px;
+    color: #ffffff;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &-unit {
+    flex: none;
+    margin-left: 2px;
+    font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  &-arrow {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    flex: none;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+  }
+
+  &-arrow-icon {
+    display: block;
+    width: 12px;
+    height: 12px;
+    overflow: visible;
+  }
+
+  &-arrow-up {
+    color: #ff4848;
+    filter: drop-shadow(0 0 3px rgba(255, 72, 72, 0.75));
+  }
+
+  &-arrow-down {
+    color: #29e6d8;
+    filter: drop-shadow(0 0 3px rgba(41, 230, 216, 0.75));
+
+    #{$biz-css-prefix}-effluent-arrow-icon {
+      transform: rotate(180deg);
+    }
+  }
+
+  &-arrow-flat {
+    color: #58f6ae;
+    filter: drop-shadow(0 0 3px rgba(88, 246, 174, 0.75));
+
+    #{$biz-css-prefix}-effluent-arrow-icon {
+      transform: rotate(90deg);
+    }
+  }
+
+  &-label {
+    box-sizing: border-box;
     width: 100%;
     max-width: 100%;
-    min-width: 0;
-    gap: 8px;
+    margin-top: 4px;
     overflow: hidden;
-    color: #eaf7ff;
-    font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
-
-    // 按最多 4 列等分（3 个 8px gap），单项不再被拉满整行
-    $effluent-slot-width: calc((100% - 24px) / 4);
-
-    &-item {
-        display: flex;
-        flex: 0 1 $effluent-slot-width;
-        flex-direction: column;
-        align-items: center;
-        width: $effluent-slot-width;
-        min-width: 0;
-        max-width: $effluent-slot-width;
-        padding: 0;
-        cursor: pointer;
-        background: transparent;
-        border: 0;
-        outline: none;
-    }
-
-    &-box {
-        position: relative;
-        display: flex;
-        box-sizing: border-box;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        width: 100%;
-        min-width: 0;
-        height: auto;
-        min-height: 37px;
-        padding: 6px 8px;
-        background: linear-gradient(180deg, rgba(61, 96, 133, 0.85) 0%, rgba(30, 51, 75, 0.92) 40%, rgba(22, 39, 58, 0.95) 100%);
-        border: 1.5px solid rgba(86, 190, 255, 0.85);
-        border-radius: 10px;
-        box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.18), inset 0 -8px 12px rgba(0, 0, 0, 0.25),
-            0 0 10px rgba(60, 180, 255, 0.5);
-
-        &::before {
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            left: 2px;
-            height: 14px;
-            content: '';
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
-            border-radius: 8px 8px 0 0;
-            pointer-events: none;
-        }
-    }
-
-    &-value {
-        position: relative;
-        z-index: 1;
-        display: inline-flex;
-        flex: 0 1 auto;
-        align-items: center;
-        justify-content: center;
-        min-width: 0;
-        max-width: 100%;
-        overflow: hidden;
-        font-family: SourceHanSansCN, SourceHanSansCN;
-        font-style: normal;
-        font-weight: 500;
-        font-size: 14px;
-        line-height: 22px;
-        color: #ffffff;
-        text-align: center;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    &-unit {
-        flex: none;
-        margin-left: 2px;
-        font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
-        font-size: 11px;
-        font-weight: 400;
-        color: rgba(255, 255, 255, 0.72);
-    }
-
-    &-arrow {
-        position: relative;
-        z-index: 1;
-        display: inline-flex;
-        flex: none;
-        flex-shrink: 0;
-        align-items: center;
-        justify-content: center;
-        width: 12px;
-        height: 12px;
-    }
-
-    &-arrow-icon {
-        display: block;
-        width: 12px;
-        height: 12px;
-        overflow: visible;
-    }
-
-    &-arrow-up {
-        color: #ff4848;
-        filter: drop-shadow(0 0 3px rgba(255, 72, 72, 0.75));
-    }
-
-    &-arrow-down {
-        color: #29e6d8;
-        filter: drop-shadow(0 0 3px rgba(41, 230, 216, 0.75));
-
-        #{$biz-css-prefix}-effluent-arrow-icon {
-            transform: rotate(180deg);
-        }
-    }
-
-    &-arrow-flat {
-        color: #58f6ae;
-        filter: drop-shadow(0 0 3px rgba(88, 246, 174, 0.75));
-
-        #{$biz-css-prefix}-effluent-arrow-icon {
-            transform: rotate(90deg);
-        }
-    }
-
-    &-label {
-        box-sizing: border-box;
-        width: 100%;
-        max-width: 100%;
-        margin-top: 4px;
-        overflow: hidden;
-        font-family: SourceHanSansCN, SourceHanSansCN;
-        font-style: normal;
-        font-weight: 400;
-        font-size: 12px;
-        line-height: 18px;
-        color: #ffffff;
-        text-align: center;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
+    font-family: PingFangSC, PingFang SC, sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #ffffff;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

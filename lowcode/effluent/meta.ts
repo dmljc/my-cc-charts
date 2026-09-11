@@ -1,14 +1,10 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
+import { DEFAULT_EFFLUENT_LIST_TEST_DATA } from '../../src/components/effluent/test-data';
 
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
-const defaultData = [
-  { id: 1, name: '全排', value: 0.3, threshold: 1, arrow: 'down' },
-  { id: 2, name: '特排', value: 0.285, threshold: 100, arrow: 'down' },
-  { id: 3, name: '局排', value: 0.285, threshold: 10, arrow: 'down' },
-  { id: 4, name: '特排', value: 1000, threshold: 100, arrow: 'up' },
-];
+const defaultData = DEFAULT_EFFLUENT_LIST_TEST_DATA;
 
 const EffluentMeta: ComponentMetadata = {
   componentName: 'Effluent',
@@ -76,7 +72,7 @@ const EffluentMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '流出物数据',
-              tip: '与接口一致：[{ name, value, threshold, arrow }]，arrow 取值 up/down',
+              tip: '推荐：{ effluentList: { X12: [{ name, value, threshold, arrow }] } }；也支持直接传 map 或单卡数组',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -114,7 +110,7 @@ const EffluentMeta: ComponentMetadata = {
             name: 'arrowField',
             title: {
               label: '箭头字段名',
-              tip: '默认 arrow，取值 up/down',
+              tip: '默认 arrow，取值 up/down/flat',
             },
             defaultValue: 'arrow',
             setter: 'StringSetter',
@@ -146,6 +142,15 @@ const EffluentMeta: ComponentMetadata = {
             setter: 'NumberSetter',
           },
           {
+            name: 'gap',
+            title: {
+              label: '卡片间距',
+              tip: '多卡纵向间距，默认 12',
+            },
+            defaultValue: 12,
+            setter: 'NumberSetter',
+          },
+          {
             name: 'unit',
             title: '数值单位',
             setter: 'StringSetter',
@@ -169,7 +174,15 @@ const EffluentMeta: ComponentMetadata = {
             name: 'onItemClick',
             title: {
               label: '点击指标项',
-              tip: '(item, index) => void',
+              tip: '(item, index, groupKey) => void',
+            },
+            setter: 'FunctionSetter',
+          },
+          {
+            name: 'onCardClick',
+            title: {
+              label: '点击卡片',
+              tip: '(groupKey, items) => void',
             },
             setter: 'FunctionSetter',
           },
@@ -192,6 +205,7 @@ const snippets: Snippet[] = [
         valueField: 'value',
         thresholdField: 'threshold',
         arrowField: 'arrow',
+        gap: 12,
       },
     },
   },
