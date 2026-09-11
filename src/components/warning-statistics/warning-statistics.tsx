@@ -301,7 +301,7 @@ const buildPieOption = (
 const WarningStatistics: React.FC<WarningStatisticsProps> = function WarningStatistics(props) {
   const {
     data = defaultData,
-    width = 280,
+    width = 400,
     height = 180,
     style = {},
     className = '',

@@ -148,11 +148,11 @@ const WarningStatisticsMeta: ComponentMetadata = {
           {
             name: 'width',
             title: '宽度',
-            defaultValue: 223,
+            defaultValue: 400,
             setter: {
               componentName: 'NumberSetter',
               props: {
-                defaultValue: 223,
+                defaultValue: 400,
               },
             },
           },
@@ -233,7 +233,7 @@ const snippets: Snippet[] = [
         totalField: 'total',
         totalLabel: '总计',
         unit: '个',
-        width: 280,
+        width: 400,
         height: 180,
       },
     },
