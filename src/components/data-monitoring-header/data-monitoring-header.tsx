@@ -12,9 +12,9 @@ export interface DataMonitoringHeaderData {
 
 export interface DataMonitoringHeaderProps {
   data?: DataMonitoringHeaderData;
-  /** 房间标签文案，默认 '房间：' */
+  /** 房间标签文案，默认 '房间号' */
   roomLabel?: string;
-  /** 设备标签文案，默认 '设备：' */
+  /** 设备标签文案，默认 '设备名称' */
   deviceLabel?: string;
   /** 房间值对应的数据字段名，默认 roomValue */
   roomValueField?: string;
@@ -33,12 +33,12 @@ interface BizRef {
   };
 }
 
-const DEFAULT_ROOM_LABEL = '房间：';
-const DEFAULT_DEVICE_LABEL = '设备：';
+const DEFAULT_ROOM_LABEL = '房间号';
+const DEFAULT_DEVICE_LABEL = '设备名称';
 
 const defaultData: DataMonitoringHeaderData = {
   roomValue: '101',
-  deviceValue: '设备名称设备名称名称0253333',
+  deviceValue: '0235625852',
 };
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
@@ -77,7 +77,7 @@ const DataMonitoringHeader: React.FC<DataMonitoringHeaderProps> = function DataM
     roomValueField = 'roomValue',
     deviceValueField = 'deviceValue',
     width = 400,
-    height = 78,
+    height = 68,
     style = {},
     className = '',
     ...otherProps
@@ -127,13 +127,13 @@ const DataMonitoringHeader: React.FC<DataMonitoringHeaderProps> = function DataM
       style={{ width, height, ...style }}
       {...rootDomProps}
     >
-      <div className="bizpack-data-monitoring-header-item bizpack-data-monitoring-header-room">
+      <div className="bizpack-data-monitoring-header-room">
         <span className="bizpack-data-monitoring-header-label">{state.roomLabel}</span>
         <span className="bizpack-data-monitoring-header-value">{state.roomValue}</span>
       </div>
-      <div className="bizpack-data-monitoring-header-item bizpack-data-monitoring-header-device">
+      <div className="bizpack-data-monitoring-header-device">
         <span className="bizpack-data-monitoring-header-label">{state.deviceLabel}</span>
-        <span className="bizpack-data-monitoring-header-value bizpack-data-monitoring-header-value-wrap">
+        <span className="bizpack-data-monitoring-header-value">
           {state.deviceValue}
         </span>
       </div>

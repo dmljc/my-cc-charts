@@ -5,7 +5,7 @@ const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
 const defaultData = {
   roomValue: '101',
-  deviceValue: '设备名称设备名称名称0253333',
+  deviceValue: '0235625852',
 };
 
 const DataMonitoringHeaderMeta: ComponentMetadata = {
@@ -85,9 +85,15 @@ const DataMonitoringHeaderMeta: ComponentMetadata = {
             name: 'roomLabel',
             title: {
               label: '房间标签',
-              tip: '房间标签文案，默认 房间：',
+              tip: '房间标签文案，默认 房间号',
             },
-            setter: 'StringSetter',
+            defaultValue: '房间号',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: '房间号',
+              },
+            },
           },
           {
             name: 'roomValueField',
@@ -101,9 +107,15 @@ const DataMonitoringHeaderMeta: ComponentMetadata = {
             name: 'deviceLabel',
             title: {
               label: '设备标签',
-              tip: '设备标签文案，默认 设备：',
+              tip: '设备标签文案，默认 设备名称',
             },
-            setter: 'StringSetter',
+            defaultValue: '设备名称',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: '设备名称',
+              },
+            },
           },
           {
             name: 'deviceValueField',
@@ -153,12 +165,12 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
-        roomLabel: '房间：',
-        deviceLabel: '设备：',
+        roomLabel: '房间号',
+        deviceLabel: '设备名称',
         roomValueField: 'roomValue',
         deviceValueField: 'deviceValue',
         width: 400,
-        height: 78,
+        height: 68,
       },
     },
   },
