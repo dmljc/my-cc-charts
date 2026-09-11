@@ -137,9 +137,15 @@ const EffluentMeta: ComponentMetadata = {
             name: 'height',
             title: {
               label: '高度',
-              tip: '可选；不填则由内容自适应撑开',
+              tip: '默认 142',
             },
-            setter: 'NumberSetter',
+            defaultValue: 142,
+            setter: {
+              componentName: 'NumberSetter',
+              props: {
+                defaultValue: 142,
+              },
+            },
           },
           {
             name: 'gap',
@@ -206,6 +212,7 @@ const snippets: Snippet[] = [
         thresholdField: 'threshold',
         arrowField: 'arrow',
         gap: 12,
+        height: 142,
       },
     },
   },
