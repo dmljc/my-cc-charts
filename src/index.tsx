@@ -44,7 +44,16 @@ export type {
 } from './components/variable-y-step-line-chart';
 export { default as VariableYStepLineChart } from './components/variable-y-step-line-chart';
 
-export type { EffluentArrow, EffluentItem, EffluentProps, EffluentTrend } from './components/effluent';
+export type {
+  EffluentArrow,
+  EffluentDataInput,
+  EffluentGroupView,
+  EffluentItem,
+  EffluentListMap,
+  EffluentListPayload,
+  EffluentProps,
+  EffluentTrend,
+} from './components/effluent';
 export { default as Effluent } from './components/effluent';
 
 export type {
@@ -74,6 +83,13 @@ export type {
   DeviceWarningStatus,
 } from './components/device-warning';
 export { default as DeviceWarning } from './components/device-warning';
+
+export type {
+  WarningStatisticsData,
+  WarningStatisticsItem,
+  WarningStatisticsProps,
+} from './components/warning-statistics';
+export { default as WarningStatistics } from './components/warning-statistics';
 
 export type { OperationLogItem, OperationLogProps } from './components/operation-log';
 export { default as OperationLog } from './components/operation-log';

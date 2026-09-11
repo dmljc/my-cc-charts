@@ -1,14 +1,14 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
-import { DEFAULT_EFFLUENT_LIST_TEST_DATA } from '../../src/components/effluent/test-data';
+import { DEFAULT_WARNING_STATISTICS_TEST_DATA } from '../../src/components/warning-statistics/test-data';
 
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
-const defaultData = DEFAULT_EFFLUENT_LIST_TEST_DATA;
+const defaultData = DEFAULT_WARNING_STATISTICS_TEST_DATA;
 
-const EffluentMeta: ComponentMetadata = {
-  componentName: 'Effluent',
-  title: '流出物',
+const WarningStatisticsMeta: ComponentMetadata = {
+  componentName: 'WarningStatistics',
+  title: '警告统计',
   category: '状态组件',
   group: '图表库',
   docUrl: '',
@@ -17,7 +17,7 @@ const EffluentMeta: ComponentMetadata = {
   npm: {
     package: 'my-cc-charts',
     version: '0.1.0',
-    exportName: 'Effluent',
+    exportName: 'WarningStatistics',
     main: 'src/index.tsx',
     destructuring: true,
     subName: '',
@@ -71,8 +71,8 @@ const EffluentMeta: ComponentMetadata = {
           {
             name: 'data',
             title: {
-              label: '流出物数据',
-              tip: '推荐：{ effluentList: { X12: [{ name, value, threshold, arrow }] } }；也支持直接传 map 或单卡数组',
+              label: '警告统计数据',
+              tip: '结构：{ total, items: [{ name, value, color }] }。items 为动态分类，数量不限；未传 color 时按序使用调色板；total 不传则对 items 求和',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -83,37 +83,57 @@ const EffluentMeta: ComponentMetadata = {
             name: 'nameField',
             title: {
               label: '名称字段名',
-              tip: '默认 name',
+              tip: '分类名称字段，默认为 name',
             },
             defaultValue: 'name',
-            setter: 'StringSetter',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'name',
+              },
+            },
           },
           {
             name: 'valueField',
             title: {
-              label: '数值字段名',
-              tip: '默认 value',
+              label: '数量字段名',
+              tip: '分类数量字段，默认为 value',
             },
             defaultValue: 'value',
-            setter: 'StringSetter',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'value',
+              },
+            },
           },
           {
-            name: 'thresholdField',
+            name: 'colorField',
             title: {
-              label: '阈值字段名',
-              tip: '默认 threshold',
+              label: '颜色字段名',
+              tip: '扇区颜色字段，默认为 color',
             },
-            defaultValue: 'threshold',
-            setter: 'StringSetter',
+            defaultValue: 'color',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'color',
+              },
+            },
           },
           {
-            name: 'arrowField',
+            name: 'totalField',
             title: {
-              label: '箭头字段名',
-              tip: '默认 arrow，取值 up/down/flat',
+              label: '总计字段名',
+              tip: '总计数字段，默认为 total',
             },
-            defaultValue: 'arrow',
-            setter: 'StringSetter',
+            defaultValue: 'total',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'total',
+              },
+            },
           },
         ],
       },
@@ -127,33 +147,47 @@ const EffluentMeta: ComponentMetadata = {
         items: [
           {
             name: 'width',
-            title: {
-              label: '宽度',
-              tip: '可选；不填则由内容自适应撑开',
+            title: '宽度',
+            defaultValue: 223,
+            setter: {
+              componentName: 'NumberSetter',
+              props: {
+                defaultValue: 223,
+              },
             },
-            setter: 'NumberSetter',
           },
           {
             name: 'height',
-            title: {
-              label: '高度',
-              tip: '可选；不填则由内容自适应撑开',
+            title: '高度',
+            defaultValue: 90,
+            setter: {
+              componentName: 'NumberSetter',
+              props: {
+                defaultValue: 90,
+              },
             },
-            setter: 'NumberSetter',
           },
           {
-            name: 'gap',
-            title: {
-              label: '卡片间距',
-              tip: '多卡纵向间距，默认 12',
+            name: 'totalLabel',
+            title: '总计文案',
+            defaultValue: '总计',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: '总计',
+              },
             },
-            defaultValue: 12,
-            setter: 'NumberSetter',
           },
           {
             name: 'unit',
-            title: '数值单位',
-            setter: 'StringSetter',
+            title: '数量单位',
+            defaultValue: '个',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: '个',
+              },
+            },
           },
           {
             name: 'className',
@@ -173,16 +207,8 @@ const EffluentMeta: ComponentMetadata = {
           {
             name: 'onItemClick',
             title: {
-              label: '点击指标项',
-              tip: '(item, index, groupKey) => void',
-            },
-            setter: 'FunctionSetter',
-          },
-          {
-            name: 'onCardClick',
-            title: {
-              label: '点击卡片',
-              tip: '(groupKey, items) => void',
+              label: '点击分类',
+              tip: '(item, index) => void',
             },
             setter: 'FunctionSetter',
           },
@@ -194,24 +220,27 @@ const EffluentMeta: ComponentMetadata = {
 
 const snippets: Snippet[] = [
   {
-    title: '流出物',
+    title: '警告统计',
     screenshot: '',
     schema: {
-      componentName: 'Effluent',
+      componentName: 'WarningStatistics',
       props: {
         ...ChartSnippet,
         data: defaultData,
         nameField: 'name',
         valueField: 'value',
-        thresholdField: 'threshold',
-        arrowField: 'arrow',
-        gap: 12,
+        colorField: 'color',
+        totalField: 'total',
+        totalLabel: '总计',
+        unit: '个',
+        width: 280,
+        height: 180,
       },
     },
   },
 ];
 
 export default {
-  ...EffluentMeta,
+  ...WarningStatisticsMeta,
   snippets,
 };
