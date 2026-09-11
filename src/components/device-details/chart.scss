@@ -1,0 +1,122 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-device-details-chart {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+  background: transparent;
+
+  &-canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  &-rangeStart,
+  &-rangeEnd,
+  &-rangeBadge {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    font-family: 'HarmonyOS Sans SC', 'HarmonyOS_Sans_SC', 'PingFang SC', 'Microsoft YaHei',
+      sans-serif;
+    font-size: calc(12 / 1400 * 100cqw);
+    line-height: calc(16 / 1400 * 100cqw);
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  &-rangeStart,
+  &-rangeEnd {
+    z-index: 1;
+    color: rgba(198, 221, 255, 0.72);
+  }
+
+  &-rangeBadge {
+    z-index: 2;
+    justify-content: center;
+    overflow: hidden;
+    color: #ffffff;
+  }
+
+  &-sliderTicks {
+    position: absolute;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  &-sliderTick {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: calc(2 / 1400 * 100cqw);
+    background: rgba(118, 228, 255, 0.55);
+    transform: translateX(-50%);
+  }
+
+  &-sliderDayHits {
+    position: absolute;
+    z-index: 5;
+    display: flex;
+    box-sizing: border-box;
+    padding: 0;
+    overflow: hidden;
+    pointer-events: auto;
+  }
+
+  &-sliderDayHit {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    outline: none;
+    appearance: none;
+
+    &:hover {
+      background: rgba(59, 167, 255, 0.16);
+    }
+
+    &:focus-visible {
+      background: rgba(59, 167, 255, 0.22);
+    }
+  }
+
+  &-sideBtn {
+    position: absolute;
+    z-index: 6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(64, 148, 214, 0.45);
+    border-radius: 50%;
+    background: rgba(12, 40, 78, 0.72);
+    color: #76e4ff;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+
+  &-sidePrev {
+    left: calc(10 / 1400 * 100cqw);
+  }
+
+  &-sideNext {
+    right: calc(10 / 1400 * 100cqw);
+  }
+
+  &-sideIcon {
+    display: block;
+    width: calc(16 / 1400 * 100cqw);
+    height: calc(16 / 1400 * 100cqw);
+  }
+}

@@ -44,6 +44,18 @@ export {
   default as DisposalStatistics,
 } from './components/disposal-statistics';
 
+export type {
+  DeviceDetailsData,
+  DeviceDetailsProps,
+  DeviceMetric,
+  RoomTrendSeriesItem,
+} from './components/device-details';
+export {
+  createDeviceDetailsTestData,
+  DEFAULT_DEVICE_DETAILS_TEST_DATA,
+  default as DeviceDetails,
+} from './components/device-details';
+
 export type { HeaderDateProps } from './components/header-date';
 export { default as HeaderDate } from './components/header-date';
 
