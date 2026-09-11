@@ -382,7 +382,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     width = '100%',
     height,
     headerHeight = 78,
-    infoHeight = 60,
+    infoHeight = 98,
     chartHeight = 150,
     cardGap = 16,
     pauseOnHover = true,
@@ -416,7 +416,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     ? (sourceData.length === 1 ? sourceData[0] : undefined)
     : sourceData;
   const resolvedHeaderHeight = resolveNumber(headerHeight, 78);
-  const resolvedInfoHeight = resolveNumber(infoHeight, 60);
+  const resolvedInfoHeight = resolveNumber(infoHeight, 98);
   const resolvedChartHeight = resolveNumber(chartHeight, 150);
   const resolvedHeight = resolveNumber(height, DEFAULT_LIST_HEIGHT);
   const resolvedPauseOnHover = resolveBoolean(pauseOnHover, true);

@@ -5,54 +5,104 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  padding: 10px 36px;
-  overflow: hidden;
+  width: 395px;
+  height: 98px;
+  padding: 16px 12px;
+  overflow: visible;
   color: #ffffff;
   font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
-  border: 1px solid rgba(58, 214, 200, 0.85);
-  border-radius: 6px;
+  // 使用设计稿导出背景（已含主层 + 阴影层效果）
+  background: url('./bg.webp') center / 100% 100% no-repeat;
 
   &-item {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex: 1;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     min-width: 0;
     height: 100%;
     cursor: pointer;
   }
 
-  &-divider {
+  &-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  &-icon {
+    display: block;
     flex: none;
-    align-self: stretch;
+    width: 16px;
+    height: 16px;
+    color: #5ec8ff;
+  }
+
+  &-icon-img {
+    display: block;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+  }
+
+  &-divider {
+    position: relative;
+    z-index: 1;
+    flex: none;
+    align-self: center;
     width: 1px;
-    margin: -10px 0;
-    background: rgba(150, 200, 210, 0.4);
+    height: 40px;
+    background: #115ea8;
+  }
+
+  &-label {
+    overflow: hidden;
+    height: 20px;
+    font-weight: 400;
+    font-size: 14px;
+    font-family: PingFangSC, PingFang SC, Microsoft YaHei, Arial, sans-serif;
+    font-style: normal;
+    line-height: 20px;
+    color: #c4f5ff;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &-value {
     display: flex;
     align-items: baseline;
-    font-weight: 600;
-    font-size: 16px;
-    font-family: DIN Alternate, Arial, sans-serif;
+    justify-content: center;
+    min-width: 0;
+  }
+
+  &-number {
+    height: 28px;
+    font-family: DINAlternate, DIN Alternate, DIN, sans-serif;
+    font-weight: bold;
+    font-size: 24px;
+    font-style: normal;
+    line-height: 28px;
     color: #ffffff;
+    text-align: left;
   }
 
   &-unit {
-    margin-left: 2px;
-    font-weight: 400;
-    font-size: 12px;
-    font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
-    color: #dbe6ec;
-  }
-
-  &-label {
-    margin-top: 2px;
+    margin-left: 4px;
+    height: 22px;
+    font-family: PingFangSC, PingFang SC, sans-serif;
     font-weight: 400;
     font-size: 16px;
-    line-height: 16px;
-    color: #9fb0bd;
+    font-style: normal;
+    line-height: 22px;
+    color: #c4f5ff;
+    text-align: left;
   }
 }

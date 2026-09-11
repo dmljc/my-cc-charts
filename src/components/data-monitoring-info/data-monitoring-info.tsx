@@ -14,6 +14,8 @@ export interface DataMonitoringInfoItem {
   unit?: string;
   /** 指标名称 */
   label?: string;
+  /** 自定义图标地址，可选 */
+  icon?: string;
   [key: string]: unknown;
 }
 
@@ -29,6 +31,8 @@ export interface DataMonitoringInfoProps {
   unitField?: string;
   /** 名称字段名，默认 label */
   labelField?: string;
+  /** 图标字段名，默认 icon */
+  iconField?: string;
   onItemClick?: (item: DataMonitoringInfoItem, index: number) => void;
   [key: string]: unknown;
 }
@@ -73,16 +77,103 @@ const resolveFieldValue = (item: DataMonitoringInfoItem, field: string) => {
   return String(value);
 };
 
+const resolveOptionalFieldValue = (item: DataMonitoringInfoItem, field: string) => {
+  const value = item[field];
+
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+
+  return String(value);
+};
+
+/** 流量：脉搏波形 */
+const IconFlow = () => (
+  <svg className="bizpack-data-monitoring-info-icon" viewBox="0 0 16 16" aria-hidden="true">
+    <polyline
+      points="1,8 3.5,8 5,4 7,12 9,5 11,8 15,8"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+/** 流速：波浪线 */
+const IconVelocity = () => (
+  <svg className="bizpack-data-monitoring-info-icon" viewBox="0 0 16 16" aria-hidden="true">
+    <path
+      d="M2 5.5c1.2-1.2 2.8-1.2 4 0s2.8 1.2 4 0 2.8-1.2 4 0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+    />
+    <path
+      d="M2 8.5c1.2-1.2 2.8-1.2 4 0s2.8 1.2 4 0 2.8-1.2 4 0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+    />
+    <path
+      d="M2 11.5c1.2-1.2 2.8-1.2 4 0s2.8 1.2 4 0 2.8-1.2 4 0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+/** 压力：下箭头 + 波形 */
+const IconPressure = () => (
+  <svg className="bizpack-data-monitoring-info-icon" viewBox="0 0 16 16" aria-hidden="true">
+    <path
+      d="M5 2.5v5.5H3.2L8 13l4.8-5H11V2.5z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M2.5 14.2c1-.8 2.2-.8 3.2 0s2.2.8 3.2 0 2.2-.8 3.2 0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const DEFAULT_ICONS = [IconFlow, IconVelocity, IconPressure];
+
+const resolveDefaultIcon = (label: string, index: number) => {
+  if (label.indexOf('流量') >= 0) {
+    return IconFlow;
+  }
+  if (label.indexOf('流速') >= 0) {
+    return IconVelocity;
+  }
+  if (label.indexOf('压力') >= 0) {
+    return IconPressure;
+  }
+  return DEFAULT_ICONS[index % DEFAULT_ICONS.length];
+};
+
 const DataMonitoringInfo: React.FC<DataMonitoringInfoProps> = function DataMonitoringInfo(props) {
   const {
     data = defaultData,
-    width = 400,
-    height = 60,
+    width = 395,
+    height = 110,
     style = {},
     className = '',
     valueField = 'value',
     unitField = 'unit',
     labelField = 'label',
+    iconField = 'icon',
     onItemClick,
     ...otherProps
   } = props;
@@ -132,25 +223,38 @@ const DataMonitoringInfo: React.FC<DataMonitoringInfoProps> = function DataMonit
       style={{ width, height, ...style }}
       {...rootDomProps}
     >
-      {items.map((item, index) => (
-        <React.Fragment key={item.id != null ? String(item.id) : index}>
-          {index > 0 ? <div className="bizpack-data-monitoring-info-divider" /> : null}
-          <div
-            className="bizpack-data-monitoring-info-item"
-            onClick={() => {
-              if (onItemClick) {
-                onItemClick(item, index);
-              }
-            }}
-          >
-            <div className="bizpack-data-monitoring-info-value">
-              {resolveFieldValue(item, valueField)}
-              <span className="bizpack-data-monitoring-info-unit">{resolveFieldValue(item, unitField)}</span>
+      {items.map((item, index) => {
+        const label = resolveFieldValue(item, labelField);
+        const iconUrl = resolveOptionalFieldValue(item, iconField);
+        const DefaultIcon = resolveDefaultIcon(label, index);
+
+        return (
+          <React.Fragment key={item.id != null ? String(item.id) : index}>
+            {index > 0 ? <div className="bizpack-data-monitoring-info-divider" /> : null}
+            <div
+              className="bizpack-data-monitoring-info-item"
+              onClick={() => {
+                if (onItemClick) {
+                  onItemClick(item, index);
+                }
+              }}
+            >
+              <div className="bizpack-data-monitoring-info-head">
+                {iconUrl ? (
+                  <img className="bizpack-data-monitoring-info-icon-img" src={iconUrl} alt="" />
+                ) : (
+                  <DefaultIcon />
+                )}
+                <div className="bizpack-data-monitoring-info-label">{label}</div>
+              </div>
+              <div className="bizpack-data-monitoring-info-value">
+                <span className="bizpack-data-monitoring-info-number">{resolveFieldValue(item, valueField)}</span>
+                <span className="bizpack-data-monitoring-info-unit">{resolveFieldValue(item, unitField)}</span>
+              </div>
             </div>
-            <div className="bizpack-data-monitoring-info-label">{resolveFieldValue(item, labelField)}</div>
-          </div>
-        </React.Fragment>
-      ))}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 };
