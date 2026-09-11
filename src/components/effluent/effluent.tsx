@@ -248,6 +248,8 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
 
     const list = dedupeById(normalizeListData(data));
     if (!list.length) {
+      structureReadyRef.current = false;
+      setItems([]);
       return;
     }
 
@@ -275,6 +277,8 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
           }
           const list = dedupeById(normalizeListData(nextData));
           if (!list.length) {
+            structureReadyRef.current = false;
+            setItems([]);
             return;
           }
           setItems((prev) => {

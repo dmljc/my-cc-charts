@@ -244,16 +244,33 @@ const mergeCard = (
   const previous = normalizeCardData(history);
   const incoming = normalizeCardData(realtime) as DataMonitoringCardData;
   const incomingPoints = incoming.tritiumConcentration;
+  let tritiumConcentration: DataMonitoringLineChartPoint[] | undefined;
+
+  if (incomingPoints === undefined) {
+    tritiumConcentration = trimChartWindow(previous?.tritiumConcentration);
+  } else if (!incomingPoints.length) {
+    // 空数组不覆盖已有时序（与页面旧 mergeMonitoring 一致）
+    tritiumConcentration = trimChartWindow(previous?.tritiumConcentration);
+  } else if (incomingPoints.length > 5) {
+    // 整窗快照：直接替换后裁 15 分钟
+    tritiumConcentration = trimChartWindow(incomingPoints);
+  } else {
+    tritiumConcentration = mergeChartPoints(previous?.tritiumConcentration, incomingPoints);
+  }
 
   return {
     ...previous,
     ...incoming,
-    tritiumConcentration: incomingPoints === undefined
-      ? trimChartWindow(previous?.tritiumConcentration)
-      : mergeChartPoints(previous?.tritiumConcentration, incomingPoints),
+    tritiumConcentration,
   };
 };
 
+/**
+ * init_data / ws_data / props.data / changeData：
+ * - 空数组：整表清空
+ * - 有列表：以本次列表为完整设备集合（未出现的设备移除）
+ * - 折线：≤5 点视为增量 append，否则整窗替换，再裁 15 分钟
+ */
 const mergeMonitoringData = (
   history: DataMonitoringCardData | DataMonitoringCardData[] | undefined,
   realtime: DataMonitoringCardData | DataMonitoringCardData[],
@@ -262,35 +279,20 @@ const mergeMonitoringData = (
     return mergeCard(Array.isArray(history) ? history[0] : history, realtime);
   }
 
+  if (!realtime.length) {
+    return [];
+  }
+
   const previousList = Array.isArray(history) ? history : history ? [history] : [];
-  const incomingKeys = new Set<string>();
-  const incomingByKey = new Map<string, DataMonitoringCardData>();
-  realtime.forEach((card, index) => {
-    const key = getCardKey(card, index);
-    incomingKeys.add(key);
-    incomingByKey.set(key, card);
+  const prevByKey = new Map<string, DataMonitoringCardData>();
+  previousList.forEach((card, index) => {
+    prevByKey.set(getCardKey(card, index), card);
   });
 
-  const merged = previousList.map((card, index) => {
+  return realtime.map((card, index) => {
     const key = getCardKey(card, index);
-    const incoming = incomingByKey.get(key);
-    if (!incoming) {
-      // 增量更新未带上的设备保持原引用，避免每轮 WS 让全部卡片重渲染。
-      return card;
-    }
-    incomingByKey.delete(key);
-    return mergeCard(card, incoming);
+    return mergeCard(prevByKey.get(key), card);
   });
-
-  realtime.forEach((card, index) => {
-    const key = getCardKey(card, index);
-    if (incomingKeys.has(key) && incomingByKey.has(key)) {
-      merged.push(mergeCard(undefined, card));
-      incomingByKey.delete(key);
-    }
-  });
-
-  return merged;
 };
 
 const pickRootDomProps = (props: Record<string, unknown>) => {
