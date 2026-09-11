@@ -330,7 +330,7 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
     unit = '',
     gap = 12,
     width,
-    height,
+    height = 142,
     style = {},
     className = '',
     onItemClick,
