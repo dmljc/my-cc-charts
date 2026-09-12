@@ -174,6 +174,33 @@ const DataMonitoringCardMeta: ComponentMetadata = {
           },
         ],
       },
+      {
+        name: '',
+        type: 'group',
+        display: 'accordion',
+        title: {
+          label: '交互事件',
+        },
+        items: [
+          {
+            name: 'onCardClick',
+            title: {
+              label: '点击设备卡片',
+              tip: '(card, index) => void，可用于自定义逻辑；默认会弹出设备详情',
+            },
+            setter: 'FunctionSetter',
+          },
+          {
+            name: 'openDeviceDetailsOnClick',
+            title: {
+              label: '点击弹出设备详情',
+              tip: '默认 true；点击卡片后在页面正中弹出设备详情，点右上角 X 关闭',
+            },
+            defaultValue: true,
+            setter: 'BoolSetter',
+          },
+        ],
+      },
     ],
   },
 };

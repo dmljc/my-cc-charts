@@ -9,6 +9,38 @@
   color: #eaf7ff;
   font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
 
+  &-body {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+  }
+
+  &-body-clickable {
+    cursor: pointer;
+  }
+
+  &-detailMask {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 24px;
+    background: rgba(0, 12, 28, 0.58);
+  }
+
+  &-detailDialog {
+    position: relative;
+    flex: none;
+    max-width: min(884px, calc(100vw - 48px));
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+  }
+
   &-header {
     flex: none;
   }

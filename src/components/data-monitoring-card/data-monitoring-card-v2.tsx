@@ -8,7 +8,11 @@ import DataMonitoringInfo from '../data-monitoring-info';
 import type { DataMonitoringInfoItem } from '../data-monitoring-info';
 import DataMonitoringLineChart from '../data-monitoring-line-chart';
 import type { DataMonitoringLineChartPoint } from '../data-monitoring-line-chart';
+import DeviceDetails from '../device-details';
+import type { DeviceDetailsData } from '../device-details';
+import { createDeviceDetailsTestData } from '../device-details';
 import { destroy, init } from '../../common/iot';
+import { createPortal } from 'react-dom';
 import './index.scss';
 
 export interface DataMonitoringCardData {
@@ -58,6 +62,10 @@ export interface DataMonitoringCardProps {
   carouselLoop?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  /** 点击单张设备卡片；用于打开设备详情等弹窗 */
+  onCardClick?: (card: DataMonitoringCardData, index: number) => void;
+  /** 点击卡片时是否自动弹出设备详情，默认 true */
+  openDeviceDetailsOnClick?: boolean;
   [key: string]: unknown;
 }
 
@@ -69,6 +77,28 @@ const DEFAULT_LIST_HEIGHT = 780;
 const CHART_WINDOW_SECONDS = 15 * 60;
 /** 时间字段不可识别时，按 1 秒 1 点降级裁剪。 */
 const LIST_CHART_MAX_POINTS = 15 * 60;
+
+/** 由监测卡片数据组装设备详情弹窗数据 */
+const mapCardToDeviceDetails = (card: DataMonitoringCardData): DeviceDetailsData => {
+  const base = createDeviceDetailsTestData('flow');
+  const baseInfo = card.baseInfo ?? card.header;
+  const deviceName =
+    baseInfo && baseInfo.deviceValue != null && baseInfo.deviceValue !== ''
+      ? String(baseInfo.deviceValue)
+      : String(base.deviceName || '-');
+  const monitorArea =
+    baseInfo && baseInfo.roomValue != null && baseInfo.roomValue !== ''
+      ? `房间${String(baseInfo.roomValue)}`
+      : String(base.monitorArea || '-');
+  const deviceCode = card.id != null && card.id !== '' ? String(card.id) : String(base.deviceCode || '-');
+  return {
+    ...base,
+    deviceName,
+    monitorArea,
+    deviceCode,
+    chartKey: `device-details-${deviceCode}-flow`,
+  };
+};
 
 const resolveNumber = (value: unknown, fallback: number) => {
   const numberValue = Number(value);
@@ -321,6 +351,8 @@ interface CardContentProps {
   min?: number;
   max?: number;
   mountChart: boolean;
+  clickable?: boolean;
+  onClick?: () => void;
 }
 
 const CardContent: React.FC<CardContentProps> = React.memo(function CardContent({
@@ -332,6 +364,8 @@ const CardContent: React.FC<CardContentProps> = React.memo(function CardContent(
   min,
   max,
   mountChart,
+  clickable,
+  onClick,
 }) {
   const card = normalizeCardData(data);
   const info = card?.runtimeParameters ?? card?.info;
@@ -339,7 +373,36 @@ const CardContent: React.FC<CardContentProps> = React.memo(function CardContent(
   const hasChartData = chartData.length > 0;
 
   return (
-    <React.Fragment>
+    <div
+      className={`bizpack-data-monitoring-card-body ${
+        clickable ? 'bizpack-data-monitoring-card-body-clickable' : ''
+      }`}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onClick={
+        clickable
+          ? (event) => {
+              event.stopPropagation();
+              if (onClick) {
+                onClick();
+              }
+            }
+          : undefined
+      }
+      onKeyDown={
+        clickable
+          ? (event) => {
+              if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
+              }
+              event.preventDefault();
+              if (onClick) {
+                onClick();
+              }
+            }
+          : undefined
+      }
+    >
       <DataMonitoringHeader
         width="100%"
         height={headerHeight}
@@ -373,7 +436,7 @@ const CardContent: React.FC<CardContentProps> = React.memo(function CardContent(
           aria-hidden="true"
         />
       ) : null}
-    </React.Fragment>
+    </div>
   );
 });
 CardContent.displayName = 'DataMonitoringCardContent';
@@ -398,6 +461,8 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     carouselLoop = true,
     className = '',
     style = {},
+    onCardClick,
+    openDeviceDetailsOnClick = true,
     ...otherProps
   } = props;
   const [sourceData, setSourceData] = useState<
@@ -429,6 +494,8 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const resolvedCarouselTransitionDuration = resolveNumber(carouselTransitionDuration, 400);
   const resolvedCarouselLoop = resolveBoolean(carouselLoop, true);
   const resolvedCardGap = resolveNumber(cardGap, 16);
+  const resolvedOpenDeviceDetails = resolveBoolean(openDeviceDetailsOnClick, true);
+  const cardClickable = resolvedOpenDeviceDetails || typeof onCardClick === 'function';
   const rootDomProps = pickRootDomProps(otherProps);
   const [carouselPage, setCarouselPage] = useState(0);
   const carouselPageRef = useRef(0);
@@ -436,8 +503,29 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const [outgoingCarouselPage, setOutgoingCarouselPage] = useState<number | null>(null);
   const [carouselPaused, setCarouselPaused] = useState(false);
   const [isCarouselResetting, setIsCarouselResetting] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailData, setDetailData] = useState<DeviceDetailsData | null>(null);
   const carouselHoverRef = useRef(false);
   const navigateToPageRef = useRef<(nextPage: number) => void>(() => undefined);
+
+  const handleCardClick = (card: DataMonitoringCardData, index: number) => {
+    if (resolvedOpenDeviceDetails) {
+      setDetailData(mapCardToDeviceDetails(card));
+      setDetailOpen(true);
+      setCarouselPaused(true);
+    }
+    if (typeof onCardClick === 'function') {
+      onCardClick(card, index);
+    }
+  };
+
+  const handleCloseDetail = () => {
+    setDetailOpen(false);
+    setDetailData(null);
+    if (!carouselHoverRef.current && typeof document !== 'undefined') {
+      setCarouselPaused(document.hidden);
+    }
+  };
 
   const carouselPages = useMemo(() => {
     if (!items) {
@@ -534,7 +622,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   }, [isCarouselResetting]);
 
   useEffect(() => {
-    if (carouselPaused || carouselPages.length <= 1 || typeof window === 'undefined') {
+    if (carouselPaused || detailOpen || carouselPages.length <= 1 || typeof window === 'undefined') {
       return undefined;
     }
 
@@ -553,6 +641,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     carouselPage,
     carouselPages.length,
     carouselPaused,
+    detailOpen,
     resolvedCarouselInterval,
     resolvedCarouselLoop,
   ]);
@@ -607,6 +696,30 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     ...style,
   };
 
+  const detailModal =
+    detailOpen && detailData && typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            className="bizpack-data-monitoring-card-detailMask"
+            role="presentation"
+            onClick={handleCloseDetail}
+          >
+            <div
+              className="bizpack-data-monitoring-card-detailDialog"
+              role="dialog"
+              aria-modal="true"
+              aria-label="设备详情"
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
+            >
+              <DeviceDetails data={detailData} onClose={handleCloseDetail} />
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   if (!isListMode) {
     return (
       <div className={`bizpack-data-monitoring-card ${className}`} style={rootStyle} {...rootDomProps}>
@@ -619,7 +732,14 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
           min={min}
           max={max}
           mountChart={resolvedMountChart}
+          clickable={cardClickable}
+          onClick={
+            cardClickable && singleData
+              ? () => handleCardClick(singleData, 0)
+              : undefined
+          }
         />
+        {detailModal}
       </div>
     );
   }
@@ -639,7 +759,9 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
         } : undefined}
         onMouseLeave={resolvedPauseOnHover ? () => {
           carouselHoverRef.current = false;
-          setCarouselPaused(document.hidden);
+          if (!detailOpen) {
+            setCarouselPaused(document.hidden);
+          }
         } : undefined}
       >
         <div
@@ -685,6 +807,16 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
                         min={min}
                         max={max}
                         mountChart={resolvedMountChart && mountPageCharts}
+                        clickable={cardClickable}
+                        onClick={
+                          cardClickable
+                            ? () =>
+                                handleCardClick(
+                                  item,
+                                  pageIndex * resolvedDevicesPerPage + itemIndex,
+                                )
+                            : undefined
+                        }
                       />
                     </div>
                   </React.Fragment>
@@ -710,6 +842,7 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
           </div>
         ) : null}
       </div>
+      {detailModal}
     </div>
   );
 };
