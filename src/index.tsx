@@ -79,6 +79,13 @@ export type {
 } from './components/effluent';
 export { default as Effluent } from './components/effluent';
 
+export type { EffluentLineChartProps } from './components/effluent-line-chart';
+export {
+  createEffluentLineChartTestData,
+  DEFAULT_EFFLUENT_LINE_CHART_TEST_DATA,
+  default as EffluentLineChart,
+} from './components/effluent-line-chart';
+
 export type {
   AlarmStatusOverviewData,
   AlarmStatusOverviewItem,

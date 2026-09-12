@@ -1,0 +1,67 @@
+@import '../../variables.scss';
+
+#{$biz-css-prefix}-effluent-line-chart {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 1px;
+  overflow: hidden;
+  color: #eaf7ff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+
+  &-chart {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+  }
+}
+
+.bizpack-effluent-line-chart-tooltip {
+  min-width: 156px;
+  color: #eaf7ff;
+  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+
+  &__content {
+    min-width: 156px;
+  }
+
+  &__title {
+    margin-bottom: 10px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    line-height: 20px;
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    margin-right: 20px;
+    overflow: hidden;
+    color: rgba(234, 247, 255, 0.85);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__value {
+    flex-shrink: 0;
+    color: #0eeaff;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+}
