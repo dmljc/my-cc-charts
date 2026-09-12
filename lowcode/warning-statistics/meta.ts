@@ -72,7 +72,7 @@ const WarningStatisticsMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '警告统计数据',
-              tip: '结构：{ total, items: [{ name, value, color }] }。items 为动态分类，数量不限；未传 color 时按序使用调色板；total 不传则对 items 求和',
+              tip: '支持 alarmStats: { total, levels: [{ levelName, count, levelColor }] }，或直接传内层字段；未传 levelColor 时按序使用调色板；total 不传则对 levels 求和',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -80,16 +80,30 @@ const WarningStatisticsMeta: ComponentMetadata = {
             },
           },
           {
-            name: 'nameField',
+            name: 'listField',
             title: {
-              label: '名称字段名',
-              tip: '分类名称字段，默认为 name',
+              label: '等级列表字段名',
+              tip: '分类列表字段，默认为 levels',
             },
-            defaultValue: 'name',
+            defaultValue: 'levels',
             setter: {
               componentName: 'StringSetter',
               props: {
-                defaultValue: 'name',
+                defaultValue: 'levels',
+              },
+            },
+          },
+          {
+            name: 'nameField',
+            title: {
+              label: '名称字段名',
+              tip: '分类名称字段，默认为 levelName',
+            },
+            defaultValue: 'levelName',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: 'levelName',
               },
             },
           },
@@ -97,13 +111,13 @@ const WarningStatisticsMeta: ComponentMetadata = {
             name: 'valueField',
             title: {
               label: '数量字段名',
-              tip: '分类数量字段，默认为 value',
+              tip: '分类数量字段，默认为 count',
             },
-            defaultValue: 'value',
+            defaultValue: 'count',
             setter: {
               componentName: 'StringSetter',
               props: {
-                defaultValue: 'value',
+                defaultValue: 'count',
               },
             },
           },
@@ -111,13 +125,13 @@ const WarningStatisticsMeta: ComponentMetadata = {
             name: 'colorField',
             title: {
               label: '颜色字段名',
-              tip: '扇区颜色字段，默认为 color',
+              tip: '扇区颜色字段，默认为 levelColor',
             },
-            defaultValue: 'color',
+            defaultValue: 'levelColor',
             setter: {
               componentName: 'StringSetter',
               props: {
-                defaultValue: 'color',
+                defaultValue: 'levelColor',
               },
             },
           },
@@ -227,9 +241,10 @@ const snippets: Snippet[] = [
       props: {
         ...ChartSnippet,
         data: defaultData,
-        nameField: 'name',
-        valueField: 'value',
-        colorField: 'color',
+        listField: 'levels',
+        nameField: 'levelName',
+        valueField: 'count',
+        colorField: 'levelColor',
         totalField: 'total',
         totalLabel: '总计',
         unit: '个',

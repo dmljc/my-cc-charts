@@ -10,16 +10,25 @@ import { DEFAULT_WARNING_STATISTICS_TEST_DATA } from './test-data';
 import './index.scss';
 
 export interface WarningStatisticsItem {
-  name?: string;
-  value?: number | string;
-  color?: string;
+  /** 等级名称，如：紧急 / 严重 / 注意 / 一般 */
+  levelName?: string;
+  /** 该等级告警数量 */
+  count?: number | string;
+  /** 等级颜色，如 #FA8C16 */
+  levelColor?: string;
   [key: string]: unknown;
 }
 
-export interface WarningStatisticsData {
+export interface WarningStatisticsStats {
   total?: number | string;
+  levels?: WarningStatisticsItem[];
+  /** @deprecated 请使用 levels */
   items?: WarningStatisticsItem[];
   [key: string]: unknown;
+}
+
+export interface WarningStatisticsData extends WarningStatisticsStats {
+  alarmStats?: WarningStatisticsStats;
 }
 
 export interface WarningStatisticsProps {
@@ -28,11 +37,13 @@ export interface WarningStatisticsProps {
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
-  /** 分类名称字段名，默认 name */
+  /** 等级列表字段名，默认 levels */
+  listField?: string;
+  /** 分类名称字段名，默认 levelName */
   nameField?: string;
-  /** 数量字段名，默认 value */
+  /** 数量字段名，默认 count */
   valueField?: string;
-  /** 颜色字段名，默认 color */
+  /** 颜色字段名，默认 levelColor */
   colorField?: string;
   /** 总计字段名，默认 total；不传则对分类求和 */
   totalField?: string;
@@ -93,29 +104,48 @@ const toNumber = (value: unknown, fallback = 0) => {
   return Number.isFinite(num) ? num : fallback;
 };
 
+const unwrapPayload = (value: WarningStatisticsData): WarningStatisticsStats => {
+  if (value.alarmStats && typeof value.alarmStats === 'object' && !Array.isArray(value.alarmStats)) {
+    return value.alarmStats;
+  }
+  return value;
+};
+
+const resolveList = (payload: WarningStatisticsStats, listField: string): WarningStatisticsItem[] => {
+  const preferred = payload[listField];
+  if (Array.isArray(preferred)) {
+    return preferred as WarningStatisticsItem[];
+  }
+  if (Array.isArray(payload.levels)) {
+    return payload.levels;
+  }
+  if (Array.isArray(payload.items)) {
+    return payload.items;
+  }
+  return [];
+};
+
 const resolvePayload = (
   value?: WarningStatisticsData | WarningStatisticsItem[] | null,
-): WarningStatisticsData => {
+): WarningStatisticsStats => {
   if (Array.isArray(value)) {
-    return { items: value };
+    return { levels: value };
   }
   if (value && typeof value === 'object') {
-    if (Array.isArray(value.items)) {
-      return value;
-    }
-    return { items: [] };
+    return unwrapPayload(value);
   }
   return defaultData;
 };
 
 const buildSlices = (
-  payload: WarningStatisticsData,
+  payload: WarningStatisticsStats,
+  listField: string,
   nameField: string,
   valueField: string,
   colorField: string,
   totalField: string,
 ): { total: number; slices: SliceView[] } => {
-  const items = Array.isArray(payload.items) ? payload.items : [];
+  const items = resolveList(payload, listField);
   const slices = items.map((item, index) => {
     const name = item[nameField] != null && item[nameField] !== ''
       ? String(item[nameField])
@@ -305,16 +335,17 @@ const WarningStatistics: React.FC<WarningStatisticsProps> = function WarningStat
     height = 130,
     style = {},
     className = '',
-    nameField = 'name',
-    valueField = 'value',
-    colorField = 'color',
+    listField = 'levels',
+    nameField = 'levelName',
+    valueField = 'count',
+    colorField = 'levelColor',
     totalField = 'total',
     totalLabel = '总计',
     unit = '个',
     onItemClick,
     ...otherProps
   } = props;
-  const [source, setSource] = useState<WarningStatisticsData>(() => resolvePayload(data));
+  const [source, setSource] = useState<WarningStatisticsStats>(() => resolvePayload(data));
   const chartRef = useRef<HTMLDivElement | null>(null);
   const echartsRef = useRef<echarts.ECharts | null>(null);
   const bizRef = useRef<BizRef | null>(null);
@@ -323,14 +354,22 @@ const WarningStatistics: React.FC<WarningStatisticsProps> = function WarningStat
   const viewRef = useRef({ unit });
   const bc: BroadcastChannel = null as unknown as BroadcastChannel;
   const rootDomProps = pickRootDomProps(otherProps);
-  const safeNameField = nameField || 'name';
-  const safeValueField = valueField || 'value';
-  const safeColorField = colorField || 'color';
+  const safeListField = listField || 'levels';
+  const safeNameField = nameField || 'levelName';
+  const safeValueField = valueField || 'count';
+  const safeColorField = colorField || 'levelColor';
   const safeTotalField = totalField || 'total';
 
   const view = useMemo(
-    () => buildSlices(source, safeNameField, safeValueField, safeColorField, safeTotalField),
-    [source, safeNameField, safeValueField, safeColorField, safeTotalField],
+    () => buildSlices(
+      source,
+      safeListField,
+      safeNameField,
+      safeValueField,
+      safeColorField,
+      safeTotalField,
+    ),
+    [source, safeListField, safeNameField, safeValueField, safeColorField, safeTotalField],
   );
   slicesRef.current = view.slices;
   viewRef.current = { unit };

@@ -26,15 +26,22 @@
     flex: none;
     align-items: center;
     box-sizing: border-box;
-    height: 32px;
-    padding: 0;
+    height: 44px;
+    padding: 0 12px 0 0;
+    font: inherit;
     color: #ffffff;
     text-align: left;
     cursor: pointer;
-    background: linear-gradient(90deg, #559ee6 0%, rgba(13, 129, 247, 0) 100%);
+    appearance: none;
+    -webkit-appearance: none;
+    background: url('./bg.webp') center / 100% 100% no-repeat;
     border: 0;
-    border-radius: 5px;
     outline: none;
+
+    &::-moz-focus-inner {
+      border: 0;
+      padding: 0;
+    }
   }
 
   &-icon-wrap {
@@ -43,26 +50,27 @@
     align-items: center;
     justify-content: center;
     width: 40px;
-    height: 32px;
+    height: 44px;
   }
 
   &-icon {
     display: block;
-    width: 32px;
-    height: 32px;
+    width: 20px;
+    height: 20px;
     background-image: url('./icon_@x.webp');
     background-repeat: no-repeat;
     background-position: center;
-    background-size: 32px 32px;
-    border-radius: 4px;
+    background-size: 20px 20px;
   }
 
   &-name {
-    flex: 1;
+    flex: 1 1 0;
     min-width: 0;
     overflow: hidden;
+    font-family: SourceHanSansSC, SourceHanSansSC, PingFang SC, Microsoft YaHei, Arial, sans-serif;
     font-size: 16px;
     font-weight: 400;
+    line-height: 24px;
     color: #ffffff;
     letter-spacing: 1px;
     text-overflow: ellipsis;
@@ -71,30 +79,30 @@
 
   &-time {
     flex: none;
-    margin-left: 12px;
+    margin-left: 8px;
     overflow: hidden;
     font-weight: 400;
     font-size: 14px;
-    line-height: 1;
-    color: rgba(255, 255, 255, 0.75);
-    text-align: right;
+    line-height: 24px;
+    color: rgba(255, 255, 255, 0.88);
+    text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   &-status {
     flex: none;
-    margin-left: 12px;
+    margin-left: 8px;
     overflow: hidden;
     font-weight: 400;
     font-size: 14px;
-    line-height: 1;
+    line-height: 24px;
     text-align: right;
     text-overflow: ellipsis;
     white-space: nowrap;
 
     &-unresolved {
-      color: #ffbe2f;
+      color: #ffd43a;
     }
 
     &-resolved {
@@ -103,14 +111,27 @@
   }
 
   &-level {
+    box-sizing: border-box;
+    display: flex;
     flex: none;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    min-width: 70px;
     margin-left: 12px;
-    margin-right: 16px;
+    margin-right: 8px;
     font-weight: 400;
     font-size: 14px;
-    line-height: 1;
-    text-align: right;
+    line-height: 24px;
+    text-align: left;
     white-space: nowrap;
+  }
+
+  &-level-dot {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
   }
 
   &-empty {
