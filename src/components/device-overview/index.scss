@@ -99,7 +99,7 @@
         align-items: baseline;
         line-height: 1;
         pointer-events: none;
-        transform: translateY(-50%);
+        transform: translateY(calc(-50% - 6px));
     }
 
     &-card-small &-metric {
@@ -110,10 +110,10 @@
         display: block;
         flex: none;
         font-family: D-DIN, DIN Alternate, Arial, sans-serif;
-        font-size: 28px;
+        font-size: 30px;
         font-style: normal;
         font-weight: bold;
-        line-height: 32px;
+        line-height: 34px;
         color: #ffffff;
         letter-spacing: 0.5px;
         white-space: nowrap;
@@ -121,8 +121,8 @@
     }
 
     &-card-small &-value {
-        font-size: 22px;
-        line-height: 26px;
+        font-size: 30px;
+        line-height: 34px;
     }
 
     &-unit {
