@@ -27,7 +27,7 @@
     align-items: center;
     box-sizing: border-box;
     height: 44px;
-    padding: 0 12px 0 0;
+    padding: 0 8px 0 0;
     font: inherit;
     color: #ffffff;
     text-align: left;
@@ -64,8 +64,8 @@
   }
 
   &-name {
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 1 1 auto;
+    min-width: 88px;
     overflow: hidden;
     font-family: SourceHanSansSC, SourceHanSansSC, PingFang SC, Microsoft YaHei, Arial, sans-serif;
     font-size: 16px;
@@ -113,13 +113,11 @@
   &-level {
     box-sizing: border-box;
     display: flex;
-    flex: none;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: flex-start;
     gap: 6px;
-    min-width: 70px;
-    margin-left: 12px;
-    margin-right: 8px;
+    margin-left: 8px;
     font-weight: 400;
     font-size: 14px;
     line-height: 24px;
