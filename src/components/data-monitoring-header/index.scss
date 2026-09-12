@@ -7,9 +7,10 @@
   flex-direction: column;
   justify-content: center;
   width: 400px;
-  height: 68px;
+  min-height: 68px;
+  height: auto;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
   color: #ffffff;
   font-family: PingFangSC, PingFang SC, SourceHanSansSC, sans-serif;
 
@@ -29,7 +30,7 @@
     box-sizing: border-box;
     display: flex;
     flex: none;
-    align-items: center;
+    align-items: flex-start;
     justify-content: flex-start;
     gap: 12px;
     width: 100%;
@@ -70,29 +71,31 @@
 
   &-device &-label {
     width: 64px;
-    height: 16px;
+    height: 22px;
     font-family: PingFangSC, PingFang SC, sans-serif;
     font-weight: 400;
     font-size: 16px;
     font-style: normal;
-    line-height: 16px;
+    line-height: 22px;
     color: #ffffff;
     text-align: left;
   }
 
   &-device &-value {
-    flex: none;
-    width: 96px;
-    height: 16px;
-    overflow: hidden;
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    overflow: visible;
     font-family: PingFangSC, PingFang SC, sans-serif;
     font-weight: 400;
     font-size: 16px;
     font-style: normal;
-    line-height: 16px;
+    line-height: 22px;
     color: #ffffff;
     text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 }

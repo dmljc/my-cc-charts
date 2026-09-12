@@ -124,7 +124,7 @@ const DataMonitoringHeader: React.FC<DataMonitoringHeaderProps> = function DataM
   return (
     <div
       className={`bizpack-data-monitoring-header ${className}`}
-      style={{ width, height, ...style }}
+      style={{ width, minHeight: height, ...style }}
       {...rootDomProps}
     >
       <div className="bizpack-data-monitoring-header-room">
