@@ -194,7 +194,7 @@ const snippets: Snippet[] = [
         unresolvedLabel: '未解决',
         rateLabel: '处置率',
         width: 376,
-        height: 171,
+        height: 160,
       },
     },
   },

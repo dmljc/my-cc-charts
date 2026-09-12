@@ -147,7 +147,7 @@ const DisposalStatistics: React.FC<DisposalStatisticsProps> = function DisposalS
     unresolvedLabel = '未解决',
     rateLabel = '处置率',
     width = 376,
-    height = 171,
+    height,
     style = {},
     className = '',
     onItemClick,

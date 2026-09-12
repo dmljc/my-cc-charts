@@ -18,9 +18,9 @@
     &-main {
         position: relative;
         box-sizing: border-box;
-        flex: 1 1 auto;
+        flex: none;
         width: 100%;
-        min-height: 0;
+        aspect-ratio: 800 / 236;
         background-image: url('./disposalBg.png');
         background-repeat: no-repeat;
         background-position: center;
