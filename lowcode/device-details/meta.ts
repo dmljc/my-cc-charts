@@ -92,6 +92,12 @@ const DeviceDetailsMeta: ComponentMetadata = {
         },
         items: [
           {
+            name: 'title',
+            title: '弹窗标题',
+            defaultValue: '设备详情',
+            setter: 'StringSetter',
+          },
+          {
             name: 'width',
             title: '宽度',
             setter: 'NumberSetter',
@@ -119,6 +125,14 @@ const DeviceDetailsMeta: ComponentMetadata = {
           label: '交互事件',
         },
         items: [
+          {
+            name: 'onClose',
+            title: {
+              label: '关闭弹窗',
+              tip: '() => void',
+            },
+            setter: 'FunctionSetter',
+          },
           {
             name: 'onTrendPropertyChange',
             title: {
@@ -158,7 +172,9 @@ const snippets: Snippet[] = [
       props: {
         ...deviceDetailsChartSnippet,
         data: defaultData,
-        width: 960,
+        title: '设备详情',
+        width: 884,
+        height: 643,
       },
     },
   },

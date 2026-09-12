@@ -19,10 +19,12 @@ export type { DeviceDetailsData, DeviceMetric, RoomTrendSeriesItem } from './int
 
 export interface DeviceDetailsProps {
   data?: DeviceDetailsData;
+  title?: string;
   width?: number | string;
   height?: number | string;
   style?: React.CSSProperties;
   className?: string;
+  onClose?: () => void;
   onTrendPropertyChange?: (propertyId: string) => void;
   onTimePage?: (range: { from: number; to: number }) => void;
   onRangeChange?: (range: { from: number; to: number }) => void;
@@ -95,10 +97,12 @@ const resolveData = (value?: DeviceDetailsData | null): DeviceDetailsData => {
 const DeviceDetails: React.FC<DeviceDetailsProps> = function DeviceDetails(props) {
   const {
     data = defaultData,
-    width = 960,
-    height,
+    title = '设备详情',
+    width = 884,
+    height = 643,
     style = {},
     className = '',
+    onClose,
     onTrendPropertyChange,
     onTimePage,
     onRangeChange,
@@ -148,7 +152,7 @@ const DeviceDetails: React.FC<DeviceDetailsProps> = function DeviceDetails(props
   const rootStyle: React.CSSProperties = useMemo(
     () => ({
       width,
-      ...(height !== undefined && height !== null && height !== '' ? { height } : {}),
+      height,
       ...style,
     }),
     [width, height, style],
@@ -198,6 +202,8 @@ const DeviceDetails: React.FC<DeviceDetailsProps> = function DeviceDetails(props
       {...rootDomProps}
     >
       <RealtimePanel
+        title={title}
+        onClose={onClose}
         deviceName={deviceName}
         deviceCode={deviceCode}
         monitorArea={monitorArea}

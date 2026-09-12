@@ -1,6 +1,14 @@
 /** 与 RealtimePanel className 字段对应 */
 const styles = {
   mainPanel: 'bizpack-device-details-panel',
+  modalHeader: 'bizpack-device-details-modalHeader',
+  modalTitle: 'bizpack-device-details-modalTitle',
+  titleIcon: 'bizpack-device-details-titleIcon',
+  titleText: 'bizpack-device-details-titleText',
+  closeBtn: 'bizpack-device-details-closeBtn',
+  closeIcon: 'bizpack-device-details-closeIcon',
+  headerDivider: 'bizpack-device-details-headerDivider',
+  panelBody: 'bizpack-device-details-panelBody',
   deviceNameBar: 'bizpack-device-details-deviceNameBar',
   deviceNameLabel: 'bizpack-device-details-deviceNameLabel',
   deviceNameValue: 'bizpack-device-details-deviceNameValue',

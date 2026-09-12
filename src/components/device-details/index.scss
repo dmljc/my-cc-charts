@@ -3,6 +3,8 @@
 #{$biz-css-prefix}-device-details {
   position: relative;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   min-width: 0;
   min-height: 0;
@@ -13,16 +15,107 @@
   &-panel {
     box-sizing: border-box;
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     width: 100%;
     min-width: 0;
     min-height: 0;
-    padding: 12px 20px 16px;
+    height: 100%;
+    padding: 0;
     color: #ffffff;
     font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
-    background: linear-gradient(180deg, rgba(8, 28, 58, 0.96) 0%, rgba(5, 18, 40, 0.98) 100%);
-    border: 1px solid rgba(64, 148, 214, 0.45);
-    border-radius: 4px;
+    background: linear-gradient(180deg, rgba(8, 32, 64, 0.96) 0%, rgba(4, 16, 36, 0.98) 100%);
+    border: 1px solid rgba(64, 180, 255, 0.72);
+    border-radius: 2px;
+    box-shadow:
+      0 0 0 1px rgba(30, 100, 160, 0.25) inset,
+      0 8px 28px rgba(0, 20, 40, 0.45);
+  }
+
+  &-modalHeader {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 20px 6px;
+    gap: 12px;
+  }
+
+  &-modalTitle {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  &-titleIcon {
+    flex: none;
+    width: 28px;
+    height: 30px;
+    object-fit: contain;
+  }
+
+  &-titleText {
+    font-size: 20px;
+    line-height: 20px;
+    color: #c6ddff;
+    white-space: nowrap;
+  }
+
+  &-closeBtn {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    outline: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+      opacity: 0.88;
+      transform: scale(1.06);
+    }
+
+    &:focus,
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  &-closeIcon {
+    display: block;
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+  }
+
+  &-headerDivider {
+    flex: none;
+    width: 100%;
+    height: 3px;
+    background: url('./assets/header-divider.png') center / 100% 100% no-repeat;
+  }
+
+  &-panelBody {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: 12px 20px 16px;
   }
 
   &-deviceNameBar {
@@ -272,9 +365,9 @@
   &-trendChart {
     position: relative;
     box-sizing: border-box;
+    flex: 1 1 auto;
     width: 100%;
-    height: 420px;
-    min-height: 320px;
+    min-height: 240px;
     margin-top: 10px;
     overflow: hidden;
     background: transparent;
