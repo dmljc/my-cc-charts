@@ -159,13 +159,18 @@
 
   &-carousel {
     position: relative;
+    display: flex;
     flex: 1 1 auto;
+    flex-direction: column;
     min-height: 0;
     overflow: hidden;
+    box-sizing: border-box;
   }
 
   &-carousel-track {
     display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
     height: 100%;
     will-change: transform;
     transition-property: transform;
@@ -181,7 +186,7 @@
     box-sizing: border-box;
     min-width: 0;
     height: 100%;
-    padding-bottom: 32px;
+    padding-bottom: 8px;
   }
 
   &-carousel-item {
@@ -212,16 +217,15 @@
   }
 
   &-carousel-pagination {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
+    position: relative;
     z-index: 1;
     display: flex;
+    flex: none;
     align-items: center;
     justify-content: center;
     gap: 0;
     min-height: 28px;
+    margin-top: 10px;
   }
 
   &-carousel-dot {
