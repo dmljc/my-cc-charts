@@ -68,7 +68,7 @@ const DEFAULT_COLORS = ['#EE8C45', '#6BC7A6', '#7492DB', '#E06C75', '#73c0de', '
 const DEFAULT_MAX_POINTS = 15 * 60;
 const TOOLTIP_CLASS_NAME = 'bizpack-effluent-line-chart-tooltip';
 const GRID_LEFT = 40;
-const GRID_RIGHT = 12;
+const GRID_RIGHT = 40;
 /** 容器已有 1px padding，这里只留轴文字高度 */
 const GRID_TOP = 12;
 const GRID_BOTTOM = 22;

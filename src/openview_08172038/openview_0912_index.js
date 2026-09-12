@@ -33,22 +33,22 @@ class LowcodeComponent extends Component {
       // 流出物折线图
       qtcList: {},
     };
-
+  
     componentDidMount() {
       this.handleWss();
     }
-
+  
     /**
      * 页面只负责 WebSocket 连接与按字段分发。
      * 列表覆盖、监测卡折线合并、QTC 增量拼接 / 裁窗均在对应自定义组件内维护。
      */
     handleWss() {
       this.ws = new WebSocket('ws://192.168.1.2:8088/api/ws/realtime');
-
+  
       this.ws.onopen = () => {
         console.log('✅ WebSocket 连接已建立');
       };
-
+  
       this.ws.onmessage = (e) => {
         try {
           const msg = JSON.parse(e.data);
@@ -66,17 +66,17 @@ class LowcodeComponent extends Component {
           console.error('❌ 解析消息失败:', error);
         }
       };
-
+  
       this.ws.onerror = () => { };
     }
-
+  
     goX12(e, params) {
       if (params && params.key === 1) {
         this.setState({
           btnClass1: 'bottom-btn btn-background-click',
           sceneIndex: 1,
         });
-
+  
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify({
             topic: 'subscribe',
@@ -85,28 +85,28 @@ class LowcodeComponent extends Component {
         }
       }
     }
-
+  
     goHome() {
       this.setState({
         btnClass1: 'bottom-btn btn-background-click',
         sceneIndex: 0,
       });
-
+  
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         this.ws.send(JSON.stringify({
           topic: 'unsubscribe'
         }));
       }
     }
-
+  
     asObject(value) {
       return Object.prototype.toString.call(value) === '[object Object]' ? value : {};
     }
-
+  
     hasOwn(obj, key) {
       return Object.prototype.hasOwnProperty.call(obj, key);
     }
-
+  
     applyInitData(data) {
       const payload = this.asObject(data);
       this.setState({
@@ -123,13 +123,13 @@ class LowcodeComponent extends Component {
         qtcList: payload.qtcList || {},
       });
     }
-
+  
     applyWsData(data) {
       const payload = this.asObject(data);
       if (!Object.keys(payload).length) {
         return;
       }
-
+  
       const keys = [
         'alarmStats',
         'disposalStats',
@@ -144,18 +144,18 @@ class LowcodeComponent extends Component {
         'qtcList',
       ];
       const next = {};
-
+  
       keys.forEach((key) => {
         if (this.hasOwn(payload, key)) {
           next[key] = payload[key];
         }
       });
-
+  
       if (Object.keys(next).length) {
         this.setState(next);
       }
     }
-
+  
     componentWillUnmount() {
       if (this.ws) {
         this.ws.onopen = null;
@@ -167,3 +167,4 @@ class LowcodeComponent extends Component {
       }
     }
   }
+  
