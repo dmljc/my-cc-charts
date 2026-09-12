@@ -72,7 +72,7 @@ const DeviceCheckMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '设备定检数据',
-              tip: '与接口字段一致：deviceName、remainingDaysText、status；status 为文案如正常/即将到期/逾期',
+              tip: '与接口字段一致：deviceName、remainingDaysText、status；status 为文案如正常/即将到期/延期；数组为空时展示无定检文案',
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
@@ -111,13 +111,27 @@ const DeviceCheckMeta: ComponentMetadata = {
             name: 'statusField',
             title: {
               label: '状态字段名',
-              tip: '数据中状态文案对应的字段名，默认为 status，如：正常、即将到期、逾期',
+              tip: '数据中状态文案对应的字段名，默认为 status，如：正常、即将到期、延期',
             },
             defaultValue: 'status',
             setter: {
               componentName: 'StringSetter',
               props: {
                 defaultValue: 'status',
+              },
+            },
+          },
+          {
+            name: 'emptyText',
+            title: {
+              label: '无定检文案',
+              tip: '定检列表为空时展示的文案，默认"正常"',
+            },
+            defaultValue: '正常',
+            setter: {
+              componentName: 'StringSetter',
+              props: {
+                defaultValue: '正常',
               },
             },
           },
@@ -194,6 +208,7 @@ const snippets: Snippet[] = [
         deviceNameField: 'deviceName',
         remainingDaysTextField: 'remainingDaysText',
         statusField: 'status',
+        emptyText: '正常',
         width: 400,
         height: 200,
       },

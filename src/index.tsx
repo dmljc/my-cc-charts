@@ -111,6 +111,7 @@ export type {
   WarningStatisticsData,
   WarningStatisticsItem,
   WarningStatisticsProps,
+  WarningStatisticsStats,
 } from './components/warning-statistics';
 export { default as WarningStatistics } from './components/warning-statistics';
 

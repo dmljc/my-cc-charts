@@ -221,8 +221,15 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
                 >
                   {statusText}
                 </span>
-                <span className="bizpack-device-warning-level" style={{ color: levelColor }}>
-                  {levelName}
+                <span className="bizpack-device-warning-level" title={levelName}>
+                  <span
+                    className="bizpack-device-warning-level-dot"
+                    style={{
+                      background: levelColor,
+                      boxShadow: `0 0 6px ${levelColor}`,
+                    }}
+                  />
+                  <span style={{ color: levelColor }}>{levelName}</span>
                 </span>
               </button>
             );

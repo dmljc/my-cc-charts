@@ -5,5 +5,6 @@ export type {
   WarningStatisticsData,
   WarningStatisticsItem,
   WarningStatisticsProps,
+  WarningStatisticsStats,
 } from './warning-statistics';
 export default WarningStatistics;

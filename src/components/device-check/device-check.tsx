@@ -18,7 +18,7 @@ export interface DeviceCheckItem {
   deviceName?: string;
   /** 剩余/延期天数文案，如：剩余50天、延期3天 */
   remainingDaysText?: string;
-  /** 定检状态文案，如：正常、即将到期、逾期 */
+  /** 定检状态文案，如：正常、即将到期、延期 */
   status?: string;
   [key: string]: unknown;
 }
@@ -35,6 +35,8 @@ export interface DeviceCheckProps {
   remainingDaysTextField?: string;
   /** 状态字段名，默认 status */
   statusField?: string;
+  /** 无定检数据时展示的文案，默认 '正常' */
+  emptyText?: string;
   onItemClick?: (item: DeviceCheckItem, index: number) => void;
   [key: string]: unknown;
 }
@@ -116,6 +118,7 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
     deviceNameField = 'deviceName',
     remainingDaysTextField = 'remainingDaysText',
     statusField = 'status',
+    emptyText = '正常',
     onItemClick,
     ...otherProps
   } = props;
@@ -149,6 +152,7 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const hasItems = items.length > 0;
   const safeDeviceNameField = deviceNameField || 'deviceName';
   const safeRemainingDaysTextField = remainingDaysTextField || 'remainingDaysText';
   const safeStatusField = statusField || 'status';
@@ -159,52 +163,59 @@ const DeviceCheck: React.FC<DeviceCheckProps> = function DeviceCheck(props) {
       style={{ width, height, ...style }}
       {...rootDomProps}
     >
-      <div className="bizpack-device-check-list">
-        {items.map((item, index) => {
-          const deviceName = resolveFieldValue(item, safeDeviceNameField);
-          const remainingDaysText = resolveFieldValue(item, safeRemainingDaysTextField);
-          const statusText = resolveFieldValue(item, safeStatusField);
-          const tone = resolveStatusTone(statusText || remainingDaysText);
+      {hasItems ? (
+        <div className="bizpack-device-check-list">
+          {items.map((item, index) => {
+            const deviceName = resolveFieldValue(item, safeDeviceNameField);
+            const remainingDaysText = resolveFieldValue(item, safeRemainingDaysTextField);
+            const statusText = resolveFieldValue(item, safeStatusField);
+            const tone = resolveStatusTone(statusText || remainingDaysText);
 
-          return (
-            <button
-              key={item.id != null ? String(item.id) : `${deviceName}-${index}`}
-              type="button"
-              className="bizpack-device-check-row"
-              onClick={() => {
-                if (onItemClick) {
-                  onItemClick(item, index);
-                }
-              }}
-            >
-              <span className="bizpack-device-check-icon-wrap">
-                <span className="bizpack-device-check-icon" />
-              </span>
-              <span className="bizpack-device-check-name" title={deviceName}>
-                {deviceName}
-              </span>
-              <span
-                className={`bizpack-device-check-days ${
-                  tone === 'overdue' ? 'bizpack-device-check-days-overdue' : ''
-                }`}
-                title={remainingDaysText}
+            return (
+              <button
+                key={item.id != null ? String(item.id) : `${deviceName}-${index}`}
+                type="button"
+                className="bizpack-device-check-row"
+                onClick={() => {
+                  if (onItemClick) {
+                    onItemClick(item, index);
+                  }
+                }}
               >
-                {remainingDaysText || '-'}
-              </span>
-              <span className="bizpack-device-check-status">
-                <span
-                  className={`bizpack-device-check-status-dot bizpack-device-check-status-dot-${tone}`}
-                />
-                <span
-                  className={`bizpack-device-check-status-text bizpack-device-check-status-text-${tone}`}
-                >
-                  {statusText}
+                <span className="bizpack-device-check-icon-wrap">
+                  <span className="bizpack-device-check-icon" />
                 </span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                <span className="bizpack-device-check-name" title={deviceName}>
+                  {deviceName}
+                </span>
+                <span
+                  className={`bizpack-device-check-days ${
+                    tone === 'overdue' ? 'bizpack-device-check-days-overdue' : ''
+                  }`}
+                  title={remainingDaysText}
+                >
+                  {remainingDaysText || '-'}
+                </span>
+                <span className="bizpack-device-check-status">
+                  <span
+                    className={`bizpack-device-check-status-dot bizpack-device-check-status-dot-${tone}`}
+                  />
+                  <span
+                    className={`bizpack-device-check-status-text bizpack-device-check-status-text-${tone}`}
+                  >
+                    {statusText}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="bizpack-device-check-empty">
+          <span className="bizpack-device-check-empty-bg" />
+          <span className="bizpack-device-check-empty-text">{emptyText}</span>
+        </div>
+      )}
     </div>
   );
 };
