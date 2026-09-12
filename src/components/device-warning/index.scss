@@ -27,7 +27,7 @@
     align-items: center;
     box-sizing: border-box;
     height: 44px;
-    padding: 0 8px 0 0;
+    padding: 0 26px 0 0;
     font: inherit;
     color: #ffffff;
     text-align: left;
@@ -90,9 +90,17 @@
     white-space: nowrap;
   }
 
+  &-tail {
+    display: flex;
+    flex: none;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 12px;
+    white-space: nowrap;
+  }
+
   &-status {
     flex: none;
-    margin-left: 8px;
     overflow: hidden;
     font-weight: 400;
     font-size: 14px;

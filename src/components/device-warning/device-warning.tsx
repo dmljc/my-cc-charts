@@ -211,25 +211,27 @@ const DeviceWarning: React.FC<DeviceWarningProps> = function DeviceWarning(props
                 <span className="bizpack-device-warning-time" title={alarmTime}>
                   {alarmTime}
                 </span>
-                <span
-                  className={`bizpack-device-warning-status ${
-                    isResolved
-                      ? 'bizpack-device-warning-status-resolved'
-                      : 'bizpack-device-warning-status-unresolved'
-                  }`}
-                  title={statusText}
-                >
-                  {statusText}
-                </span>
-                <span className="bizpack-device-warning-level" title={levelName}>
+                <span className="bizpack-device-warning-tail">
                   <span
-                    className="bizpack-device-warning-level-dot"
-                    style={{
-                      background: levelColor,
-                      boxShadow: `0 0 6px ${levelColor}`,
-                    }}
-                  />
-                  <span style={{ color: levelColor }}>{levelName}</span>
+                    className={`bizpack-device-warning-status ${
+                      isResolved
+                        ? 'bizpack-device-warning-status-resolved'
+                        : 'bizpack-device-warning-status-unresolved'
+                    }`}
+                    title={statusText}
+                  >
+                    {statusText}
+                  </span>
+                  <span className="bizpack-device-warning-level" title={levelName}>
+                    <span
+                      className="bizpack-device-warning-level-dot"
+                      style={{
+                        background: levelColor,
+                        boxShadow: `0 0 6px ${levelColor}`,
+                      }}
+                    />
+                    <span style={{ color: levelColor }}>{levelName}</span>
+                  </span>
                 </span>
               </button>
             );
