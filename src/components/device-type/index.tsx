@@ -1,4 +1,4 @@
-// 设备分类
+// 设备类型
 import Left2 from './left2';
 
 export type {

@@ -329,8 +329,8 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
     arrowField = 'arrow',
     unit = '',
     gap = 12,
-    width,
-    height = 142,
+    width = 376,
+    height = 144,
     style = {},
     className = '',
     onItemClick,
@@ -399,8 +399,8 @@ const Effluent: React.FC<EffluentProps> = function Effluent(props) {
   const safeThresholdField = thresholdField || 'threshold';
   const safeArrowField = arrowField || 'arrow';
   const rootStyle: React.CSSProperties = {
-    ...(width !== undefined && width !== null && width !== '' ? { width } : {}),
-    ...(height !== undefined && height !== null && height !== '' ? { height } : {}),
+    width,
+    height,
     gap,
     ...style,
   };

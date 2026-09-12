@@ -187,7 +187,7 @@ const snippets: Snippet[] = [
         unitField: 'unit',
         themeField: 'theme',
         unit: '个',
-        width: 400,
+        width: 376,
         height: 188,
       },
     },

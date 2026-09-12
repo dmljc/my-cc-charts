@@ -1,4 +1,4 @@
-// 设备分类（立体柱）
+// 设备类型（立体柱）
 import * as React from 'react';
 import '../jsx-shim';
 // createElement is required by tsconfig jsxFactory
@@ -153,8 +153,8 @@ const Left2: React.FC<Left2Props> = function Left2(props) {
     valueField = 'value',
     themeField = 'theme',
     columns = 2,
-    width = 400,
-    height = 300,
+    width = 376,
+    height = 330,
     style = {},
     className = '',
     onItemClick,

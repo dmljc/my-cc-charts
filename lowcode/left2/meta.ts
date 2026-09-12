@@ -10,7 +10,7 @@ const { height: _snippetHeight, ...left2ChartSnippet } = ChartSnippet;
 
 const Left2Meta: ComponentMetadata = {
   componentName: 'Left2',
-  title: '设备分类',
+  title: '设备类型',
   category: '状态组件',
   group: '图表库',
   docUrl: '',
@@ -73,7 +73,7 @@ const Left2Meta: ComponentMetadata = {
           {
             name: 'data',
             title: {
-              label: '设备分类数据',
+              label: '设备类型数据',
               tip: '支持后端结构：{ deviceTypes: { "PLC 设备": 5, "QTC 设备": 4 } }，key 为名称，value 为数量；也可直接传 deviceTypes 对象或数组',
             },
             setter: 'JsonSetter',
@@ -171,7 +171,7 @@ const Left2Meta: ComponentMetadata = {
 
 const snippets: Snippet[] = [
   {
-    title: '设备分类',
+    title: '设备类型',
     screenshot: '',
     schema: {
       componentName: 'Left2',
@@ -182,8 +182,8 @@ const snippets: Snippet[] = [
         valueField: 'value',
         themeField: 'theme',
         columns: 2,
-        width: 400,
-        height: 300,
+        width: 376,
+        height: 330,
       },
     },
   },

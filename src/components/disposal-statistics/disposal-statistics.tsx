@@ -147,7 +147,7 @@ const DisposalStatistics: React.FC<DisposalStatisticsProps> = function DisposalS
     unresolvedLabel = '未解决',
     rateLabel = '处置率',
     width = 376,
-    height,
+    height = 171,
     style = {},
     className = '',
     onItemClick,
@@ -201,7 +201,7 @@ const DisposalStatistics: React.FC<DisposalStatisticsProps> = function DisposalS
 
   const rootStyle: React.CSSProperties = {
     width,
-    ...(height !== undefined && height !== null && height !== '' ? { height } : {}),
+    height,
     ...style,
   };
 
