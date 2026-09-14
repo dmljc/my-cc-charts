@@ -1,10 +1,31 @@
 import { ComponentMetadata, Snippet } from 'lowcode-types';
 import { ChartSnippet, ChartMetaIot } from '../common/iot';
-import { DEFAULT_DEVICE_DETAILS_TEST_DATA } from '../../src/components/device-details/test-data';
 
 const dataSourceMeta = ChartMetaIot.filter((item) => item.name !== 'data');
 
-const defaultData = DEFAULT_DEVICE_DETAILS_TEST_DATA;
+/** 设计器默认空数据；大屏推荐用「数据监测卡片」点击打开，或绑定 state 注入 data */
+const defaultData = {
+  deviceId: '',
+  deviceName: '',
+  deviceCode: '',
+  monitorArea: '',
+  pipeCode: '',
+  configFlow: '',
+  metrics: [],
+  deviceDisabled: false,
+  trendPropertyId: '',
+  trendUnit: '',
+  legendSeries: [],
+  trendSeries: [],
+  chartKey: 'device-details-empty',
+};
+
+const dataJsonTip = [
+  '必填（拉趋势）：deviceId、metrics[].propertyId、trendPropertyId（或取首个指标 propertyId）',
+  '头部：deviceName、deviceCode、monitorArea、pipeCode、configFlow',
+  'metrics 示例：{ "key":"RCE","label":"反控执行","value":0,"unit":"","propertyId":"RCE" }',
+  '趋势由组件内请求 /api/iiot/tablet/device/{deviceId}/trend，无需传 trendSeries',
+].join('；');
 
 const { height: _snippetHeight, ...deviceDetailsChartSnippet } = ChartSnippet;
 
@@ -74,12 +95,20 @@ const DeviceDetailsMeta: ComponentMetadata = {
             name: 'data',
             title: {
               label: '设备详情数据',
-              tip: '字段：metrics / deviceDisabled / trendPropertyId / trendUnit / legendSeries / trendSeries / chartKey',
+              tip: dataJsonTip,
             },
             setter: 'JsonSetter',
             condition: (target: any) => {
               return target.getProps().getPropValue('dataType') === 'data';
             },
+          },
+          {
+            name: 'apiBaseUrl',
+            title: {
+              label: 'API 根地址',
+              tip: '趋势接口前缀，如 https://xxx.vicp.fun；留空则走当前页同域 /api/...',
+            },
+            setter: 'StringSetter',
           },
         ],
       },
@@ -145,7 +174,7 @@ const DeviceDetailsMeta: ComponentMetadata = {
             name: 'onTimePage',
             title: {
               label: '趋势时间翻页',
-              tip: '(range) => void',
+              tip: '左右箭头：({ from, to }) => void，from/to 为毫秒时间戳，窗口约 1 小时；组件内已自动请求 trend',
             },
             setter: 'FunctionSetter',
           },
@@ -153,7 +182,7 @@ const DeviceDetailsMeta: ComponentMetadata = {
             name: 'onRangeChange',
             title: {
               label: '趋势区间变化',
-              tip: '(range) => void',
+              tip: '顶部 1 天滑块：({ from, to }) => void，窗口约 24 小时；组件内已自动请求 trend',
             },
             setter: 'FunctionSetter',
           },

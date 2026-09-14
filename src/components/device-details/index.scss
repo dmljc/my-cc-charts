@@ -288,18 +288,50 @@
   }
 
   &-metricCardActive {
-    transform: translateY(-1px);
+    z-index: 1;
+    transform: translateY(-3px) scale(1.04);
+    filter: brightness(1.18) saturate(1.15);
+    box-shadow:
+      0 0 0 1px rgba(90, 200, 255, 0.85),
+      0 0 18px rgba(59, 167, 255, 0.55),
+      0 8px 20px rgba(0, 40, 80, 0.45) !important;
 
     &::before {
-      opacity: 0.85;
+      opacity: 1;
+      background: linear-gradient(
+        180deg,
+        rgba(80, 190, 255, 0.42) 0%,
+        rgba(59, 167, 255, 0.12) 48%,
+        rgba(0, 210, 255, 0.4) 100%
+      );
     }
 
     &::after {
-      opacity: 0.8;
+      opacity: 1;
+      height: 48%;
+      filter: brightness(1.35);
+    }
+
+    #{$biz-css-prefix}-device-details-metricLabel {
+      color: #d7efff;
+      text-shadow: 0 0 8px rgba(90, 200, 255, 0.55);
+    }
+
+    #{$biz-css-prefix}-device-details-metricValue {
+      color: #9fd8ff;
+      text-shadow: 0 0 14px rgba(70, 190, 255, 0.95);
+    }
+
+    #{$biz-css-prefix}-device-details-metricUnit {
+      color: #9fd8ff;
     }
 
     &:hover {
-      transform: translateY(-2px);
+      transform: translateY(-4px) scale(1.04);
+      box-shadow:
+        0 0 0 1px rgba(120, 220, 255, 0.95),
+        0 0 22px rgba(59, 167, 255, 0.7),
+        0 10px 22px rgba(0, 40, 80, 0.5) !important;
 
       &::before {
         opacity: 1;

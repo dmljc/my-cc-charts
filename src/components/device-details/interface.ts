@@ -15,6 +15,10 @@ export type RoomTrendSeriesItem = LineChartSeriesItem;
 
 /** 设备详情面板数据（字段命名与 RealtimePanel / 蓝湖稿对齐） */
 export interface DeviceDetailsData {
+  /** 设备 ID，对应卡片 data.id，用于趋势接口路径 */
+  deviceId?: number | string;
+  /** 可选：页面配置的 API 根地址；留空走同域 `/api/...` */
+  apiBaseUrl?: string;
   /** 设备名称展示值，如 X12-202 */
   deviceName?: string;
   /** 设备编号 */

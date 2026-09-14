@@ -10,7 +10,6 @@ import DataMonitoringLineChart from '../data-monitoring-line-chart';
 import type { DataMonitoringLineChartPoint } from '../data-monitoring-line-chart';
 import DeviceDetails from '../device-details';
 import type { DeviceDetailsData } from '../device-details';
-import { createDeviceDetailsTestData } from '../device-details';
 import { destroy, init } from '../../common/iot';
 import { createPortal } from 'react-dom';
 import './index.scss';
@@ -66,6 +65,12 @@ export interface DataMonitoringCardProps {
   onCardClick?: (card: DataMonitoringCardData, index: number) => void;
   /** 点击卡片时是否自动弹出设备详情，默认 true */
   openDeviceDetailsOnClick?: boolean;
+  /** 弹窗内设备详情宽度，默认 884 */
+  deviceDetailsWidth?: number | string;
+  /** 弹窗内设备详情高度，默认 643 */
+  deviceDetailsHeight?: number | string;
+  /** 设备详情趋势接口 API 根地址（页面配置）；留空则走同域 `/api/...` */
+  deviceDetailsApiBaseUrl?: string;
   [key: string]: unknown;
 }
 
@@ -78,25 +83,72 @@ const CHART_WINDOW_SECONDS = 15 * 60;
 /** 时间字段不可识别时，按 1 秒 1 点降级裁剪。 */
 const LIST_CHART_MAX_POINTS = 15 * 60;
 
-/** 由监测卡片数据组装设备详情弹窗数据 */
+/** 由监测卡片数据组装设备详情弹窗数据（无字段/无趋势则留空，不注入假数据） */
 const mapCardToDeviceDetails = (card: DataMonitoringCardData): DeviceDetailsData => {
-  const base = createDeviceDetailsTestData('flow');
-  const baseInfo = card.baseInfo ?? card.header;
+  const baseInfo = (card.baseInfo ?? card.header ?? {}) as Record<string, unknown>;
+  const runtime = (card.runtimeParameters ?? card.info ?? []) as Array<
+    Record<string, unknown>
+  >;
+
+  const metrics = runtime.map((item, index) => {
+    const propertyId =
+      item.propertyId != null && String(item.propertyId).trim() !== ''
+        ? String(item.propertyId)
+        : undefined;
+    return {
+      key: propertyId || String(item.id ?? index),
+      label: item.label != null ? String(item.label) : '',
+      value: item.value != null ? (item.value as string | number) : '-',
+      unit: item.unit != null ? String(item.unit) : undefined,
+      propertyId,
+    };
+  });
+
   const deviceName =
-    baseInfo && baseInfo.deviceValue != null && baseInfo.deviceValue !== ''
+    baseInfo.deviceValue != null && baseInfo.deviceValue !== ''
       ? String(baseInfo.deviceValue)
-      : String(base.deviceName || '-');
+      : '';
   const monitorArea =
-    baseInfo && baseInfo.roomValue != null && baseInfo.roomValue !== ''
+    baseInfo.roomValue != null && baseInfo.roomValue !== ''
       ? `房间${String(baseInfo.roomValue)}`
-      : String(base.monitorArea || '-');
-  const deviceCode = card.id != null && card.id !== '' ? String(card.id) : String(base.deviceCode || '-');
+      : '';
+  const deviceCode =
+    baseInfo.deviceCode != null && String(baseInfo.deviceCode) !== ''
+      ? String(baseInfo.deviceCode)
+      : '';
+  const pipeCode =
+    baseInfo.pipelineId != null && String(baseInfo.pipelineId) !== ''
+      ? String(baseInfo.pipelineId)
+      : '';
+  const flowRaw = baseInfo.flowRate;
+  const configFlow =
+    flowRaw != null && String(flowRaw) !== ''
+      ? /[a-zA-Z%/米]/.test(String(flowRaw))
+        ? String(flowRaw)
+        : `${flowRaw}m/s`
+      : '';
+
+  const trendPropertyId =
+    (baseInfo.propertyId != null && String(baseInfo.propertyId).trim()) ||
+    metrics.find((item) => item.propertyId)?.propertyId ||
+    '';
+  const matchedMetric = metrics.find((item) => item.propertyId === trendPropertyId);
+  const deviceId = card.id;
+
   return {
-    ...base,
+    deviceId,
     deviceName,
     monitorArea,
     deviceCode,
-    chartKey: `device-details-${deviceCode}-flow`,
+    pipeCode,
+    configFlow,
+    metrics,
+    deviceDisabled: false,
+    trendPropertyId,
+    trendUnit: matchedMetric?.unit || '',
+    trendSeries: [],
+    legendSeries: [],
+    chartKey: `device-details-${(deviceId ?? deviceCode) || 'na'}-${trendPropertyId || 'empty'}`,
   };
 };
 
@@ -463,6 +515,9 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
     style = {},
     onCardClick,
     openDeviceDetailsOnClick = true,
+    deviceDetailsWidth = 884,
+    deviceDetailsHeight = 643,
+    deviceDetailsApiBaseUrl,
     ...otherProps
   } = props;
   const [sourceData, setSourceData] = useState<
@@ -495,6 +550,10 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   const resolvedCarouselLoop = resolveBoolean(carouselLoop, true);
   const resolvedCardGap = resolveNumber(cardGap, 16);
   const resolvedOpenDeviceDetails = resolveBoolean(openDeviceDetailsOnClick, true);
+  const resolvedDeviceDetailsWidth = deviceDetailsWidth ?? 884;
+  const resolvedDeviceDetailsHeight = deviceDetailsHeight ?? 643;
+  const resolvedDeviceDetailsApiBaseUrl =
+    deviceDetailsApiBaseUrl != null ? String(deviceDetailsApiBaseUrl).trim() : undefined;
   const cardClickable = resolvedOpenDeviceDetails || typeof onCardClick === 'function';
   const rootDomProps = pickRootDomProps(otherProps);
   const [carouselPage, setCarouselPage] = useState(0);
@@ -709,11 +768,21 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
               role="dialog"
               aria-modal="true"
               aria-label="设备详情"
+              style={{
+                width: resolvedDeviceDetailsWidth,
+                maxWidth: `min(${typeof resolvedDeviceDetailsWidth === 'number' ? `${resolvedDeviceDetailsWidth}px` : resolvedDeviceDetailsWidth}, calc(100vw - 48px))`,
+              }}
               onClick={(event) => {
                 event.stopPropagation();
               }}
             >
-              <DeviceDetails data={detailData} onClose={handleCloseDetail} />
+              <DeviceDetails
+                data={detailData}
+                apiBaseUrl={resolvedDeviceDetailsApiBaseUrl}
+                width={resolvedDeviceDetailsWidth}
+                height={resolvedDeviceDetailsHeight}
+                onClose={handleCloseDetail}
+              />
             </div>
           </div>,
           document.body,

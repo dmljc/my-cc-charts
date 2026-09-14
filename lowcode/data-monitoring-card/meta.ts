@@ -179,6 +179,51 @@ const DataMonitoringCardMeta: ComponentMetadata = {
         type: 'group',
         display: 'accordion',
         title: {
+          label: '设备详情（弹窗）',
+        },
+        items: [
+          {
+            name: 'deviceDetailsWidth',
+            title: {
+              label: '弹窗宽度',
+              tip: '点击卡片后弹出的设备详情宽度，默认 884',
+            },
+            defaultValue: 884,
+            setter: 'NumberSetter',
+          },
+          {
+            name: 'deviceDetailsHeight',
+            title: {
+              label: '弹窗高度',
+              tip: '设备详情面板高度，默认 643',
+            },
+            defaultValue: 643,
+            setter: 'NumberSetter',
+          },
+          {
+            name: 'deviceDetailsApiBaseUrl',
+            title: {
+              label: '趋势 API 根地址',
+              tip: '如 https://xxx.vicp.fun；留空则走当前页同域 /api/...',
+            },
+            setter: 'StringSetter',
+          },
+          {
+            name: 'openDeviceDetailsOnClick',
+            title: {
+              label: '点击弹出设备详情',
+              tip: '默认 true；关闭后仅触发 onCardClick，不自动弹窗',
+            },
+            defaultValue: true,
+            setter: 'BoolSetter',
+          },
+        ],
+      },
+      {
+        name: '',
+        type: 'group',
+        display: 'accordion',
+        title: {
           label: '交互事件',
         },
         items: [
@@ -189,15 +234,6 @@ const DataMonitoringCardMeta: ComponentMetadata = {
               tip: '(card, index) => void，可用于自定义逻辑；默认会弹出设备详情',
             },
             setter: 'FunctionSetter',
-          },
-          {
-            name: 'openDeviceDetailsOnClick',
-            title: {
-              label: '点击弹出设备详情',
-              tip: '默认 true；点击卡片后在页面正中弹出设备详情，点右上角 X 关闭',
-            },
-            defaultValue: true,
-            setter: 'BoolSetter',
           },
         ],
       },
@@ -226,6 +262,9 @@ const snippets: Snippet[] = [
         carouselLoop: true,
         pauseOnHover: true,
         showLatestValue: true,
+        deviceDetailsWidth: 884,
+        deviceDetailsHeight: 643,
+        openDeviceDetailsOnClick: true,
       },
     },
   },
