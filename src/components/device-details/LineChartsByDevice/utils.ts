@@ -169,12 +169,13 @@ export function getPointsExtent(points: [number, number][]): [number, number] | 
  *
  * @param {[number, number][]} - 全部折线点。
  * @param {[number, number] | null} - 可见时间区间。
- * @returns {{ min: number; max: number }} - 与可见数据极值对齐的 Y 轴上下限。
+ * @returns {{ min: number; max: number; tight: boolean }} -
+ *   tight=true 表示波动很小，Y 轴贴数据极值，不强制贴 0。
  */
 export function computeVisibleYExtent(
 	points: [number, number][],
 	viewExtent: [number, number] | null,
-): { min: number; max: number } {
+): { min: number; max: number; tight: boolean } {
 	const values: number[] = [];
 	const start = viewExtent?.[0];
 	const end = viewExtent?.[1];
@@ -190,18 +191,30 @@ export function computeVisibleYExtent(
 		}
 	}
 	if (!values.length) {
-		return { min: 0, max: 1 };
+		return { min: 0, max: 1, tight: false };
 	}
 	const minVal = Math.min(...values);
 	const maxVal = Math.max(...values);
-	if (maxVal === minVal) {
+	const span = maxVal - minVal;
+	const mid = (minVal + maxVal) / 2;
+	const tight = span <= Math.max(Math.abs(mid) * 0.15, 0.5);
+	if (span <= 0) {
 		const padding = Math.max(Math.abs(minVal) * 0.05, 0.01);
 		return {
 			min: minVal - padding,
 			max: maxVal + padding,
+			tight: true,
 		};
 	}
-	return { min: minVal, max: maxVal };
+	if (tight) {
+		const padding = Math.max(span * 0.1, 0.01);
+		return {
+			min: minVal - padding,
+			max: maxVal + padding,
+			tight: true,
+		};
+	}
+	return { min: minVal, max: maxVal, tight: false };
 }
 
 /**
@@ -435,9 +448,17 @@ export function buildLineChartOption(
 		},
 	];
 
-	const ySpan = yExtent.max - yExtent.min;
-	const yMin = yExtent.min >= 0 ? 0 : yExtent.min;
-	const yMax = yExtent.max <= 0 ? 0 : yExtent.max;
+	// 波动很小：贴数据 min/max；波动正常：正数从 0、负数可贴到 0
+	const yMin = yExtent.tight
+		? yExtent.min
+		: yExtent.min >= 0
+			? 0
+			: yExtent.min;
+	const yMax = yExtent.tight
+		? yExtent.max
+		: yExtent.max <= 0
+			? 0
+			: yExtent.max;
 	const yAxisSpan = Math.max(yMax - yMin, 0.01);
 	const yAxisOption = {
 		type: "value" as const,
