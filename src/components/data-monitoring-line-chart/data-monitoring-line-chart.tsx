@@ -185,6 +185,24 @@ const pickRootDomProps = (props: Record<string, unknown>) => {
 
 const formatTooltipValue = (value: number | string | undefined) => formatAxisNumber(value);
 
+/**
+ * 接口空数字转成 echarts 断点。必须先拦 null / 空串：
+ * Number(null)、Number('') 都是 0，会把空白氚浓度画成横线。
+ * 真实数值 0 仍按 0 展示。
+ */
+const toNullableNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value === 'string' && value.trim() === '') {
+    return null;
+  }
+
+  const num = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(num) ? num : null;
+};
+
 const normalizePoints = (
   nextData: DataMonitoringLineChartPoint[] | undefined | null,
   maxPoints: number,
@@ -282,20 +300,19 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
   }, [onPointClick]);
 
   const buildOption = useMemo(() => {
-    const hasData = items.length > 0;
+    const hasPoints = items.length > 0;
     // 无数据时用占位类目轴，保证坐标系 / 网格始终可见，不“隐藏”图表
-    const xAxisData = hasData
+    const xAxisData = hasPoints
       ? items.map((item) => (item as any)[xField])
       : Array.from({ length: EMPTY_AXIS_PLACEHOLDER_COUNT }, () => '');
-    const seriesData = hasData
-      ? items.map((item) => (item as any)[yField])
+    const seriesData = hasPoints
+      ? items.map((item) => toNullableNumber((item as any)[yField]))
       : Array.from({ length: EMPTY_AXIS_PLACEHOLDER_COUNT }, () => null);
-    const numericValues = hasData
-      ? seriesData.map((value) => Number(value)).filter((value) => Number.isFinite(value))
-      : [];
-    const dataMin = numericValues.length > 0 ? Math.min(...numericValues) : 0;
-    const dataMax = numericValues.length > 0 ? Math.max(...numericValues) : 0;
-    const autoRange = buildNiceAxisRange(dataMin, dataMax);
+    const numericValues = seriesData.filter((value): value is number => value !== null);
+    const hasNumericData = numericValues.length > 0;
+    const dataMin = hasNumericData ? Math.min(...numericValues) : 0;
+    const dataMax = hasNumericData ? Math.max(...numericValues) : 1;
+    const autoRange = hasNumericData ? buildNiceAxisRange(dataMin, dataMax) : { min: 0, max: 1 };
     const configuredMin = Number(min);
     const configuredMax = Number(max);
     const hasConfiguredMin = min !== undefined && min !== null && min !== '' && Number.isFinite(configuredMin);
@@ -307,11 +324,13 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
     }
     const yAxisTicks = buildNiceAxisTicks(axisMin, axisMax);
     const showUnitLabel = !showXAxisLabels && Boolean(xAxisUnitLabel);
-    const lastRawValue = hasData ? (items[items.length - 1] as any)[yField] : undefined;
-    const latestText = showLatestValue && lastRawValue !== null && lastRawValue !== undefined
-      ? formatTooltipValue(lastRawValue)
+    const lastNumericValue = hasPoints
+      ? toNullableNumber((items[items.length - 1] as any)[yField])
       : null;
-    const isLargeData = items.length > 500;
+    const latestText = showLatestValue && lastNumericValue !== null
+      ? formatTooltipValue(lastNumericValue)
+      : null;
+    const isLargeData = hasNumericData && items.length > 500;
     const xAxisLabelIndexSet = buildXAxisLabelIndexSet(xAxisData.length, xAxisLabelCount);
     return {
       // 大屏多实例（监测卡列表）场景关闭动画，降低麒麟机滚动/断网稳态 CPU
@@ -412,7 +431,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
           smooth: true,
           symbol: 'none',
           connectNulls: false,
-          sampling: hasData ? 'lttb' : undefined,
+          sampling: hasNumericData ? 'lttb' : null,
           large: isLargeData,
           largeThreshold: 800,
           progressive: isLargeData ? 800 : 0,
@@ -421,23 +440,26 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
           animationDurationUpdate: 0,
           lineStyle: {
             color: lineColor,
-            width: 2,
-            shadowColor: 'rgba(91, 200, 255, 0.45)',
-            shadowBlur: 6,
+            width: hasNumericData ? 2 : 0,
+            shadowColor: hasNumericData ? 'rgba(91, 200, 255, 0.45)' : 'transparent',
+            shadowBlur: hasNumericData ? 6 : 0,
           },
           emphasis: {
             disabled: true,
           },
-          areaStyle: hasData
+          areaStyle: hasNumericData
             ? {
               color: getAreaGradient(areaColor[0], areaColor[1]),
               origin: 'start',
             }
-            : undefined,
+            : {
+              opacity: 0,
+              color: 'transparent',
+            },
         },
       ],
       tooltip: {
-        show: hasData,
+        show: hasNumericData,
         trigger: 'axis',
         confine: true,
         transitionDuration: 0,
@@ -458,10 +480,11 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
         },
         formatter: (params: any) => {
           const item = Array.isArray(params) ? params[0] : params;
-          const value = Array.isArray(item?.value) ? item.value[item.value.length - 1] : item?.value;
+          const rawValue = Array.isArray(item?.value) ? item.value[item.value.length - 1] : item?.value;
+          const numericValue = toNullableNumber(rawValue);
           const timeText = formatTimeLabel(item?.axisValue ?? item?.name);
 
-          return `数值：${formatTooltipValue(value)}<br />时间：${timeText}`;
+          return `数值：${numericValue === null ? '-' : formatTooltipValue(numericValue)}<br />时间：${timeText}`;
         },
       },
     };
@@ -582,7 +605,7 @@ const DataMonitoringLineChart: React.FC<DataMonitoringLineChartProps> = function
             {
               id: 'monitoring-line',
               data: option.series?.[0]?.data,
-              sampling: option.series?.[0]?.sampling,
+              sampling: option.series?.[0]?.sampling ?? null,
               large: option.series?.[0]?.large,
               progressive: option.series?.[0]?.progressive,
               progressiveThreshold: option.series?.[0]?.progressiveThreshold,
