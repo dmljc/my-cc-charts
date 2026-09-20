@@ -179,20 +179,27 @@ export function toTrendChartSeries(
   if (data && typeof data === 'object' && !Array.isArray(data)) {
     const record = data as Record<string, unknown>;
     if (Array.isArray(record.segments) && record.segments.length > 0) {
+      const colorByName = new Map<string, string>();
       return record.segments
         .map((row, index) => {
           const item = row && typeof row === 'object' ? (row as Record<string, unknown>) : {};
           const name = toSegmentSeriesName(item, index, seriesName);
+          let color = colorByName.get(name);
+          if (!color) {
+            color = getTrendColor(colorByName.size);
+            colorByName.set(name, color);
+          }
           const rawPoints = Array.isArray(item.points) ? item.points : [];
           const points = filterRange(
             parseTrendPointList(rawPoints).sort((a, b) => a.time - b.time),
           );
-          return { name, color: getTrendColor(index), data: points };
+          return { name, color, data: points };
         })
         .filter((item) => item.data.length > 0);
     }
 
     if (Array.isArray(record.series) && record.series.length > 0) {
+      const colorByName = new Map<string, string>();
       return record.series
         .map((row, index) => {
           const item = row && typeof row === 'object' ? (row as Record<string, unknown>) : {};
@@ -201,6 +208,11 @@ export function toTrendChartSeries(
             String(item.deviceCode ?? '').trim() ||
             seriesName ||
             `设备${index + 1}`;
+          let color = colorByName.get(name);
+          if (!color) {
+            color = getTrendColor(colorByName.size);
+            colorByName.set(name, color);
+          }
           const rawPoints = Array.isArray(item.points)
             ? item.points
             : Array.isArray(item.data)
@@ -209,7 +221,7 @@ export function toTrendChartSeries(
           const points = filterRange(
             parseTrendPointList(rawPoints).sort((a, b) => a.time - b.time),
           );
-          return { name, color: getTrendColor(index), data: points };
+          return { name, color, data: points };
         })
         .filter((item) => item.data.length > 0);
     }
