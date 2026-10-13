@@ -17,6 +17,22 @@
     min-width: 0;
   }
 
+  &-empty {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 120px;
+    font-family: SourceHanSansCN, PingFang SC, Microsoft YaHei, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 22px;
+    color: rgba(255, 255, 255, 0.72);
+    text-align: center;
+  }
+
   &-body-clickable {
     cursor: pointer;
   }

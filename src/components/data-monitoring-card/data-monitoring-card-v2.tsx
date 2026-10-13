@@ -420,7 +420,11 @@ const CardContent: React.FC<CardContentProps> = React.memo(function CardContent(
   onClick,
 }) {
   const card = normalizeCardData(data);
-  const info = card?.runtimeParameters ?? card?.info;
+  // 没有卡片数据时不渲染。否则头部会回落到内置演示数据（房间号 101 / 设备名称 0235625852）。
+  if (!card) {
+    return null;
+  }
+  const info = card.runtimeParameters ?? card.info;
   const chartData = getChartData(card);
   const hasChartData = chartData.length > 0;
 
@@ -458,7 +462,7 @@ const CardContent: React.FC<CardContentProps> = React.memo(function CardContent(
       <DataMonitoringHeader
         width="100%"
         height={headerHeight}
-        data={card?.baseInfo}
+        data={card.baseInfo}
         className="bizpack-data-monitoring-card-header"
       />
       {Array.isArray(info) && info.length > 0 ? (
@@ -792,22 +796,26 @@ const DataMonitoringCard: React.FC<DataMonitoringCardProps> = function DataMonit
   if (!isListMode) {
     return (
       <div className={`bizpack-data-monitoring-card ${className}`} style={rootStyle} {...rootDomProps}>
-        <CardContent
-          data={singleData}
-          headerHeight={resolvedHeaderHeight}
-          infoHeight={resolvedInfoHeight}
-          chartHeight={resolvedChartHeight}
-          showLatestValue={resolvedShowLatestValue}
-          min={min}
-          max={max}
-          mountChart={resolvedMountChart}
-          clickable={cardClickable}
-          onClick={
-            cardClickable && singleData
-              ? () => handleCardClick(singleData, 0)
-              : undefined
-          }
-        />
+        {singleData ? (
+          <CardContent
+            data={singleData}
+            headerHeight={resolvedHeaderHeight}
+            infoHeight={resolvedInfoHeight}
+            chartHeight={resolvedChartHeight}
+            showLatestValue={resolvedShowLatestValue}
+            min={min}
+            max={max}
+            mountChart={resolvedMountChart}
+            clickable={cardClickable}
+            onClick={
+              cardClickable
+                ? () => handleCardClick(singleData, 0)
+                : undefined
+            }
+          />
+        ) : (
+          <div className="bizpack-data-monitoring-card-empty">暂无数据</div>
+        )}
         {detailModal}
       </div>
     );
