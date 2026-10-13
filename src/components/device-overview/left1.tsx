@@ -248,8 +248,8 @@ const Left1: React.FC<Left1Props> = function Left1(props) {
           <span className={`bizpack-left1-gauge bizpack-left1-gauge-${theme}`} aria-hidden="true" />
           <span className="bizpack-left1-metric">
             <span className="bizpack-left1-value">{value}</span>
-            {itemUnit ? <span className="bizpack-left1-unit">{itemUnit}</span> : null}
           </span>
+          {itemUnit ? <span className="bizpack-left1-unit">{itemUnit}</span> : null}
         </span>
       </button>
     );

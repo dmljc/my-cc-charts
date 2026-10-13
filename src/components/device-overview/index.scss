@@ -93,7 +93,7 @@
     &-metric {
         position: absolute;
         top: 50%;
-        left: 6px;
+        right: 48px;
         z-index: 1;
         display: inline-flex;
         align-items: baseline;
@@ -103,14 +103,14 @@
     }
 
     &-card-small &-metric {
-        left: 14px;
+        right: 42px;
     }
 
     &-value {
         display: block;
         flex: none;
         font-family: D-DIN, DIN Alternate, Arial, sans-serif;
-        font-size: 30px;
+        font-size: 28px;
         font-style: normal;
         font-weight: bold;
         line-height: 34px;
@@ -121,14 +121,17 @@
     }
 
     &-card-small &-value {
-        font-size: 30px;
+        font-size: 28px;
         line-height: 34px;
     }
 
     &-unit {
+        position: absolute;
+        top: 50%;
+        right: 40px;
+        z-index: 1;
         display: block;
-        flex: none;
-        margin: 0 0 0 2px;
+        margin: 0;
         font-family: SourceHanSansCN, SourceHanSansCN, PingFang SC, Microsoft YaHei, Arial, sans-serif;
         font-size: 12px;
         font-style: normal;
@@ -136,6 +139,12 @@
         line-height: 16px;
         color: rgba(255, 255, 255, 0.92);
         white-space: nowrap;
+        pointer-events: none;
+        transform: translate(50%, -50%);
+    }
+
+    &-card-small &-unit {
+        right: 34px;
     }
 
     &-gauge {
