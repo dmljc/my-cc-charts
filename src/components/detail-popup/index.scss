@@ -5,7 +5,7 @@
     box-sizing: border-box;
     min-width: 433px;
     color: #ffffff;
-    font-family: SourceHanSansSC, SourceHanSansSC;
+    font-family: SourceHanSansCN;
 
     &-panel {
         position: relative;
@@ -45,7 +45,7 @@
         flex: 1;
         min-width: 0;
         overflow: hidden;
-        font-family: SourceHanSansSC, SourceHanSansSC;
+        font-family: SourceHanSansCN;
         font-weight: 500;
         font-size: 16px;
         line-height: 24px;
@@ -126,7 +126,7 @@
 
     &-label,
     &-value {
-        font-family: SourceHanSansSC, SourceHanSansSC;
+        font-family: SourceHanSansCN;
         font-weight: 400;
         font-size: 16px;
         color: #E9E9E9;
@@ -148,7 +148,7 @@
         flex: 1 1 50%;
         width: 50%;
         min-width: 0;
-        font-family: SourceHanSansSC, SourceHanSansSC;
+        font-family: SourceHanSansCN;
         font-weight: 400;
         font-size: 16px;
         color: #FFFFFF;

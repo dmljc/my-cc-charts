@@ -11,7 +11,7 @@
   gap: 12px;
   overflow: auto;
   color: #eaf7ff;
-  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+  font-family: SourceHanSansCN;
 
   &-card {
     position: relative;
@@ -45,7 +45,7 @@
 
   &-header-title {
     overflow: hidden;
-    font-family: PingFangSC, PingFang SC, sans-serif;
+    font-family: SourceHanSansCN;
     font-size: 20px;
     font-weight: 600;
     font-style: normal;
@@ -156,7 +156,7 @@
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
-    font-family: SourceHanSansCN, PingFang SC, sans-serif;
+    font-family: SourceHanSansCN;
     font-style: normal;
     font-weight: 500;
     font-size: 14px;
@@ -170,7 +170,7 @@
   &-unit {
     flex: none;
     margin-left: 2px;
-    font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+    font-family: SourceHanSansCN;
     font-size: 11px;
     font-weight: 400;
     color: rgba(255, 255, 255, 0.72);
@@ -224,7 +224,7 @@
     max-width: 100%;
     margin-top: 4px;
     overflow: hidden;
-    font-family: PingFangSC, PingFang SC, sans-serif;
+    font-family: SourceHanSansCN;
     font-style: normal;
     font-weight: 400;
     font-size: 14px;

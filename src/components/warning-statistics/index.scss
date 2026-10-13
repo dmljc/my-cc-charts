@@ -7,7 +7,7 @@
   height: 180px;
   overflow: hidden;
   color: #ffffff;
-  font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+  font-family: SourceHanSansCN;
   background: transparent;
   border: 1px solid;
   border-image: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.26)) 1 1;
@@ -26,14 +26,14 @@
       color: #ffffff;
       font-size: 12px;
       font-weight: 400;
-      font-family: PingFangSC, PingFang SC, sans-serif;
+      font-family: SourceHanSansCN;
       line-height: 18px;
       font-style: normal;
     }
 
     &-value {
       height: 26px;
-      font-family: DINAlternate, DIN Alternate, DIN, sans-serif;
+      font-family: SourceHanSansCN;
       font-weight: bold;
       font-size: 22px;
       line-height: 26px;
@@ -52,7 +52,7 @@
       color: #ffffff;
       font-size: 12px;
       font-weight: 400;
-      font-family: PingFangSC, PingFang SC, sans-serif;
+      font-family: SourceHanSansCN;
       line-height: 20px;
       text-align: right;
       font-style: normal;

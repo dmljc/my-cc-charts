@@ -10,7 +10,7 @@
     min-height: 0;
     overflow: hidden;
     color: #ffffff;
-    font-family: PingFang SC, Microsoft YaHei, Arial, sans-serif;
+    font-family: SourceHanSansCN;
     background: transparent;
     gap: 10px;
     padding: 0;
@@ -62,7 +62,7 @@
 
     &-label {
         display: block;
-        font-family: SourceHanSansCN, SourceHanSansCN, PingFang SC, Microsoft YaHei, Arial, sans-serif;
+        font-family: SourceHanSansCN;
         font-size: 14px;
         font-style: normal;
         font-weight: 400;
@@ -75,7 +75,7 @@
     &-value {
         display: inline-block;
         margin-top: 2px;
-        font-family: D-DIN, DIN Alternate, Arial, sans-serif;
+        font-family: SourceHanSansCN;
         font-size: 28px;
         font-style: normal;
         font-weight: bold;
@@ -128,7 +128,7 @@
 
     &-rate-label,
     &-rate-value {
-        font-family: SourceHanSansCN, SourceHanSansCN, PingFang SC, Microsoft YaHei, Arial, sans-serif;
+        font-family: SourceHanSansCN;
         font-size: 14px;
         font-style: normal;
         font-weight: 400;
@@ -139,7 +139,7 @@
     }
 
     &-rate-value {
-        font-family: D-DIN, DIN Alternate, Arial, sans-serif;
+        font-family: SourceHanSansCN;
         font-size: 16px;
         font-weight: bold;
         line-height: 20px;

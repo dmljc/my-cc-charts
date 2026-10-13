@@ -12,7 +12,7 @@
   padding: 0;
   overflow: visible;
   color: #ffffff;
-  font-family: PingFangSC, PingFang SC, SourceHanSansSC, sans-serif;
+  font-family: SourceHanSansCN;
 
   &-room {
     box-sizing: border-box;
@@ -72,7 +72,7 @@
   &-device &-label {
     width: 64px;
     height: 22px;
-    font-family: PingFangSC, PingFang SC, sans-serif;
+    font-family: SourceHanSansCN;
     font-weight: 400;
     font-size: 16px;
     font-style: normal;
@@ -87,7 +87,7 @@
     min-width: 0;
     height: auto;
     overflow: visible;
-    font-family: PingFangSC, PingFang SC, sans-serif;
+    font-family: SourceHanSansCN;
     font-weight: 400;
     font-size: 16px;
     font-style: normal;
