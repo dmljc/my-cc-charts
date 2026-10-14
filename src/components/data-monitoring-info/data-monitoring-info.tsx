@@ -212,11 +212,6 @@ const DataMonitoringInfo: React.FC<DataMonitoringInfoProps> = function DataMonit
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 指标数据为空时不渲染，避免占位空白条
-  if (!Array.isArray(items) || items.length === 0) {
-    return null;
-  }
-
   return (
     <div
       className={`bizpack-data-monitoring-info ${className}`}

@@ -465,14 +465,12 @@ const CardContent: React.FC<CardContentProps> = React.memo(function CardContent(
         data={card.baseInfo}
         className="bizpack-data-monitoring-card-header"
       />
-      {Array.isArray(info) && info.length > 0 ? (
-        <DataMonitoringInfo
-          width="100%"
-          height={infoHeight}
-          data={info}
-          className="bizpack-data-monitoring-card-info"
-        />
-      ) : null}
+      <DataMonitoringInfo
+        width="100%"
+        height={infoHeight}
+        data={Array.isArray(info) ? info : []}
+        className="bizpack-data-monitoring-card-info"
+      />
       {hasChartData && mountChart ? (
         <DataMonitoringLineChart
           width="100%"
