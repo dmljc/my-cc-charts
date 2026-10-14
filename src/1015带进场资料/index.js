@@ -77,38 +77,38 @@
     }
   
     // x12 厂房动画：分层 / 合并分层 / 设备1~3 / 管道（OpenView 按钮按方法名绑定，需保留）
-    runX12Open() { 
-      this.$('devanimation-464782d2').runAnimation();
+    runX12Open() {
+      this._runDevAnimation('devanimation-1');
     }
-    runX12Close() { 
-      this.$('devanimation-464782d2').runAnimation();
+    runX12Close() {
+      this._runDevAnimation('devanimation-2');
     }
-    runX12F1() { 
-      this.$('devanimation-464782d2').runAnimation();
+    runX12F1() {
+      this._runDevAnimation('devanimation-3');
     }
-    runX12F2() { 
-      this.$('devanimation-464782d2').runAnimation();
+    runX12F2() {
+      this._runDevAnimation('devanimation-4');
     }
-    runX12F3() { 
-      this.$('devanimation-464782d2').runAnimation();
+    runX12F3() {
+      this._runDevAnimation('devanimation-5');
     }
-    runX12Pipe() { 
-      this.$('devanimation-464782d2').runAnimation();
+    runX12Pipe() {
+      this._runDevAnimation('devanimation-6');
     }
     runWaterFlow() {
-      this._runWaterAnimation();
+      this._runDevAnimation('devanimation-7');
     }
     stopWaterFlow() {
-      this._runWaterAnimation();
+      this._runDevAnimation('devanimation-8');
     }
 
     /** 动画组件未挂载或模型未就绪时跳过，避免 runAnimation 抛错。 */
-    _runWaterAnimation() {
+    _runDevAnimation(ref) {
       try {
-        const target = typeof this.$ === 'function' ? this.$('devanimation-464782d2') : null;
+        const target = typeof this.$ === 'function' ? this.$(ref) : null;
         if (target && typeof target.runAnimation === 'function') target.runAnimation();
       } catch (error) {
-        console.warn('[WaterFlow] 动画调用已跳过', error);
+        console.warn('[DevAnimation] 动画调用已跳过', ref, error);
       }
     }
   
