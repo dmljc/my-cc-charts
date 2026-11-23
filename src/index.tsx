@@ -154,6 +154,26 @@ export {
   default as DataMonitoringPanel,
 } from './components/data-monitoring-panel';
 
+export type {
+  DeviceAlarmTagProps,
+  LabelBackgroundRule,
+  LabelStateValue,
+  SceneLabelItem,
+  SceneLabelText,
+} from './components/device-alarm-tag';
+export { default as DeviceAlarmTag } from './components/device-alarm-tag';
+
+export type {
+  PipeData,
+  PipeMessage,
+  PipeState,
+  PipesFlowDiagnostics,
+  PipesFlowHandle,
+  PipesFlowProps,
+  PipesFlowReport,
+} from './components/pipes-flow';
+export { default as PipesFlow } from './components/pipes-flow';
+
 const bizCssPrefix = 'bizpack';
 
 export {

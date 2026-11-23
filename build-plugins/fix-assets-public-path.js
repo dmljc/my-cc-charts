@@ -1,3 +1,9 @@
+const path = require('path');
+
+// 只替换精确的 `three` 导入。three 的 UMD 构建会写入 global.THREE，
+// 同页的三维场景和其他组件不能被这个全局变量覆盖。
+const threeModule = path.resolve(__dirname, '../node_modules/three/build/three.module.js');
+
 /**
  * @file 修复组件库 UMD 产物（dist/）中静态资源无法在消费方项目中显示的问题。
  *
@@ -19,6 +25,10 @@
  *   对于组件库 UMD 产物，这是确保跨项目、跨部署环境图片正常显示的最可靠方案。
  */
 module.exports = ({ onGetWebpackConfig }) => {
+  onGetWebpackConfig((config) => {
+    config.resolve.alias.set('three$', threeModule);
+  });
+
   onGetWebpackConfig('component-dist', (config) => {
     config.output.publicPath('./');
 

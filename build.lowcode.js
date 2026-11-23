@@ -1,7 +1,11 @@
+const path = require('path');
 const { library } = require('./build.json');
+
+const threeModule = path.resolve(__dirname, 'node_modules/three/build/three.module.js');
 
 const inlineAssetsPlugin = ({ onGetWebpackConfig }) => {
   onGetWebpackConfig((config) => {
+    config.resolve.alias.set('three$', threeModule);
     if (config.module.rules.has('img')) {
       config.module.rule('img').use('img').tap((options) => ({
         ...options,
