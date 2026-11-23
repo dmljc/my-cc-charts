@@ -2,6 +2,8 @@
 import {createElement, CSSProperties, useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {findLabelViewport, LabelViewport, observeLabelViewports} from '../../utils/render/src/labels/LabelViewport';
+import {alarmLabelColor, alarmLabelPosition, alarmProbePoints, alarmRecord, layoutAlarmCaption} from './alarm-record';
+import {findAlarmModelRoot, removeLegacyAlarmOverlays} from './model-root';
 import {getLabelColor, getLabelData, getLabelImage, getLabelMaskImage, getLabelText, getLabelValue, labelSize, stackLabelHeight, validLabelItems} from './model';
 import {LabelProjection} from './Projection';
 import {DeviceAlarmTagProps} from './types';
@@ -21,6 +23,7 @@ export default function DeviceAlarmTag(props: DeviceAlarmTagProps) {
   const data = props.data === undefined && props.items === undefined ? exampleLabelData : props.data;
   const design = props.__designMode === 'design';
   const [binding, setBinding] = useState<Binding>(null);
+  const [modelRoot, setModelRoot] = useState<{target: string; sceneId: string} | null>(null);
   const elements = useRef(new Map<string, HTMLElement>());
   const root = useRef<HTMLDivElement>(null);
   const projection = useRef<LabelProjection | DesignLabelProjection>(null);
@@ -32,16 +35,26 @@ export default function DeviceAlarmTag(props: DeviceAlarmTagProps) {
   // Resolve the same dimensions for the designer, card and projection. A single card
   // can be resized through the style panel even when an older schema saved item sizes.
   const items = sourceItems.map(item => {
-    const record = getLabelData(item, data);
-    const image = getLabelImage(item, getLabelValue(item, record, stateField), imageProps);
-    const customImage = !!image && !isExampleLabelImage(image) || hasLabelStyleImage(appearance) || getLabelColor(item, props) !== undefined;
+    const alarm = alarmRecord(data, item.id);
+    const resolved: typeof item = {...item,
+      position: alarmLabelPosition(alarm, item.position),
+      texts: (Array.isArray(item.texts) ? item.texts : []).map(text => text?.field === 'alarmLabel' ? layoutAlarmCaption(text, alarm, item.id) : text),
+    };
+    if (resolved.color === undefined && props.color === undefined) resolved.color = alarmLabelColor(alarm);
+    if (props.attachModelRoot && !resolved.target && modelRoot) {
+      resolved.target = modelRoot.target;
+      resolved.sceneId = resolved.sceneId || modelRoot.sceneId;
+    }
+    const record = getLabelData(resolved, data) || alarm;
+    const image = getLabelImage(resolved, getLabelValue(resolved, record, stateField), imageProps);
+    const customImage = !!image && !isExampleLabelImage(image) || hasLabelStyleImage(appearance) || getLabelColor(resolved, props) !== undefined;
     const styledHeight = labelPixelSize(layout.height, 0);
     const single = sourceItems.length === 1;
     const manualHeight = single && styledHeight > 0 && styledHeight !== labelSize(props.height, 90);
     const autoHeight = item.textLayout === 'stack' && item.autoHeight !== false && !customImage && !manualHeight;
-    return {...item,
+    return {...resolved,
       width: single ? labelPixelSize(layout.width, labelSize(item.width, width)) : labelSize(item.width, width),
-      height: autoHeight ? stackLabelHeight(item, record) : single ? labelPixelSize(layout.height, labelSize(item.height, height)) : labelSize(item.height, height),
+      height: autoHeight ? stackLabelHeight(resolved, record) : single ? labelPixelSize(layout.height, labelSize(item.height, height)) : labelSize(item.height, height),
     };
   });
   const designItem = items.find(item => item.id === props.designItemId) || items[0];
@@ -58,9 +71,32 @@ export default function DeviceAlarmTag(props: DeviceAlarmTagProps) {
     const current = latest.current;
     const item = current.items.find(label => label.id === id);
     if (!item) return;
-    const record = getLabelData(item, current.props.data === undefined && current.props.items === undefined ? exampleLabelData : current.props.data);
+    const source = current.props.data === undefined && current.props.items === undefined ? exampleLabelData : current.props.data;
+    const record = alarmRecord(source, id) || getLabelData(item, source);
     current.props.onLabelClick?.({id, value: getLabelValue(item, record, current.props.stateField), data: record});
   }, []);
+
+  useEffect(() => {
+    if (!props.attachModelRoot || !visible) return undefined;
+    let timer = 0;
+    let stopped = false;
+    const deadline = Date.now() + 30000;
+    const attempt = () => {
+      if (stopped) return;
+      const viewport = findLabelViewport(loaderId);
+      removeLegacyAlarmOverlays(viewport?.dom);
+      const scene = viewport?.scene;
+      const root = scene && findAlarmModelRoot(scene, alarmProbePoints(data, props.modelRootScene === 'floor' ? 'floor' : 'overview'));
+      if (scene && root) {
+        setModelRoot(current => current?.target === root.uuid && current.sceneId === scene.uuid ? current : {target: root.uuid, sceneId: scene.uuid});
+        return;
+      }
+      if (Date.now() < deadline) timer = window.setTimeout(attempt, 100);
+    };
+    const stop = observeLabelViewports(attempt);
+    attempt();
+    return () => {stopped = true; window.clearTimeout(timer); stop();};
+  }, [props.attachModelRoot, props.modelRootScene, visible, loaderId, data]);
 
   useEffect(() => {
     if (!enabled) {setBinding(null); return undefined;}

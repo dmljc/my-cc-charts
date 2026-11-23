@@ -27,6 +27,31 @@ export function pipeRunning(value: unknown): boolean {
 }
 
 /** Validate a whole batch before applying it; names such as __proto__ remain ordinary keys. */
+function pipeMessages(data: unknown): {name: string; status: unknown}[] | null {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') {
+    const record = data as Record<string, unknown>;
+    if (typeof record.name === 'string' && Object.prototype.hasOwnProperty.call(record, 'status')) return [record as {name: string; status: unknown}];
+    return Object.entries(record).map(([name, status]) => ({name, status}));
+  }
+  return null;
+}
+
+/** 丢掉名单外或状态无法识别的管道，其余照常应用。省略的名称由调用方决定是保持还是停止。 */
+export function sanitizePipeFlow(data: unknown, allowed?: ReadonlySet<string>): Map<string, boolean> {
+  const result = new Map<string, boolean>();
+  if (data == null) return result;
+  const messages = pipeMessages(data);
+  if (!messages) throw new Error('状态数据须为 {名称: 状态}、{name, status} 或消息数组。');
+  messages.forEach(message => {
+    if (!message || typeof message.name !== 'string' || !message.name.trim()) return;
+    const name = message.name.trim();
+    if (allowed && !allowed.has(name)) return;
+    try {result.set(name, pipeRunning(message.status));} catch (_) { /* 无法识别的状态不阻断其余管道。 */ }
+  });
+  return result;
+}
+
 export function pipeStates(data: PipeData | PipeMessage): Map<string, boolean> {
   const result = new Map<string, boolean>();
   if (data == null) return result;

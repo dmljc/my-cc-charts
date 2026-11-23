@@ -1,7 +1,7 @@
 // 管道流动控制
 import {Component, createElement, CSSProperties, useEffect, useMemo, useRef, useState} from 'react';
 import {findLabelViewport, LabelViewport, observeLabelViewports} from '../../utils/render/src/labels/LabelViewport';
-import {defaultPipeNames, importPipeNames, parsePipeNames, PipeData, PipeMessage, pipeStates, reconcilePipeStates, samePipeNames, simulatePipeStates} from './model';
+import {defaultPipeNames, importPipeNames, parsePipeNames, PipeData, PipeMessage, pipeStates, reconcilePipeStates, samePipeNames, sanitizePipeFlow, simulatePipeStates} from './model';
 import {PipeFlowDiagnostics, PipeFlowReport, PipeFlowSession} from './Session';
 import {subscribePipeFlowFrame} from './Scheduler';
 
@@ -31,6 +31,8 @@ export interface PipesFlowProps {
   simulationEnabled?: boolean;
   simulationInterval?: number;
   simulationRatio?: number;
+  /** 为 false 时，本次数据里没出现的管道保持上次状态。默认按全量数据重算，省略的管道停止。 */
+  replaceData?: boolean;
   showDebugger?: boolean;
   style?: CSSProperties;
   className?: string;
@@ -132,8 +134,7 @@ function PipesFlowView(props: PipesFlowViewProps) {
     if (!props.simulationEnabled) {
       cancelQueue();
       try {
-        const incoming = pipeStates(props.data);
-        commitStates(incoming, true);
+        if (props.data !== undefined) commitStates(sanitizePipeFlow(props.data, latest.current.allowed), props.replaceData !== false);
       } catch (error) {setMessage(error.message);}
     }
   }, [props.simulationEnabled]);
@@ -144,12 +145,12 @@ function PipesFlowView(props: PipesFlowViewProps) {
     // session yields to a new bound WS snapshot, so it cannot mask live data.
     if (latest.current.simulating && props.simulationEnabled === true) return;
     try {
-      const incoming = pipeStates(props.data);
+      const incoming = sanitizePipeFlow(props.data, allowed);
       setSimulation(false);
       cancelQueue();
-      commitStates(incoming, true); setMessage('');
+      commitStates(incoming, props.replaceData !== false); setMessage('');
     } catch (error) {setMessage(error.message);}
-  }, [props.data, allowed]);
+  }, [props.data, allowed, props.replaceData]);
 
   useEffect(() => {
     queued.current.forEach((_, name) => {if (!allowed.has(name)) queued.current.delete(name);});

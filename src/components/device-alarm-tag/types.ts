@@ -18,6 +18,8 @@ export interface SceneLabelText {
   x?: number;
   y?: number;
   width?: number;
+  /** 按文案宽度把文字放进这个内容宽度，告警文案使用。 */
+  fitWidth?: number;
   fontSize?: number;
   color?: string;
   align?: 'left' | 'center' | 'right';
@@ -58,8 +60,12 @@ export interface DeviceAlarmTagProps {
   /** DevLoader.labelScope or its low-code component ID. Auto-selects a sole loader. */
   loaderId?: string;
   items?: SceneLabelItem[];
-  /** Bind this property to page state, indexed by item.dataKey/id. */
-  data?: Record<string, any>;
+  /** Bind this property to page state, indexed by item.dataKey/id. 告警列表也可以直接传记录数组。 */
+  data?: Record<string, any> | any[];
+  /** 未填写模型 UUID 时，按探针坐标自动挂到当前场景的模型根节点。 */
+  attachModelRoot?: boolean;
+  /** 自动挂根时使用的默认探针坐标。 */
+  modelRootScene?: 'overview' | 'floor';
   stateField?: string;
   backgroundRules?: LabelBackgroundRule[];
   defaultImage?: string;
