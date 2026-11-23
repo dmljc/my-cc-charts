@@ -1,0 +1,43 @@
+{
+  "topic": "init_data",
+  "data": {
+    "pipeFlowList": [
+      {
+        "name": "guan1_Flow",
+        "status": 1
+      },
+      {
+        "name": "guan2_Flow",
+        "status": 0
+      },
+      {
+        "name": "guan3_Flow",
+        "status": 0
+      },
+      {
+        "name": "guan4_Flow2",
+        "status": 1
+      },
+      {
+        "name": "guan5_Flow",
+        "status": 0
+      },
+      {
+        "name": "guan6_Flow",
+        "status": 0
+      },
+      {
+        "name": "guan7_Flow",
+        "status": 1
+      },
+      {
+        "name": "guan8_Flow",
+        "status": 0
+      },
+      {
+        "name": "guan9_Flow",
+        "status": 0
+      }
+    ]
+  }
+}

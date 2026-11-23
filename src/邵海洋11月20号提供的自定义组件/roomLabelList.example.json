@@ -1,0 +1,67 @@
+{
+  "topic": "ws_data",
+  "data": {
+    "roomLabelList": [
+      {
+        "name": "101",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "102",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "103",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "104",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "105",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "201",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "202",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "203",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "204",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "205",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "301",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "302",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "303",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "304",
+        "color": "#1f9d55"
+      },
+      {
+        "name": "305",
+        "color": "#1f9d55"
+      }
+    ]
+  }
+}

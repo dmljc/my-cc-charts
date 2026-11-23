@@ -1,0 +1,79 @@
+@alib/build-scripts 0.1.32
+0: C:\Users\Administrator\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe
+1: D:\code\configuration-materials-ov\node_modules\@alib\build-scripts\bin\build-scripts.js
+2: build
+3: --config
+4: ./build.lowcode.js
+_componentViews:  []
+in render view:  true
+render view build:  D:\code\configuration-materials-ov\.tmp\default.view.js
+editor view build
+Browserslist: browsers data (caniuse-lite) is 15 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+info WEBPACK Hash: 33e2757fc294c45e57222dbafce374ea373d2935de217862b4f51c04b025
+info WEBPACK Version: webpack 4.47.0
+info WEBPACK Child
+info WEBPACK     Hash: 33e2757fc294c45e5722
+info WEBPACK     Time: 5606ms
+info WEBPACK     Built at: 2026/11/19 22:06:16
+info WEBPACK       Asset     Size  Chunks             Chunk Names
+info WEBPACK     meta.js  173 KiB       0  [emitted]  meta
+info WEBPACK Child
+info WEBPACK     Hash: 2dbafce374ea373d2935
+info WEBPACK     Time: 16494ms
+info WEBPACK     Built at: 2026/11/19 22:06:27
+info WEBPACK                                           Asset      Size  Chunks                    Chunk Names
+info WEBPACK     assets/077db00d5c63647c097aa6ad68d10cd5.png  17.1 KiB          [emitted]         
+info WEBPACK     assets/2cf26999fe3c4de40d1a9f636d3f91de.png   341 KiB          [emitted]  [big]  
+info WEBPACK     assets/86c95a97596551f5d5203bd84bed7f6f.png  40.1 KiB          [emitted]         
+info WEBPACK     assets/acd79db95606e3df4b4da30f17fc25d8.png  35.9 KiB          [emitted]         
+info WEBPACK     assets/b098933d6ae011efd6f20c4cfd4f4c85.png  28.9 KiB          [emitted]         
+info WEBPACK     assets/d1ab2b5eaca18d7e4c6f4a40ac0bed4e.png  25.6 KiB          [emitted]         
+info WEBPACK                                        view.css  20.3 KiB       0  [emitted]         view
+info WEBPACK                                         view.js  4.68 MiB       0  [emitted]  [big]  view
+info WEBPACK     Child mini-css-extract-plugin node_modules/css-loader/dist/cjs.js??ref--6-1!node_modules/postcss-loader/src/index.js??ref--6-2!node_modules/build-scripts-config/node_modules/sass-loader/dist/cjs.js??ref--6-3!src/utils/render/src/utils/device-panel.scss:
+info WEBPACK                                               Asset      Size  Chunks                    Chunk Names
+info WEBPACK         assets/077db00d5c63647c097aa6ad68d10cd5.png  17.1 KiB          [emitted]         
+info WEBPACK         assets/2cf26999fe3c4de40d1a9f636d3f91de.png   341 KiB          [emitted]  [big]  
+info WEBPACK         assets/86c95a97596551f5d5203bd84bed7f6f.png  40.1 KiB          [emitted]         
+info WEBPACK         assets/acd79db95606e3df4b4da30f17fc25d8.png  35.9 KiB          [emitted]         
+info WEBPACK         assets/b098933d6ae011efd6f20c4cfd4f4c85.png  28.9 KiB          [emitted]         
+info WEBPACK         assets/d1ab2b5eaca18d7e4c6f4a40ac0bed4e.png  25.6 KiB          [emitted]         
+info WEBPACK Child
+info WEBPACK     Hash: de217862b4f51c04b025
+info WEBPACK     Time: 17758ms
+info WEBPACK     Built at: 2026/11/19 22:06:28
+info WEBPACK                                           Asset      Size  Chunks                    Chunk Names
+info WEBPACK     assets/077db00d5c63647c097aa6ad68d10cd5.png  17.1 KiB          [emitted]         
+info WEBPACK     assets/2cf26999fe3c4de40d1a9f636d3f91de.png   341 KiB          [emitted]  [big]  
+info WEBPACK     assets/86c95a97596551f5d5203bd84bed7f6f.png  40.1 KiB          [emitted]         
+info WEBPACK     assets/acd79db95606e3df4b4da30f17fc25d8.png  35.9 KiB          [emitted]         
+info WEBPACK     assets/b098933d6ae011efd6f20c4cfd4f4c85.png  28.9 KiB          [emitted]         
+info WEBPACK     assets/d1ab2b5eaca18d7e4c6f4a40ac0bed4e.png  25.6 KiB          [emitted]         
+info WEBPACK                                   designer.html  10.1 KiB          [emitted]         
+info WEBPACK                                      index.html  10.1 KiB          [emitted]         
+info WEBPACK                                        index.js  25.1 KiB       0  [emitted]         index
+info WEBPACK                                     preview.css  1.82 KiB       1  [emitted]         preview
+info WEBPACK                                    preview.html   1.4 KiB          [emitted]         
+info WEBPACK                                      preview.js   944 KiB       1  [emitted]  [big]  preview
+info WEBPACK                                        view.css  20.3 KiB       2  [emitted]         view
+info WEBPACK                                         view.js  4.68 MiB       2  [emitted]  [big]  view
+info WEBPACK     Child html-webpack-plugin for "designer.html":
+info WEBPACK                 Asset     Size  Chunks  Chunk Names
+info WEBPACK         designer.html  547 KiB       0  
+info WEBPACK     Child html-webpack-plugin for "index.html":
+info WEBPACK              Asset     Size  Chunks  Chunk Names
+info WEBPACK         index.html  547 KiB       0  
+info WEBPACK     Child html-webpack-plugin for "preview.html":
+info WEBPACK                Asset     Size  Chunks  Chunk Names
+info WEBPACK         preview.html  538 KiB       0  
+info WEBPACK     Child mini-css-extract-plugin node_modules/css-loader/dist/cjs.js??ref--6-1!node_modules/postcss-loader/src/index.js??ref--6-2!node_modules/build-scripts-config/node_modules/sass-loader/dist/cjs.js??ref--6-3!src/utils/render/src/utils/device-panel.scss:
+info WEBPACK                                               Asset      Size  Chunks                    Chunk Names
+info WEBPACK         assets/077db00d5c63647c097aa6ad68d10cd5.png  17.1 KiB          [emitted]         
+info WEBPACK         assets/2cf26999fe3c4de40d1a9f636d3f91de.png   341 KiB          [emitted]  [big]  
+info WEBPACK         assets/86c95a97596551f5d5203bd84bed7f6f.png  40.1 KiB          [emitted]         
+info WEBPACK         assets/acd79db95606e3df4b4da30f17fc25d8.png  35.9 KiB          [emitted]         
+info WEBPACK         assets/b098933d6ae011efd6f20c4cfd4f4c85.png  28.9 KiB          [emitted]         
+info WEBPACK         assets/d1ab2b5eaca18d7e4c6f4a40ac0bed4e.png  25.6 KiB          [emitted]         
+info WEBPACK Compiled successfully

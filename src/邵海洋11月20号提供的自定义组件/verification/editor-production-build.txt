@@ -1,0 +1,85 @@
+[unplugin-vue-components] component "EventEditorDialog"(D:/code/ietm-editor/src/components/editor/flow-editor/EventEditorDialog.vue) has naming conflicts with other components, ignored.
+vite v5.4.8 building for production...
+[unplugin-vue-components] component "Index"(D:/code/ietm-editor/src/components/parse/bom-parse/Index.vue) has naming conflicts with other components, ignored.
+[unplugin-vue-components] component "Index"(D:/code/ietm-editor/src/components/parse/doc-parse/Index.vue) has naming conflicts with other components, ignored.
+[unplugin-vue-components] component "Index"(D:/code/ietm-editor/src/components/parse/embed-parse/Index.vue) has naming conflicts with other components, ignored.
+[unplugin-vue-components] component "Index"(D:/code/ietm-editor/src/components/parse/logicflow-parse/Index.vue) has naming conflicts with other components, ignored.
+[unplugin-vue-components] component "Index"(D:/code/ietm-editor/src/components/parse/pdf-parse/Index.vue) has naming conflicts with other components, ignored.
+[unplugin-vue-components] component "Index"(D:/code/ietm-editor/src/components/parse/scene-parse/Index.vue) has naming conflicts with other components, ignored.
+[unplugin-vue-components] component "Index"(D:/code/ietm-editor/src/components/parse/texture-parse/Index.vue) has naming conflicts with other components, ignored.
+[unplugin-vue-components] component "Index"(D:/code/ietm-editor/src/components/parse/video-parse/Index.vue) has naming conflicts with other components, ignored.
+transforming...
+[plugin:vite:esbuild] [plugin vite:esbuild] src/view/editor/property/object/Base.vue?vue&type=script&setup=true&lang.ts: This assignment will throw because "position" is a constant
+487|                  _createVNode(_component_Vector, {
+488|                    modelValue: position,
+489|                    "onUpdate:modelValue": _cache[2] || (_cache[2] = ($event: any) => ((position) = $event)),
+   |                                                                                        ^
+490|                    onChange: changePosition,
+491|                    onStep: _cache[3] || (_cache[3] = (o, n) => recordCommand('p', o, n))
+
+[plugin:vite:esbuild] [plugin vite:esbuild] src/view/editor/property/object/Base.vue?vue&type=script&setup=true&lang.ts: This assignment will throw because "rotation" is a constant
+500|                  _createVNode(_component_Vector, {
+501|                    modelValue: rotation,
+502|                    "onUpdate:modelValue": _cache[4] || (_cache[4] = ($event: any) => ((rotation) = $event)),
+   |                                                                                        ^
+503|                    onChange: changeRotate,
+504|                    onStep: _cache[5] || (_cache[5] = (o, n) => recordCommand('r', o, n))
+
+[plugin:vite:esbuild] [plugin vite:esbuild] src/view/editor/property/object/Base.vue?vue&type=script&setup=true&lang.ts: This assignment will throw because "scale" is a constant
+513|                  _createVNode(_component_Vector, {
+514|                    modelValue: scale,
+515|                    "onUpdate:modelValue": _cache[6] || (_cache[6] = ($event: any) => ((scale) = $event)),
+   |                                                                                        ^
+516|                    onChange: changeScale,
+517|                    onStep: _cache[7] || (_cache[7] = (o, n) => recordCommand('s', o, n))
+
+node_modules/three/examples/jsm/libs/lottie_canvas.module.js (13973:30): Use of eval in "node_modules/three/examples/jsm/libs/lottie_canvas.module.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+node_modules/three/examples/jsm/libs/chevrotain.module.min.js (2:7044): Use of eval in "node_modules/three/examples/jsm/libs/chevrotain.module.min.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+node_modules/@cc/api/node_modules/js-md5/src/md5.js (156:17): Use of eval in "node_modules/@cc/api/node_modules/js-md5/src/md5.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+node_modules/@cc/api/node_modules/js-md5/src/md5.js (157:17): Use of eval in "node_modules/@cc/api/node_modules/js-md5/src/md5.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+node_modules/bluebird/js/release/util.js (165:2): Use of eval in "node_modules/bluebird/js/release/util.js" is strongly discouraged as it poses security risks and may cause issues with minification.
+✓ 7565 modules transformed.
+rendering chunks...
+computing gzip size...
+.tmp/delivery-20261119145201/dist/index.html                                      0.63 kB │ gzip:     0.35 kB
+.tmp/delivery-20261119145201/dist/assets/line-ClJ7WP1I.png                        4.29 kB
+.tmp/delivery-20261119145201/dist/assets/add-model-DdGpkljR.svg                   4.48 kB │ gzip:     2.02 kB
+.tmp/delivery-20261119145201/dist/assets/step4-CVOAZnFL.png                       6.03 kB
+.tmp/delivery-20261119145201/dist/assets/step3-C7ZUbyZR.png                       6.69 kB
+.tmp/delivery-20261119145201/dist/assets/step2--8LeP_E8.png                       7.15 kB
+.tmp/delivery-20261119145201/dist/assets/CompressTexture-Dxzc_f5-.js              9.27 kB
+.tmp/delivery-20261119145201/dist/assets/logo-czy3d-usnUVlDl.svg                  9.40 kB │ gzip:     3.87 kB
+.tmp/delivery-20261119145201/dist/assets/icon-WtxovlMW.png                       10.28 kB
+.tmp/delivery-20261119145201/dist/assets/4-D14IcyCP.png                          17.55 kB
+.tmp/delivery-20261119145201/dist/assets/header-menu-BHK7RWdW.svg                20.55 kB │ gzip:     8.53 kB
+.tmp/delivery-20261119145201/dist/assets/5-DS7atOKP.png                          26.24 kB
+.tmp/delivery-20261119145201/dist/assets/3-UJo8-p5T.png                          29.62 kB
+.tmp/delivery-20261119145201/dist/assets/1-CDJlQzWB.png                          36.78 kB
+.tmp/delivery-20261119145201/dist/assets/6-BzLapBzC.png                          41.10 kB
+.tmp/delivery-20261119145201/dist/assets/xatlas-BH16P-KL.js                      53.34 kB
+.tmp/delivery-20261119145201/dist/assets/parallelMeshBVH.worker--f3v-Afi.js      84.12 kB
+.tmp/delivery-20261119145201/dist/assets/generateMeshBVH.worker-Dez5HGrc.js     118.62 kB
+.tmp/delivery-20261119145201/dist/assets/xatlas-BoZ5JfyM.wasm                   144.83 kB
+.tmp/delivery-20261119145201/dist/assets/a.out-BUWEBmjR.wasm                    278.09 kB
+.tmp/delivery-20261119145201/dist/assets/2-2uDqA_t-.png                         349.67 kB
+.tmp/delivery-20261119145201/dist/assets/STPLoaderWorker-BAWJAzJu.js            398.39 kB
+.tmp/delivery-20261119145201/dist/assets/DracoMesh-C-_uvtJA.js                  952.77 kB
+.tmp/delivery-20261119145201/dist/assets/watermark-B54CPHCN.css                  17.77 kB │ gzip:     5.28 kB
+.tmp/delivery-20261119145201/dist/assets/index-BmIflTiB.css                      19.58 kB │ gzip:     4.95 kB
+.tmp/delivery-20261119145201/dist/assets/index-D-_ZptW3.css                      38.32 kB │ gzip:     6.20 kB
+.tmp/delivery-20261119145201/dist/assets/index-BnnDsht3.css                     100.65 kB │ gzip:    16.81 kB
+.tmp/delivery-20261119145201/dist/assets/vendor-C-kNOWFA.css                    881.86 kB │ gzip:   132.15 kB
+.tmp/delivery-20261119145201/dist/assets/UVGenerate-AwUeaiNs.js                   0.85 kB │ gzip:     0.51 kB
+.tmp/delivery-20261119145201/dist/assets/FBXLoader-YW6fMLlX.js                   41.06 kB │ gzip:    12.78 kB
+.tmp/delivery-20261119145201/dist/assets/GLTFLoader-BtTbyQ9Z.js                  45.47 kB │ gzip:    13.56 kB
+.tmp/delivery-20261119145201/dist/assets/index-BaVluzXy.js                       56.83 kB │ gzip:    17.84 kB
+.tmp/delivery-20261119145201/dist/assets/watermark-ysli39RM.js                   81.90 kB │ gzip:    25.51 kB
+.tmp/delivery-20261119145201/dist/assets/index-D673DO9q.js                      302.94 kB │ gzip:   104.82 kB
+.tmp/delivery-20261119145201/dist/assets/index-C5RH1lN7.js                      442.00 kB │ gzip:   135.81 kB
+.tmp/delivery-20261119145201/dist/assets/vendor-DH4P7xsU.js                  14,221.87 kB │ gzip: 3,399.53 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1m 9s

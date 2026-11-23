@@ -1,0 +1,222 @@
+{
+  "schema": "D:\\code\\configuration-materials-ov\\artifacts\\openview-delivery-20261117-223819\\final.schema.json",
+  "actualLowcodeRenderer": true,
+  "noLiveNetwork": true,
+  "scope": "Actual low-code renderer and built DevLoader/DevAnimation/SceneLabels; WebGL player and unrelated business widgets are replaced to audit calls.",
+  "results": [
+    {
+      "bundle": "build/lowcode/view.js",
+      "autoPlayOverride": false,
+      "initialSceneIndex": 0,
+      "manualPlayback": false,
+      "realButtons": false,
+      "initial": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 0
+      },
+      "afterWs": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 0
+      },
+      "lastCount": 19,
+      "queuedTimers": 0,
+      "playAfterTimerFlush": 0,
+      "buttonControl": null
+    },
+    {
+      "bundle": "artifacts/overview-final/configuration-material/view.js",
+      "autoPlayOverride": false,
+      "initialSceneIndex": 0,
+      "manualPlayback": false,
+      "realButtons": false,
+      "initial": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 4
+      },
+      "afterWs": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 48
+      },
+      "lastCount": 19,
+      "queuedTimers": 0,
+      "playAfterTimerFlush": 0,
+      "buttonControl": null
+    },
+    {
+      "bundle": "artifacts/openview-delivery-20261117-223819/configuration-material/view.js",
+      "autoPlayOverride": false,
+      "initialSceneIndex": 0,
+      "manualPlayback": false,
+      "realButtons": false,
+      "initial": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 4
+      },
+      "afterWs": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 48
+      },
+      "lastCount": 19,
+      "queuedTimers": 0,
+      "playAfterTimerFlush": 0,
+      "buttonControl": null
+    },
+    {
+      "bundle": "artifacts/openview-delivery-20261117-223819/configuration-material/view.js",
+      "autoPlayOverride": false,
+      "initialSceneIndex": 1,
+      "manualPlayback": false,
+      "realButtons": false,
+      "initial": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 4
+      },
+      "afterWs": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 48
+      },
+      "lastCount": 19,
+      "queuedTimers": 0,
+      "playAfterTimerFlush": 0,
+      "buttonControl": null
+    },
+    {
+      "bundle": "build/lowcode/view.js",
+      "autoPlayOverride": false,
+      "initialSceneIndex": 1,
+      "manualPlayback": true,
+      "realButtons": false,
+      "initial": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 1,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 0
+      },
+      "afterWs": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 1,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 0
+      },
+      "lastCount": 19,
+      "queuedTimers": 0,
+      "playAfterTimerFlush": 1,
+      "buttonControl": null
+    },
+    {
+      "bundle": "build/lowcode/view.js",
+      "autoPlayOverride": false,
+      "initialSceneIndex": 1,
+      "manualPlayback": false,
+      "realButtons": true,
+      "initial": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 0
+      },
+      "afterWs": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 0,
+        "renderLogs": 0
+      },
+      "lastCount": 19,
+      "queuedTimers": 0,
+      "playAfterTimerFlush": 1,
+      "buttonControl": {
+        "text": "拆解视图",
+        "playAfterClick": 1,
+        "stopAfterClick": 2
+      }
+    },
+    {
+      "bundle": "build/lowcode/view.js",
+      "autoPlayOverride": true,
+      "initialSceneIndex": 0,
+      "manualPlayback": false,
+      "realButtons": false,
+      "initial": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 2,
+        "renderLogs": 0
+      },
+      "afterWs": {
+        "attach": 1,
+        "detach": 0,
+        "resetScene": 0,
+        "play": 0,
+        "stop": 0,
+        "timers": 2,
+        "renderLogs": 0
+      },
+      "lastCount": 19,
+      "queuedTimers": 2,
+      "playAfterTimerFlush": 2,
+      "buttonControl": null
+    }
+  ],
+  "warnings": [
+    "WARNING: Multiple instances of Three.js being imported.",
+    "Warning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()?%s%s \n\nCheck the render method of `Wrapper`. \n    in Stub (created by Wrapper)\n    in Wrapper (created by ForwardRef)\n    in ForwardRef (created by PageRenderer)\n    in div (created by PageRenderer)\n    in PageRenderer (c",
+    "WARNING: Multiple instances of Three.js being imported.",
+    "WARNING: Multiple instances of Three.js being imported.",
+    "Warning: React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `%s` instead. If you accidentally passed it from a parent component, remove it from the DOM element.%s _unsafe_MixedSetter____condition____select _unsafe_mixedsetter____condition____select "
+  ]
+}

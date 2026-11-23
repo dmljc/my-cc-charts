@@ -1,0 +1,7 @@
+{
+  "componentName": "SceneLabels",
+  "package": "cc-charts",
+  "version": "0.1.0",
+  "destructuring": true,
+  "exportName": "SceneLabels"
+}

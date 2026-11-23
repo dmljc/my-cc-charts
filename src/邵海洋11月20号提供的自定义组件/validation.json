@@ -1,0 +1,78 @@
+{
+  "packagedAt": "2026-11-19T15:00:29.327Z",
+  "baseDelivery": "openview-delivery-20261119224129-solid-device",
+  "inheritedMaterial": {
+    "passed": 131,
+    "failed": 0,
+    "productionBuild": true,
+    "builtMetadata": {
+      "passed": 1,
+      "failed": 0
+    },
+    "sourceFingerprint": "120df049cc4cf959130db584e2a5fc1f9afd69cd842c24e2d648260041b1932b"
+  },
+  "currentPage": {
+    "checkedAt": "2026-11-19T14:59:20.471Z",
+    "passed": 19,
+    "failed": 0,
+    "checks": [
+      "原 7 个标注全部保留，新增 15 个独立房间标注，无重复节点 ID",
+      "15个标注保留热点位置及文字，透明设备图、颜色和默认绿色直接绑定",
+      "原有非标注节点、页面布局和动画配置保持不变",
+      "schema 的 JS、state、方法及生命周期与 index.js 同步，表达式均可解析",
+      "当前运行包导出 SceneLabels，meta 含“三维状态标注”及热点选择配置",
+      "整体视图显示 F1/F2/F3，各楼层恰好显示对应 5 个房间，概览不泄漏房间",
+      "无房间数据时默认绿色，init_data 接收 roomLabelList 并只更新对应房间",
+      "增量 WS 支持数字/字符串编号及空格，保留其他房间，不重播动画",
+      "同一 React 批次连续 WS 增量不丢失先到的数据",
+      "直接 setState 更新数组即时换色，空/无效颜色回退绿色",
+      "手动 state 更新后再接收 WS 增量，保留最新 state 而非旧缓存",
+      "显式初始化空数组回退绿色，随后消息不会复活旧房间状态",
+      "不含房间字段的消息不清空房间状态，房间颜色更新不修改 floor/sceneIndex",
+      "统一卡片前景直接内嵌，字号/位置/字重正确，状态蒙版和静态前景独立",
+      "全部标注开启同步控制，管道组件直接绑定 state 数组并保留模拟配置",
+      "管道 init_data 替换全量，ws_data 按名称合并，数字字符串和布尔值兼容",
+      "同批管道 WS 增量不丢失，不变数据复用数组，无效项不污染状态",
+      "管道空快照清空，缺字段和空增量保留，房间和管道同包独立更新且不重播动画",
+      "组件背景颜色可直接绑定任意state变量，图片变量切换及默认颜色均生效"
+    ],
+    "scope": "当前实际构建组件及meta、真实低代码渲染器、实际页面WS回调；标注以设计态渲染核对颜色及内容，未接入内网/GPU。",
+    "components": {
+      "name": "SceneLabels",
+      "title": "三维状态标注",
+      "total": 22,
+      "roomLabels": 15
+    },
+    "warnings": [
+      "WARNING: Multiple instances of Three.js being imported.",
+      "Warning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()?%s%s \n\nCheck the render method of `Wrapper`. \n    in Unknown (created b"
+    ]
+  },
+  "image": {
+    "checkedAt": "2026-11-19T15:00:29.327Z",
+    "png": "label-images/device.png",
+    "width": 104,
+    "height": 48,
+    "channels": 4,
+    "sha256": "7a98f5783019690faf4070592c1d8c4376cebcf8af1e93518f13276004e20b49",
+    "histogram": {
+      "transparent": 834,
+      "partial": 90,
+      "opaque": 4068,
+      "points": {
+        "outside": 0,
+        "pointer": 255,
+        "colorBadgeForeground": 0
+      }
+    },
+    "source": "project SVG assets",
+    "sourceSvgSha256": "8c364cc0b180141a145734cbebdf6375cc4116934d1438ce8fe780e857feaf8f",
+    "visualReview": {
+      "image": "verification/device-color-preview.png",
+      "reviewed": true,
+      "description": "已检查104×48一体式标注：深色底板、小型白色机柜、22px文字，状态色在徽标/边框/箭头上可见；外围透明。"
+    }
+  },
+  "materialEditorAndOtherComponentsUnchanged": true,
+  "scope": "更新 schema、页面 JS 与透明设备图标；沿用已构建的物料与编辑器。真实内网 GPU 场景未复测。"
+}

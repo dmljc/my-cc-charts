@@ -1,0 +1,99 @@
+{
+  "imageVariable": "this.state.roomLabelImage",
+  "imageValue": "\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGgAAAAwCAYAAAD9wT87AAAACXBIWXMAAAsTAAALEwEAmpwYAAABcElEQVR4nO3b0UoCURSF4cGoJ4heSymnXimrtyiKeqEstevAqxjv/9g1hDRnRi+Us3DWdyvI5vxwOoG7KBKAE+AKeASmwArbtVV9tnHGl3HmqRapOBfAYufj2CZz4LwrzBFwt/FrbN9ugUEqkOPomKSuNdMyWn8QxP1nWj5+Hg71a800lRHoKfcU1uohAr23f26ZTSNQlXsKa1VFIBPmQOIcSJwDiXMgcQ4kzoHEOZA4BxLnQOIcSJwDiXMgcQ4kzoHEOZA4BxLnQOIcSJwDifOPRrR9RaC33FNYq9ei3k8xTfdFvTxkmsYR6BiY5Z7EGhZ/W3ex2dX83DIb/t8Ris0u03Cd2rAbADe5JzMmyRXItVAj/03KYta41joixcOhjP2UeIt7A2Ivqvps44zHcebFIQFOgc8tDmIJnOWet5eA4RaBytxz9hrw0hHnOfd8vUf7VeerTfyqK3PPZe1Xna824atu6VebKH7/dzuoq+0by2GPz0M3lgMAAAAASUVORK5CYII=\"",
+  "foregroundVariable": "this.state.roomLabelForegroundImage",
+  "foregroundValue": "\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGgAAAAwCAYAAAD9wT87AAAACXBIWXMAAAsTAAALEwEAmpwYAAADDUlEQVR4nO2bPW8TQRCG7c4S5PaMfLZTXYMirS/4JPDeJbKrWCIESwktUIAQCIEQHSWKLKWhAFq+fgmB/AegpwgQJARFUtENesM5Ssh9xTjZTTyvNN3d+vQ+N3Nr7UyhECMiKhJRiYhsInKIqE5Ekxw0Sg/qkbd25HUxjkUcHFxcvXj11hU36L6uTM98smXwS0j1m0ONzAN4Wpme/egGc6/mr91egufwPguOdf9xP6w222sMQx3pC1n12+8fLK8EYJAIZ/HGvV7Zm/nOcJSWagHvl27evbwPElILmcNwlPYyXvbCjYf9vtpT7lD/an5nVffDcai/5a7ZXou+ScXt7MGGgM1RRr0g89fvLG5nEbZ5ruq+yXHTpi2Dp5bXUrVm81RhSOFerGFL9Qxr6jZCGBpuOPcSbADIwVY67WJLtj7bU2GzMGLZXuBjbd1mCAMDW3CwAaC63Qh/ply8eRhwdkPiTFL7fAcTsAGgyTSSKGuHBWcHklTPdb+xwsAAm0xA1lRLJRlLRD0i+krZ+kJEC0nrWI0LgW4zxHEF5DQap1MAwfi8Wk9aB7+h2wxxXAGllSY6oNLW0m2GMDAYkBwjQP9zDWeQYkDCgIzgEif1m8qApH7jGJAB5ggDgjcJUj8EBiT1G20EIP6jqhiQMOCt5gwywBhhSHCJk/ohMCA53scNI9kknDkbWLrNECf0wG4k50F8YKeGB4TumxRACzkhrRPRpaR1+MhbpQLKbhrxAj/J3AhUbAnLKm27mka2dJcTYVjYjeDHoGkkX9tVCqRhAXHblUr0vHJu9sOg7crGmEkOqlsoRfhepG0csoR7J2QYRmWNM0fG++2G3ReDxsUS5lN0pzSH2uNBb9D6G5Uip+Z33rJJyphZoZ3m+QhQ6dHKk/NlL/ym++HGPcpx4ycRJAvDQ7hA90OOa5S9cCMa4JpI2o1ZGMOr+e13uh923KLmd1ajzImH888QsYP5FIxAYLuX8T+JQx7cA3gKb+FxtCFwMoeIY0DxGD4dzRh+bjAsFovFYrFYLBaLVTjZ+gOkn+Ios7/J/AAAAABJRU5ErkJggg==\"",
+  "defaultColor": "this.state.alarmLabelDefaultColor",
+  "items": [
+    {
+      "id": "101",
+      "color": "this.getRoomLabelColor('101')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "102",
+      "color": "this.getRoomLabelColor('102')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "103",
+      "color": "this.getRoomLabelColor('103')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "104",
+      "color": "this.getRoomLabelColor('104')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "105",
+      "color": "this.getRoomLabelColor('105')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "201",
+      "color": "this.getRoomLabelColor('201')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "202",
+      "color": "this.getRoomLabelColor('202')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "203",
+      "color": "this.getRoomLabelColor('203')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "204",
+      "color": "this.getRoomLabelColor('204')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "205",
+      "color": "this.getRoomLabelColor('205')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "301",
+      "color": "this.getRoomLabelColor('301')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "302",
+      "color": "this.getRoomLabelColor('302')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "303",
+      "color": "this.getRoomLabelColor('303')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "304",
+      "color": "this.getRoomLabelColor('304')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    },
+    {
+      "id": "305",
+      "color": "this.getRoomLabelColor('305')",
+      "maskImage": "this.state.roomLabelImage",
+      "defaultImage": "this.state.roomLabelForegroundImage"
+    }
+  ]
+}

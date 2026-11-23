@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-11-19T15:00:29.327Z",
+  "png": "label-images/device.png",
+  "width": 104,
+  "height": 48,
+  "channels": 4,
+  "sha256": "7a98f5783019690faf4070592c1d8c4376cebcf8af1e93518f13276004e20b49",
+  "histogram": {
+    "transparent": 834,
+    "partial": 90,
+    "opaque": 4068,
+    "points": {
+      "outside": 0,
+      "pointer": 255,
+      "colorBadgeForeground": 0
+    }
+  },
+  "source": "project SVG assets",
+  "sourceSvgSha256": "8c364cc0b180141a145734cbebdf6375cc4116934d1438ce8fe780e857feaf8f",
+  "visualReview": {
+    "image": "verification/device-color-preview.png",
+    "reviewed": true,
+    "description": "已检查104×48一体式标注：深色底板、小型白色机柜、22px文字，状态色在徽标/边框/箭头上可见；外围透明。"
+  }
+}

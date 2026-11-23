@@ -1,0 +1,25 @@
+Warning: Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state.
+    in SettingFieldView (created by FormSetter)
+    in div (created by FormSetter)
+    in FormSetter (created by ObjectSetter)
+    in ObjectSetter (created by SceneLabelEditorSetter)
+    in div (created by SceneLabelEditorSetter)
+    in details (created by SceneLabelEditorSetter)
+    in div (created by SceneLabelEditorSetter)
+    in div (created by SceneLabelEditorSetter)
+    in SceneLabelEditorSetter (created by MixedSetter)
+    in div (created by MixedSetter)
+    in MixedSetter (created by SettingFieldView)
+    in div (created by Field)
+    in div (created by Field)
+    in Field (created by SettingFieldView)
+    in SettingFieldView
+✔ 真实引擎：换图状态、规则数组及规则内变量在切换组件与 schema 重载后保留 (2489.8626ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2581.7604
