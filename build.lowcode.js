@@ -25,6 +25,8 @@ module.exports = {
       {
         library,
         engineScope: '@alilc',
+        // PipeFlow 的导出名会生成 lowcode/pipe-flow，并覆盖 lowcode/my-pipe-flow 里的原 setter。
+        noParse: true,
       },
     ],
     [
