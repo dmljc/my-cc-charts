@@ -138,7 +138,9 @@ export default function SceneLabels(props: SceneLabelsProps) {
     ref: root,
     className: props.className, 'data-scene-labels-design': designItem?.id || 'empty',
     title: designItem ? `三维状态标注 · ${designItem.id}` : '三维状态标注',
-    style: {position: 'absolute', left: 0, top: 0, zIndex: props.zIndex ?? 20, ...layout, width: labelSize(designItem?.width, width), height: labelSize(designItem?.height, height), boxSizing: 'border-box', pointerEvents: 'auto', ...(following ? {transform: undefined, margin: 0, visibility: 'hidden'} : {})},
+    style: following
+      ? {position: 'absolute', zIndex: props.zIndex ?? layout.zIndex ?? 20, width: labelSize(designItem?.width, width), height: labelSize(designItem?.height, height), boxSizing: 'border-box', pointerEvents: 'auto', margin: 0, visibility: 'hidden'}
+      : {position: 'absolute', left: 0, top: 0, zIndex: props.zIndex ?? 20, ...layout, width: labelSize(designItem?.width, width), height: labelSize(designItem?.height, height), boxSizing: 'border-box', pointerEvents: 'auto'},
   }, ...cards, cards.length ? null : createElement('div', {style: {width: '100%', height: '100%', boxSizing: 'border-box', border: '1px dashed #3396bf', borderRadius: 6, background: '#083247', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center'}}, '添加标注'));
   if (!binding || !enabled) return null;
   return createPortal(createElement('div', {ref: root, className: props.className, 'data-scene-labels': loaderId || 'auto',

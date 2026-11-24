@@ -38,14 +38,19 @@ function placementDocuments(node: any) {
   const nodeDom = node?.getDOMNode?.();
   const dom = Array.isArray(nodeDom) ? nodeDom[0] : nodeDom;
   const docs: Document[] = [];
-  if (dom?.ownerDocument) docs.push(dom.ownerDocument);
-  else if (typeof document !== 'undefined') {
-    docs.push(document);
-    // Only inspect the simulator frames of this editor, and only explicit bridges.
-    document.querySelectorAll('iframe').forEach(frame => {
-      try {if (frame.contentDocument) docs.push(frame.contentDocument);} catch (_) { /* another origin */ }
+  const seen = new Set<Document>();
+  // The setter runs in the designer window. The loader and its hotspots live in the
+  // simulator frame, sometimes inside another frame created by the player.
+  const walk = (doc: Document, depth: number) => {
+    if (!doc || seen.has(doc) || depth > 4) return;
+    seen.add(doc);
+    docs.push(doc);
+    doc.querySelectorAll('iframe').forEach(frame => {
+      try {if (frame.contentDocument) walk(frame.contentDocument, depth + 1);} catch (_) { /* another origin */ }
     });
-  }
+  };
+  if (dom?.ownerDocument) walk(dom.ownerDocument, 0);
+  if (typeof document !== 'undefined') walk(document, 0);
   return docs;
 }
 
@@ -63,10 +68,20 @@ export function findPlacementViewport(node: any): LabelViewport | null {
 /** Observe registration/scene events, and discover a loader that mounts later. */
 export function observePlacementViewport(node: any, callback: (viewport: LabelViewport | null) => void) {
   const subscriptions = new Map<LabelViewportBridge, () => void>();
+  const observers = new Map<Document, MutationObserver>();
   let viewport: LabelViewport, scene, initialized = false;
+  const watch = (doc: Document) => {
+    if (observers.has(doc) || !doc.documentElement || !doc.defaultView) return;
+    const observer = new doc.defaultView.MutationObserver(sync);
+    observer.observe(doc.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['data-scene-label-viewport']});
+    observers.set(doc, observer);
+  };
   const sync = () => {
+    const docs = placementDocuments(node);
+    docs.forEach(watch);
+    Array.from(observers.keys()).forEach(doc => {if (!docs.includes(doc)) {observers.get(doc).disconnect(); observers.delete(doc);}});
     const bridges = new Set<LabelViewportBridge>();
-    placementDocuments(node).forEach(doc => doc.querySelectorAll('[data-scene-label-viewport]').forEach(element => {
+    docs.forEach(doc => doc.querySelectorAll('[data-scene-label-viewport]').forEach(element => {
       const bridge = element[LABEL_VIEWPORT_BRIDGE] as LabelViewportBridge;
       if (bridge?.observe) bridges.add(bridge);
     }));
@@ -77,13 +92,8 @@ export function observePlacementViewport(node: any, callback: (viewport: LabelVi
       initialized = true; viewport = next; scene = next?.scene; callback(next);
     }
   };
-  const observers = placementDocuments(node).map(doc => {
-    const observer = new doc.defaultView.MutationObserver(sync);
-    observer.observe(doc.documentElement, {childList: true, subtree: true, attributes: true, attributeFilter: ['data-scene-label-viewport']});
-    return observer;
-  });
   sync();
-  return () => {observers.forEach(observer => observer.disconnect()); subscriptions.forEach(stop => stop()); subscriptions.clear();};
+  return () => {observers.forEach(observer => observer.disconnect()); observers.clear(); subscriptions.forEach(stop => stop()); subscriptions.clear();};
 }
 
 export function pickLabelPlacement(viewport: LabelViewport, clientX: number, clientY: number): LabelPlacement | null {
